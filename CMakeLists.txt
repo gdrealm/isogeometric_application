@@ -1,0 +1,131 @@
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+message("**** configuring KratosIsogeometricApplication ****")
+
+
+include_directories( ${CMAKE_SOURCE_DIR})
+include_directories( ${CMAKE_SOURCE_DIR}/kratos)
+include_directories( ${CMAKE_SOURCE_DIR}/applications)
+include_directories( ${CMAKE_SOURCE_DIR}/applications_nonfree)
+
+# add_subdirectory(custom_external_libraries/geomod)
+add_subdirectory(custom_external_libraries/tetgen1.5.0)
+add_definitions( -DISOGEOMETRIC_USE_TETGEN )
+# add_definitions( -DENABLE_BEZIER_GEOMETRY ) # this was promoted to system level
+# add_definitions( -DENABLE_PRECOMPUTE )
+
+if(DEFINED $ENV{HDF5_ROOT})
+    SET(HDF5_DIR $ENV{HDF5_ROOT}/share/cmake/hdf5)
+    FIND_PACKAGE(HDF5 REQUIRED NAMES hdf5 hdf5_cpp)
+    set(HDF5_PROVIDED TRUE)
+elseif(DEFINED HDF5_ROOT)
+    SET(HDF5_DIR ${HDF5_ROOT}/share/cmake/hdf5)
+    FIND_PACKAGE(HDF5 REQUIRED NAMES hdf5 hdf5_cpp)
+    set(HDF5_PROVIDED TRUE)
+else()
+    set(HDF5_PROVIDED FALSE)
+endif()
+
+set(ISOGEOMETRIC_USE_HDF5 FALSE)
+if(${HDF5_PROVIDED} MATCHES TRUE)
+    message("HDF5_INCLUDE_DIR: " ${HDF5_INCLUDE_DIR})
+    message("HDF5_LIBRARIES: " ${HDF5_LIBRARIES})
+    INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR})
+#    add_definitions( -DBOOST_FILESYSTEM_VERSION=2 )
+    add_definitions(-DISOGEOMETRIC_USE_HDF5)
+    set(ISOGEOMETRIC_USE_HDF5 TRUE)
+endif()
+
+set(ISOGEOMETRIC_USE_MPI FALSE)
+if(DEFINED ISOGEOMETRIC_PARMETIS_ROOT)
+    INCLUDE_DIRECTORIES(${ISOGEOMETRIC_PARMETIS_ROOT}/include)
+    FIND_LIBRARY(METIS_FOR_IGA_LIBRARY metis "${ISOGEOMETRIC_PARMETIS_ROOT}/lib" NO_DEFAULT_PATH)
+    FIND_LIBRARY(PARMETIS_FOR_IGA_LIBRARY parmetis "${ISOGEOMETRIC_PARMETIS_ROOT}/lib" NO_DEFAULT_PATH)
+    set(ISOGEOMETRIC_USE_MPI TRUE)
+    add_definitions(-DISOGEOMETRIC_USE_PARMETIS)
+    add_definitions(-DISOGEOMETRIC_USE_MPI)
+endif()
+
+set(ISOGEOMETRIC_USE_GISMO FALSE)
+if(DEFINED GISMO_ROOT)
+    INCLUDE_DIRECTORIES(${GISMO_ROOT}/include)
+    INCLUDE_DIRECTORIES(${GISMO_ROOT}/include/gismo)
+    FIND_LIBRARY(GISMO_LIBRARY gismo PATHS ${GISMO_ROOT}/lib NO_DEFAULT_PATH)
+    set(ISOGEOMETRIC_USE_GISMO TRUE)
+    add_definitions(-DISOGEOMETRIC_USE_GISMO)
+endif()
+
+## generate variables with the sources
+set( KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/isogeometric_application.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_processes_to_python.cpp
+    ${PROJECT_SOURCE_DIR}/kratos/sources/io.cpp
+    ${PROJECT_SOURCE_DIR}/kratos/sources/model_part_io.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_io/bezier_model_part_io.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_io_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/isogeometric_python_application.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/bezier_utils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/bspline_utils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/tsplines/tsmesh_2d.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/cell_manager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/domain_manager_2d.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/domain_manager_3d.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/hierarchical_nurbs/hn_basis_function.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/hierarchical_nurbs/hn_cell.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/hierarchical_nurbs/hn_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isogeometric_post_utility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isogeometric_posteriori_estimator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_isogeometric.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_nurbs.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/total_lagrangian_isogeometric.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/unsaturated_soils_element_2phase_small_strain_isogeometric.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric_2d.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_load_isogeometric.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_pressure_isogeometric.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/master_contact_face_3D_isogeometric.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/slave_contact_face_3D_isogeometric.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/contact_link_3D_kinematic_linear_isogeometric.cpp
+)
+
+###############################################################
+## define library Kratos which defines the basic python interface
+add_library(KratosIsogeometricApplication SHARED ${KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES})
+
+target_link_libraries(KratosIsogeometricApplication KratosCore)
+target_link_libraries(KratosIsogeometricApplication KratosStructuralApplication)
+target_link_libraries(KratosIsogeometricApplication KratosPhaseFieldApplication)
+target_link_libraries(KratosIsogeometricApplication iga_tetgen150)
+if(${ISOGEOMETRIC_USE_HDF5} MATCHES TRUE)
+    target_link_libraries(KratosIsogeometricApplication ${HDF5_LIBRARIES})
+endif()
+if(${ISOGEOMETRIC_USE_MPI} MATCHES TRUE)
+    target_link_libraries(KratosIsogeometricApplication ${METIS_FOR_IGA_LIBRARY})
+    target_link_libraries(KratosIsogeometricApplication ${PARMETIS_FOR_IGA_LIBRARY})
+    target_link_libraries(KratosIsogeometricApplication ${MPI_LIBRARIES})
+endif()
+if(${ISOGEOMETRIC_USE_GISMO} MATCHES TRUE)
+    target_link_libraries(KratosIsogeometricApplication ${GISMO_LIBRARY})
+endif()
+
+set_target_properties(KratosIsogeometricApplication PROPERTIES PREFIX "")
+install(TARGETS KratosIsogeometricApplication DESTINATION libs )
+
+
+# changing the .dll suffix to .pyd 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    set_target_properties(KratosIsogeometricApplication PROPERTIES SUFFIX .pyd)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+
+if(${INSTALL_PYTHON_FILES} MATCHES ON)
+  get_filename_component (CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python_scripts DESTINATION applications/${CURRENT_DIR_NAME}  FILES_MATCHING PATTERN "*.py"  PATTERN ".svn" EXCLUDE)
+endif(${INSTALL_PYTHON_FILES} MATCHES ON)
+
+# get_property(inc_dirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+# message("TestApplication subdir inc_dirs = ${inc_dirs}")
+
+# Add to the KratosMultiphysics Python module
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/IsogeometricApplication.py" DESTINATION KratosMultiphysics)
+

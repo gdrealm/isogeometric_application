@@ -1,0 +1,394 @@
+import re
+import math
+
+def CheckSimplePattern(arg, pattern):
+    collect = set()
+    if(len(arg) > len(pattern)):
+        for i in range(0, len(arg)):
+            if(arg[i] in pattern):
+                collect.add(arg[i])
+        if(pattern == collect):
+            params = {}
+            for i in range(0, len(arg)):
+                if(arg[i] in pattern):
+                    params[arg[i]] = arg[i + 1]
+            return [True, params]
+        else:
+            return [False]
+    else:
+        return [False]
+
+def CheckLinePattern(arg):
+    if(arg[0] == 'Line'):
+        params = {}
+        params[arg[0]] = arg[1]
+        params[arg[2]] = arg[3]
+        return [True, params]
+    else:
+        return [False]
+
+def CheckPointPattern(arg):
+    if(arg[0] == 'Point'):
+        params = {}
+        params['iu'] = arg[2]
+        params['iv'] = arg[1]
+        params[arg[3]] = []
+        for i in range(4, len(arg)):
+            params[arg[3]].append(arg[i])
+        return [True, params]
+    else:
+        return [False]
+
+def CheckKnotPattern(arg):
+    pattern = {'Number', 'of', 'knots', 'in'}
+    collect = set()
+    if(len(arg) > len(pattern)):
+        for i in range(0, len(arg)):
+            if(arg[i] in pattern):
+                collect.add(arg[i])
+        if(pattern == collect):
+            if(arg[4] == 'U'):
+                return [True, 'U Knots', int(arg[5])]
+            elif(arg[4] == 'V'):
+                return [True, 'V Knots', int(arg[5])]
+        else:
+            return [False]
+    else:
+        return [False]
+
+def CheckWeightPattern(arg):
+    pattern = {'Rational', 'weights'}
+    collect = set()
+    if(len(arg) > len(pattern)):
+        for i in range(0, len(arg)):
+            if(arg[i] in pattern):
+                collect.add(arg[i])
+        if(pattern == collect):
+            return [True]
+        else:
+            return [False]
+    else:
+        return [False]
+
+def CheckDegreePattern(arg):
+    pattern = {'Number', 'of', 'Control', 'Points', 'Degree'}
+    collect = set()
+    if(len(arg) > len(pattern)):
+        for i in range(0, len(arg)):
+            if(arg[i] in pattern):
+                collect.add(arg[i])
+        if(pattern == collect):
+            params = {}
+            params['U Dim'] = arg[4]
+            params['V Dim'] = arg[5]
+            params['U Degree'] = arg[7]
+            params['V Degree'] = arg[8]
+            return [True, params]
+        else:
+            return [False]
+    else:
+        return [False]
+
+def ReadRawData(filename):
+    fid = open(filename, 'r')
+
+    NURBSURFACE_KW = 'NURBSURFACE'
+    END_KW = 'END'
+
+    nurbs_data = []
+
+    lines = fid.readlines()
+    line_read = 0
+
+    while (line_read < len(lines) ):
+        line = lines[line_read]
+        tmp = line.split()
+        
+        if(len(tmp) == 0):
+            line_read = line_read + 1
+            continue
+            
+        if(tmp[0] == NURBSURFACE_KW):
+            nurbs = {}
+        
+            #handle the nurbs surface data
+            line_read = line_read + 1
+            line = lines[line_read]
+            tmp = re.split(r"[: =,]+", line.strip())
+            while(True):
+                if(len(tmp) == 0):
+                    continue
+                if(tmp[0] == END_KW):
+                    break
+                
+                pattern = {'Num', 'HigherEntity', 'conditions', 'material'}
+                res = CheckSimplePattern(tmp, pattern)
+                if(res[0] == True):
+                    for key in res[1]:
+                        nurbs[key] = res[1][key]
+                
+                pattern = {'LAYER'}
+                res = CheckSimplePattern(tmp, pattern)
+                if(res[0] == True):
+                    for key in res[1]:
+                        nurbs[key] = res[1][key]
+                
+                pattern = {'NumLines'}
+                res = CheckSimplePattern(tmp, pattern)
+                if(res[0] == True):
+                    for key in res[1]:
+                        nurbs[key] = res[1][key]
+                
+                res = CheckLinePattern(tmp)
+                if(res[0] == True):
+                    if 'Lines' in nurbs:
+                        nurbs['Lines'].append(res[1])
+                    else:
+                        nurbs['Lines'] = []
+                        nurbs['Lines'].append(res[1])
+                
+                res = CheckPointPattern(tmp)
+                if(res[0] == True):
+                    if 'Points' in nurbs:
+                        nurbs['Points'].append(res[1])
+                    else:
+                        nurbs['Points'] = []
+                        nurbs['Points'].append(res[1])
+                
+                res = CheckKnotPattern(tmp)
+                if(res[0] == True):
+                    nurbs[res[1]] = []
+                    for i in range(0, res[2]):
+                        line_read = line_read + 1
+                        line = lines[line_read]
+                        tmp = re.split(r"[: =,]+", line.strip())
+                        nurbs[res[1]].append(tmp[3])
+                
+                res = CheckWeightPattern(tmp)
+                if(res[0] == True):
+                    nurbs['Weights'] = []
+                    for i in range(0, len(nurbs['Points'])):
+                        line_read = line_read + 1
+                        line = lines[line_read]
+                        tmp = re.split(r"[: =,]+", line.strip())
+                        nurbs['Weights'].append(tmp[0])
+                
+                res = CheckDegreePattern(tmp)
+                if(res[0] == True):
+                    for key in res[1]:
+                        nurbs[key] = res[1][key]
+                            
+                line_read = line_read + 1
+                line = lines[line_read]
+                tmp = re.split(r"[: =,]+", line.strip())
+            
+            nurbs_data.append(nurbs)
+        line_read = line_read + 1
+    fid.close()
+    return nurbs_data
+
+def CheckCoincidentNode(node, nodes_list):
+    for i in range(0, len(nodes_list)):
+        distance = 0.0
+        for j in range(0, len(node)):
+            distance = distance + (float(node[j]) - float(nodes_list[i][j]))**2
+        distance = math.sqrt(distance)
+        if distance < 1.0e-6:
+            return i
+    return -1
+    
+def GenerateHeader(fid):
+    fid.write('//KRATOS isogeometric application data file\n')
+    fid.write("//(c) 2013 Hoang Giang Bui, Ruhr-University Bochum\n\n")
+
+    fid.write('Begin ModelPartData\n')
+    fid.write('//  VARIABLE_NAME value\n')
+    fid.write('End ModelPartData\n')
+
+def GenerateProperties(fid):
+*loop materials
+*if(strcmp(MatProp(ConstitutiveLaw),"UserDefined")==0)
+    fid.write('Begin Properties *MatNum\n')
+*if(strcmp(GenData(Enable_Gravity),"1")==0)
+    fid.write("GRAVITY [3] ( *GenData(Gravity_X,real), *GenData(Gravity_Y,real), *GenData(Gravity_Z,real) )\n")
+*else
+    fid.write("GRAVITY [3] ( 0.0, 0.0, 0.0 )\n")
+*endif
+    fid.write('End Properties\n')
+*else
+    fid.write('Begin Properties *MatNum')\n')
+    fid.write('DENSITY *MatProp(Density)\n')
+*set var bodyForceX = Operation(MatProp(Density,real)*GenData(Gravity_X,real))
+*set var bodyForceY = Operation(MatProp(Density,real)*GenData(Gravity_Y,real))
+*set var bodyForceZ = Operation(MatProp(Density,real)*GenData(Gravity_Z,real))
+*if(strcmp(GenData(Enable_Gravity),"1")==0)
+    fid.write('BODY_FORCE [3] (*bodyForceX, *bodyForceY, *bodyForceZ)\n')
+    fid.write('GRAVITY [3] ( *GenData(Gravity_X,real), *GenData(Gravity_Y,real), *GenData(Gravity_Z,real) )\n')
+*else
+    fid.write('BODY_FORCE [3] (0.0, 0.0, 0.0)\n')
+    fid.write('GRAVITY [3] ( 0.0, 0.0, 0.0 )\n')
+*endif
+*if(strcmp(MatProp(ConstitutiveLaw),"Isotropic3D")==0)
+    fid.write('DENSITY *MatProp(Density,real)\n')
+    fid.write('YOUNG_MODULUS *MatProp(Young_modulus,real)\n')
+    fid.write('POISSON_RATIO *MatProp(Poisson_ratio,real)\n')
+*endif
+*if(strcmp(MatProp(ConstitutiveLaw),"TutorialDamageModel")==0)
+    fid.write('DENSITY *MatProp(Density,real)\n')
+    fid.write('YOUNG_MODULUS *MatProp(Young_modulus,real)\n')
+    fid.write('POISSON_RATIO *MatProp(Poisson_ratio,real)\n')
+    fid.write('DAMAGE_E0 *MatProp(E0,real)\n')
+    fid.write('DAMAGE_EF *MatProp(Ef,real)\n')
+*endif
+*if(strcmp(MatProp(ConstitutiveLaw),"GroutingMortar")==0)
+    fid.write('DENSITY *MatProp(Density,real)\n')
+    fid.write('YOUNG_MODULUS *MatProp(Young_modulus,real)\n')
+    fid.write('POISSON_RATIO *MatProp(Poisson_ratio,real)\n')
+    fid.write('PRIMARY_HYDRATION_TIME *MatProp(prim_hyd_time,real)\n')
+    fid.write('PRIMARY_HYDRATION_TIME_GRADIENT *MatProp(gradient_prim_hyd_time,real)\n')
+    fid.write('STIFFNESS_RATIO *MatProp(E_ratio,real)\n')
+*endif
+*if(strcmp(MatProp(ConstitutiveLaw),"TrussMaterial")==0)
+    fid.write('DENSITY *MatProp(Density,real)\n')
+    fid.write('YOUNG_MODULUS *MatProp(Young_modulus,real)\n')
+    fid.write('POISSON_RATIO *MatProp(Poisson_ratio,real)\n')
+*endif
+    fid.write('End Properties\n')
+*endif
+*end materials
+
+
+def GenerateMdpa(filename, nurbs_data):
+    fid = open(filename, 'w')
+    
+    GenerateHeader(fid)
+    GenerateProperties(fid)
+    
+    #extract all the control points within the model
+    nodes = []
+    nurbs_indices = []
+    for i in range(0, len(nurbs_data)):
+        node_indices = []
+        for node in nurbs_data[i]['Points']:
+            i = CheckCoincidentNode(node['coords'], nodes)
+            if(i == -1):
+                #new node
+                nodes.append(node['coords'])
+                node_indices.append(len(nodes))
+            else:
+                #added node
+                node_indices.append(i)
+        nurbs_indices.append(node_indices)
+        
+    cnt = 1
+    fid.write('Begin Nodes\n')
+    for node in nodes:
+        fid.write(str(cnt))
+        for i in range(0, len(node)):
+            fid.write(' ')
+            fid.write(node[i])
+        fid.write('\n')
+        cnt = cnt + 1
+    fid.write('End Nodes\n\n')
+    
+    fid.write('Begin Elements KinematicLinearGeo2dNURBS\n')
+    cnt = 1
+    for i in range(0, len(nurbs_data)):
+        fid.write(str(cnt))
+        fid.write(' ')
+        fid.write(nurbs_data[i]['material'])
+        for node in nurbs_indices[i]:
+            fid.write(' ')
+            fid.write(str(node))
+        fid.write('\n')
+        cnt = cnt + 1
+        nurbs_data[i]['Node Indices'] = nurbs_indices[i]
+    fid.write('End Elements\n\n')
+    
+    fid.write('Begin ElementalData NURBS_WEIGHT\n')
+    cnt = 1
+    for i in range(0, len(nurbs_data)):
+        fid.write(str(cnt))
+        fid.write(' ')
+        fid.write('[' + str(len(nurbs_data[i]['Weights'])) + ']')
+        for w in nurbs_data[i]['Weights']:
+            fid.write(' ')
+            fid.write(w)
+        fid.write('\n')
+        cnt = cnt + 1
+    fid.write('End ElementalData\n\n')
+    
+    fid.write('Begin ElementalData NURBS_KNOTS_U\n')
+    cnt = 1
+    for i in range(0, len(nurbs_data)):
+        fid.write(str(cnt))
+        fid.write(' ')
+        fid.write('[' + str(len(nurbs_data[i]['U Knots'])) + ']')
+        for k in nurbs_data[i]['U Knots']:
+            fid.write(' ')
+            fid.write(k)
+        fid.write('\n')
+        cnt = cnt + 1
+    fid.write('End ElementalData\n\n')
+    
+    fid.write('Begin ElementalData NURBS_KNOTS_V\n')
+    cnt = 1
+    for i in range(0, len(nurbs_data)):
+        fid.write(str(cnt))
+        fid.write(' ')
+        fid.write('[' + str(len(nurbs_data[i]['V Knots'])) + ']')
+        for k in nurbs_data[i]['V Knots']:
+            fid.write(' ')
+            fid.write(k)
+        fid.write('\n')
+        cnt = cnt + 1
+    fid.write('End ElementalData\n\n')
+    
+    fid.write('Begin ElementalData NURBS_DIMENSION_U\n')
+    cnt = 1
+    for i in range(0, len(nurbs_data)):
+        fid.write(str(cnt))
+        fid.write(' ')
+        fid.write(nurbs_data[i]['U Dim'])
+        fid.write('\n')
+        cnt = cnt + 1
+    fid.write('End ElementalData\n\n')
+    
+    fid.write('Begin ElementalData NURBS_DIMENSION_V\n')
+    cnt = 1
+    for i in range(0, len(nurbs_data)):
+        fid.write(str(cnt))
+        fid.write(' ')
+        fid.write(nurbs_data[i]['V Dim'])
+        fid.write('\n')
+        cnt = cnt + 1
+    fid.write('End ElementalData\n\n')
+    
+    fid.write('Begin ElementalData NURBS_DEGREE_U\n')
+    cnt = 1
+    for i in range(0, len(nurbs_data)):
+        fid.write(str(cnt))
+        fid.write(' ')
+        fid.write(nurbs_data[i]['U Degree'])
+        fid.write('\n')
+        cnt = cnt + 1
+    fid.write('End ElementalData\n\n')
+    
+    fid.write('Begin ElementalData NURBS_DEGREE_V\n')
+    cnt = 1
+    for i in range(0, len(nurbs_data)):
+        fid.write(str(cnt))
+        fid.write(' ')
+        fid.write(nurbs_data[i]['V Degree'])
+        fid.write('\n')
+        cnt = cnt + 1
+    fid.write('End ElementalData\n\n')
+    
+    fid.close()
+
+#data = ReadRawData('infinite_plate_raw.dat')
+
+#GenerateMdpa('infinite_plate.mdpa', data)
+
+#print data
+

@@ -1,0 +1,1349 @@
+/*
+ ==============================================================================
+ Kratos
+ A General Purpose Software for Multi-Physics Finite Element Analysis
+ Version 1.0 (Released on march 05, 2007).
+
+ Copyright 2007
+ Pooyan Dadvand, Riccardo Rossi
+ pooyan@cimne.upc.edu
+ rrossi@cimne.upc.edu
+ CIMNE (International Center for Numerical Methods in Engineering),
+ Gran Capita' s/n, 08034 Barcelona, Spain
+
+ Permission is hereby granted, free  of charge, to any person obtaining
+ a  copy  of this  software  and  associated  documentation files  (the
+ "Software"), to  deal in  the Software without  restriction, including
+ without limitation  the rights to  use, copy, modify,  merge, publish,
+ distribute,  sublicense and/or  sell copies  of the  Software,  and to
+ permit persons to whom the Software  is furnished to do so, subject to
+ the following condition:
+
+ Distribution of this code for  any  commercial purpose  is permissible
+ ONLY BY DIRECT ARRANGEMENT WITH THE COPYRIGHT OWNER.
+
+ The  above  copyright  notice  and  this permission  notice  shall  be
+ included in all copies or substantial portions of the Software.
+
+ THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
+ EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT  SHALL THE AUTHORS OR COPYRIGHT HOLDERS  BE LIABLE FOR ANY
+ CLAIM, DAMAGES OR  OTHER LIABILITY, WHETHER IN AN  ACTION OF CONTRACT,
+ TORT  OR OTHERWISE, ARISING  FROM, OUT  OF OR  IN CONNECTION  WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+ ==============================================================================
+ */
+
+//
+//   Project Name:        Kratos
+//   Last Modified by:    $Author: hbui $
+//   Date:                $Date: 2014 Jan 28 $
+//   Revision:            $Revision: 1.1 $
+//
+//
+#if !defined(KRATOS_GEO_1D_BEZIER_H_INCLUDED )
+#define  KRATOS_GEO_1D_BEZIER_H_INCLUDED
+
+// System includes
+#include <iostream>
+
+// External includes
+#include <boost/array.hpp>
+
+// Project includes
+#include "includes/define.h"
+#include "utilities/math_utils.h"
+#include "geometries/geometry.h"
+#include "custom_geometries/isogeometric_geometry.h"
+#include "integration/quadrature.h"
+#include "integration/line_gauss_legendre_integration_points.h"
+#include "custom_utilities/bezier_utils.h"
+#include "custom_utilities/isogeometric_math_utils.h"
+
+namespace Kratos
+{
+/**
+ * A geometry representing NURBS curve
+ */
+
+template<class TPointType>
+class Geo1dBezier: public IsogeometricGeometry<TPointType>
+{
+public:
+
+    /**
+     * Type Definitions
+     */
+
+    /**
+     * Geometry as base class.
+     */
+    typedef IsogeometricGeometry<TPointType> BaseType;
+
+    /**
+     * Pointer definition of Geo1dBezier
+     */
+    KRATOS_CLASS_POINTER_DEFINITION( Geo1dBezier );
+
+    /**
+     * Integration methods implemented in geometry.
+     */
+    typedef typename BaseType::IntegrationMethod IntegrationMethod;
+
+    /**
+     * A VectorType of counted pointers to Geometries. Used for
+     * returning edges of the geometry.
+     */
+    typedef typename BaseType::GeometriesArrayType GeometriesArrayType;
+
+    /**
+     * Redefinition of template parameter TPointType.
+     */
+    typedef TPointType PointType;
+
+    /**
+     * Type used for indexing in geometry class.std::size_t used for indexing
+     * point or integration point access methods and also all other
+     * methods which need point or integration point index.
+     */
+    typedef typename BaseType::IndexType IndexType;
+
+    /**
+     * This typed used to return size or dimension in
+     * geometry. Dimension, WorkingDimension, PointsNumber and
+     * ... return this type as their results.
+     */
+    typedef typename BaseType::SizeType SizeType;
+
+    /**
+     * Array of counted pointers to point. This type used to hold
+     * geometry's points.
+     */
+    typedef typename BaseType::PointsArrayType PointsArrayType;
+
+    /**
+     * This type used for representing an integration point in
+     * geometry. This integration point is a point with an
+     * additional weight component.
+     */
+    typedef typename BaseType::IntegrationPointType IntegrationPointType;
+
+    /**
+     * A VectorType of IntegrationPointType which used to hold
+     * integration points related to an integration
+     * method. IntegrationPoints functions used this type to return
+     * their results.
+     */
+    typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
+
+    /**
+     * A VectorType of IntegrationPointsArrayType which used to hold
+     * integration points related to different integration method
+     * implemented in geometry.
+     */
+    typedef typename BaseType::IntegrationPointsContainerType IntegrationPointsContainerType;
+
+    /**
+     * A third order tensor used as shape functions' values
+     * container.
+     */
+    typedef typename BaseType::ShapeFunctionsValuesContainerType
+    ShapeFunctionsValuesContainerType;
+
+    /**
+     * A fourth order tensor used as shape functions' local
+     * gradients container in geometry.
+     */
+    typedef typename BaseType::ShapeFunctionsLocalGradientsContainerType
+    ShapeFunctionsLocalGradientsContainerType;
+
+    /**
+     * A third order tensor to hold jacobian matrices evaluated at
+     * integration points. Jacobian and InverseOfJacobian functions
+     * return this type as their result.
+     */
+    typedef typename BaseType::JacobiansType JacobiansType;
+
+    /**
+     * A third order tensor to hold shape functions' local
+     * gradients. ShapefunctionsLocalGradients function return this
+     * type as its result.
+     */
+    typedef typename BaseType::ShapeFunctionsGradientsType ShapeFunctionsGradientsType;
+
+    /**
+     * Type of the normal vector used for normal to edges in geomety.
+     */
+    typedef typename BaseType::NormalType NormalType;
+
+    /**
+     * Type of coordinates array
+     */
+    typedef typename BaseType::CoordinatesArrayType CoordinatesArrayType;
+
+    /**
+     * Type of Matrix
+     */
+    typedef typename BaseType::MatrixType MatrixType;
+    
+    /**
+     * Type of Vector
+     */
+    typedef typename BaseType::VectorType VectorType;
+
+    /**
+     * Type of values container
+     */
+    typedef typename BaseType::NormalType ValuesContainerType;
+
+    /**
+     * Life Cycle
+     */
+
+    Geo1dBezier(): BaseType( PointsArrayType() )
+    {}
+
+    Geo1dBezier(
+            const PointsArrayType& ThisPoints
+    )
+    : BaseType( ThisPoints )
+    {
+    }
+
+    /**
+     * Copy constructor.
+     * Construct this geometry as a copy of given geometry.
+     *
+     * @note This copy constructor don't copy the points and new
+     * geometry shares points with given source geometry. It's
+     * obvious that any change to this new geometry's point affect
+     * source geometry's points too.
+     */
+    Geo1dBezier( Geo1dBezier const& rOther )
+    : BaseType( rOther )
+    {
+    }
+
+    /**
+     * Copy constructor from a geometry with other point type.
+     * Construct this geometry as a copy of given geometry which
+     * has different type of points. The given goemetry's
+     * TOtherPointType* must be implicity convertible to this
+     * geometry PointType.
+     * @note This copy constructor don't copy the points and new
+     * geometry shares points with given source geometry. It's
+     * obvious that any change to this new geometry's point affect
+     * source geometry's points too.
+     */
+    template<class TOtherPointType> Geo1dBezier( Geo1dBezier<TOtherPointType> const& rOther )
+    : BaseType( rOther )
+    {
+    }
+
+    /**
+     * Destructor. Does nothing!!!
+     */
+    virtual ~Geo1dBezier()
+    {}
+
+    GeometryData::KratosGeometryFamily GetGeometryFamily()
+    {
+        return GeometryData::Kratos_generic_family;
+    }
+
+    GeometryData::KratosGeometryType GetGeometryType()
+    {
+        return GeometryData::Kratos_generic_type;
+    }
+
+    /**
+     * Operators
+     */
+
+    /**
+     * Assignment operator.
+     *
+     * @note This operator don't copy the points and this
+     * geometry shares points with given source geometry. It's
+     * obvious that any change to this geometry's point affect
+     * source geometry's points too.
+     * @see Clone
+     * @see ClonePoints
+     */
+    Geo1dBezier& operator=( const Geo1dBezier& rOther )
+    {
+        BaseType::operator=( rOther );
+        return *this;
+    }
+
+    /**
+     * Assignment operator for geometries with different point type.
+     *
+     * @note This operator don't copy the points and this
+     * geometry shares points with given source geometry. It's
+     * obvious that any change to this geometry's point affect
+     * source geometry's points too.
+     *
+     * @see Clone
+     * @see ClonePoints
+     */
+    template<class TOtherPointType>
+    Geo1dBezier& operator=( Geo1dBezier<TOtherPointType> const & rOther )
+    {
+        BaseType::operator=( rOther );
+
+        return *this;
+    }
+
+    /**
+     * Operations
+     */
+
+    typename BaseType::BaseType::Pointer Create( PointsArrayType const& ThisPoints ) const
+    {
+        return typename BaseType::BaseType::Pointer( new Geo1dBezier( ThisPoints ) );
+    }
+
+    virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const
+    {
+        Geometry< Point<3> >::PointsArrayType NewPoints;
+        //making a copy of the nodes TO POINTS (not Nodes!!!)
+
+        for ( IndexType i = 0; i < this->Points().size(); ++i )
+        NewPoints.push_back( this->Points()[i] );
+
+        //creating a geometry with the new points
+        boost::shared_ptr< Geometry< Point<3> > >
+        p_clone( new Geo1dBezier< Point<3> >( NewPoints ) );
+
+        p_clone->ClonePoints();
+
+        return p_clone;
+    }
+
+    /**
+     * Informations
+     */
+
+    virtual inline SizeType Dimension() const
+    {
+        return 1;
+    }
+
+    virtual inline SizeType WorkingSpaceDimension() const
+    {
+        return 3;
+    }
+
+    virtual inline SizeType LocalSpaceDimension() const
+    {
+        return 1;
+    }
+
+    /**
+     * lumping factors for the calculation of the lumped mass matrix
+     */
+    virtual VectorType& LumpingFactors( VectorType& rResult ) const
+    {
+        //TODO: check this
+        rResult.resize( 3, false );
+        rResult[0] = 0.25;
+        rResult[2] = 0.5;
+        rResult[1] = 0.25;
+        return rResult;
+    }
+
+    /**
+     * Informations
+     */
+
+    /**
+     * This method calculates and returns Length or charactereistic
+     * length of this geometry depending on it's dimension. For one
+     * dimensional geometry for example Line it returns length of it
+     * and for the other geometries it gives Characteristic length
+     * otherwise.
+     *
+     * @return double value contains length or Characteristic
+     * length
+     * @see Area()
+     * @see Volume()
+     * @see DomainSize()
+     */
+    virtual double Length() const
+    {
+        //TODO: reimplement to account for nurbs curve
+        return 0.0;
+    }
+
+    /**
+     * This method calculates and returns area or surface area of
+     * this geometry depending to it's dimension. For one dimensional
+     * geometry it returns zero, for two dimensional it gives area
+     * and for three dimensional geometries it gives surface area.
+     *
+     * @return double value contains area or surface area.
+     * @see Length()
+     * @see Volume()
+     * @see DomainSize()
+     */
+    virtual double Area() const
+    {
+        // Area is not relevant for 1d geometry
+        return 0.0;
+    }
+
+    virtual double Volume() const
+    {
+        // Volume is not relevant for 1d geometry
+        return 0.0;
+    }
+
+    /**
+     * This method calculate and return length, area or volume of
+     * this geometry depending to it's dimension. For one dimensional
+     * geometry it returns its length, for two dimensional it gives area
+     * and for three dimensional geometries it gives its volume.
+     *
+     * @return double value contains length, area or volume.
+     * @see Length()
+     * @see Area()
+     * @see Volume()
+     */
+    virtual double DomainSize() const
+    {
+        return Length();
+    }
+
+    /**
+     * Returns whether given arbitrary point is inside the Geometry
+     */
+    virtual bool IsInside( const CoordinatesArrayType& rPoint, CoordinatesArrayType& rResult )
+    {
+        this->PointLocalCoordinates( rResult, rPoint );
+
+        if ( fabs( rResult[0] ) < 1 + 1.0e-8 )
+        return true;
+
+        return false;
+    }
+
+    /**
+     * Jacobian
+     */
+
+    /**
+     * Jacobians for given  method.
+     * This method calculates jacobians matrices in all integrations
+     * points of given integration method.
+     *
+     * @param ThisMethod integration method which jacobians has to
+     * be calculated in its integration points.
+     * @return JacobiansType a VectorType of jacobian
+     * matrices \f$ J_i \f$ where \f$ i=1,2,...,n \f$ is the
+     * integration point index of given integration method.
+     *
+     * @see DeterminantOfJacobian
+     * @see InverseOfJacobian
+     */
+    virtual JacobiansType& Jacobian( JacobiansType& rResult,
+            IntegrationMethod ThisMethod ) const
+    {
+        //getting derivatives of shape functions
+        ShapeFunctionsGradientsType shape_functions_gradients =
+        CalculateShapeFunctionsIntegrationPointsLocalGradients( ThisMethod );
+        //getting values of shape functions
+        MatrixType shape_functions_values =
+        CalculateShapeFunctionsIntegrationPointsValues( ThisMethod );
+
+        if ( rResult.size() != this->IntegrationPointsNumber( ThisMethod ) )
+        {
+            JacobiansType temp( this->IntegrationPointsNumber( ThisMethod ) );
+            rResult.swap( temp );
+        }
+
+        //loop over all integration points
+        for ( unsigned int pnt = 0; pnt < this->IntegrationPointsNumber( ThisMethod ); ++pnt )
+        {
+            //defining single jacobian matrix
+            MatrixType jacobian = ZeroMatrix( 3, 1 );
+            //loop over all nodes
+
+            for ( unsigned int i = 0; i < this->PointsNumber(); ++i )
+            {
+                jacobian( 0, 0 ) += ( this->GetPoint( i ).X() ) * ( shape_functions_gradients[pnt]( i, 0 ) );
+                jacobian( 1, 0 ) += ( this->GetPoint( i ).Y() ) * ( shape_functions_gradients[pnt]( i, 0 ) );
+                jacobian( 2, 0 ) += ( this->GetPoint( i ).Z() ) * ( shape_functions_gradients[pnt]( i, 0 ) );
+            }
+
+            rResult[pnt] = jacobian;
+        } //end of loop over all integration points
+
+        return rResult;
+    }
+
+    /**
+     * Jacobians for given  method.
+     * This method calculates jacobians matrices in all integrations
+     * points of given integration method.
+     *
+     * @param ThisMethod integration method which jacobians has to
+     * be calculated in its integration points.
+     * @return JacobiansType a VectorType of jacobian
+     * matrices \f$ J_i \f$ where \f$ i=1,2,...,n \f$ is the
+     * integration point index of given integration method.
+     *
+     * @param DeltaPosition MatrixType with the nodes position increment which describes
+     * the configuration where the jacobian has to be calculated.     
+     *
+     * @see DeterminantOfJacobian
+     * @see InverseOfJacobian
+     */
+    virtual JacobiansType& Jacobian( JacobiansType& rResult,
+            IntegrationMethod ThisMethod,
+            MatrixType & DeltaPosition ) const
+    {
+        //getting derivatives of shape functions
+        ShapeFunctionsGradientsType shape_functions_gradients =
+        CalculateShapeFunctionsIntegrationPointsLocalGradients( ThisMethod );
+        //getting values of shape functions
+        MatrixType shape_functions_values =
+        CalculateShapeFunctionsIntegrationPointsValues( ThisMethod );
+
+        if ( rResult.size() != this->IntegrationPointsNumber( ThisMethod ) )
+        {
+            JacobiansType temp( this->IntegrationPointsNumber( ThisMethod ) );
+            rResult.swap( temp );
+        }
+
+        //loop over all integration points
+        for ( unsigned int pnt = 0; pnt < this->IntegrationPointsNumber( ThisMethod ); ++pnt )
+        {
+            //defining single jacobian matrix
+            MatrixType jacobian = ZeroMatrix( 3, 1 );
+            //loop over all nodes
+
+            for ( unsigned int i = 0; i < this->PointsNumber(); ++i )
+            {
+                jacobian( 0, 0 ) += ( this->GetPoint( i ).X() + DeltaPosition(i,0) ) * ( shape_functions_gradients[pnt]( i, 0 ) );
+                jacobian( 1, 0 ) += ( this->GetPoint( i ).Y() + DeltaPosition(i,1) ) * ( shape_functions_gradients[pnt]( i, 0 ) );
+                jacobian( 2, 0 ) += ( this->GetPoint( i ).Z() + DeltaPosition(i,2) ) * ( shape_functions_gradients[pnt]( i, 0 ) );
+            }
+
+            rResult[pnt] = jacobian;
+        } //end of loop over all integration points
+
+        return rResult;
+    }
+
+    /**
+     * Jacobian in specific integration point of given integration
+     * method. This method calculate jacobian matrix in given
+     * integration point of given integration method.
+     *
+     * @param IntegrationPointIndex index of integration point which jacobians has to
+     * be calculated in it.
+     * @param ThisMethod integration method which jacobians has to
+     * be calculated in its integration points.
+     * @return MatrixType(double) Jacobian matrix \f$ J_i \f$ where \f$
+     * i \f$ is the given integration point index of given
+     * integration method.
+     * @see DeterminantOfJacobian
+     * @see InverseOfJacobian
+     */
+    virtual MatrixType& Jacobian( MatrixType& rResult,
+            IndexType IntegrationPointIndex,
+            IntegrationMethod ThisMethod ) const
+    {
+        //setting up size of jacobian matrix
+        rResult.resize( 3, 1 );
+        //derivatives of shape functions
+        ShapeFunctionsGradientsType shape_functions_gradients =
+        CalculateShapeFunctionsIntegrationPointsLocalGradients( ThisMethod );
+        MatrixType ShapeFunctionsGradientInIntegrationPoint =
+        shape_functions_gradients( IntegrationPointIndex );
+        //values of shape functions in integration points
+        vector<double> ShapeFunctionValuesInIntegrationPoint = ZeroVector( 3 );
+        ShapeFunctionValuesInIntegrationPoint = row( CalculateShapeFunctionsIntegrationPointsValues( ThisMethod ),
+                IntegrationPointIndex );
+
+        //Elements of jacobian matrix (e.g. J(1,1) = dX1/dXi1)
+        double j0 = 0.0;
+        double j1 = 0.0;
+        double j2 = 0.0;
+        //loop over all nodes
+        for ( unsigned int i = 0; i < this->PointsNumber(); ++i )
+        {
+            j0 += ( this->GetPoint( i ).X() ) * ( ShapeFunctionsGradientInIntegrationPoint( i, 0 ) );
+            j1 += ( this->GetPoint( i ).Y() ) * ( ShapeFunctionsGradientInIntegrationPoint( i, 0 ) );
+            j2 += ( this->GetPoint( i ).Z() ) * ( ShapeFunctionsGradientInIntegrationPoint( i, 0 ) );
+        }
+
+        rResult( 0, 0 ) = j0;
+        rResult( 1, 0 ) = j1;
+        rResult( 2, 0 ) = j2;
+        
+        return rResult;
+    }
+
+    /**
+     * Jacobian in given point. This method calculate jacobian
+     * matrix in given point.
+     *
+     * @param rPoint point which jacobians has to
+     * be calculated in it.
+     *
+     * @return MatrixType of double which is jacobian matrix \f$ J \f$ in given point.
+     *
+     * @see DeterminantOfJacobian
+     * @see InverseOfJacobian
+     */
+    virtual MatrixType& Jacobian( MatrixType& rResult, const CoordinatesArrayType& rPoint ) const
+    {
+        //setting up size of jacobian matrix
+        rResult.resize( 3, 1 );
+        //derivatives of shape functions
+        MatrixType shape_functions_gradients;
+        shape_functions_gradients = ShapeFunctionsLocalGradients( shape_functions_gradients, rPoint );
+
+        //Elements of jacobian matrix (e.g. J(1,1) = dX1/dXi1)
+        double j0 = 0.0;
+        double j1 = 0.0;
+        double j2 = 0.0;
+        //loop over all nodes
+        for ( unsigned int i = 0; i < this->PointsNumber(); ++i )
+        {
+            j0 += ( this->GetPoint( i ).X() ) * ( shape_functions_gradients( i, 0 ) );
+            j1 += ( this->GetPoint( i ).Y() ) * ( shape_functions_gradients( i, 0 ) );
+            j2 += ( this->GetPoint( i ).Z() ) * ( shape_functions_gradients( i, 0 ) );
+        }
+
+        rResult( 0, 0 ) = j0;
+        rResult( 1, 0 ) = j1;
+        rResult( 2, 0 ) = j2;
+        
+        return rResult;
+    }
+
+    /**
+     * Determinant of jacobians for given integration method.
+     * This method calculate determinant of jacobian in all
+     * integrations points of given integration method.
+     *
+     * @return VectorType of double which is vector of determinants of
+     * jacobians \f$ |J|_i \f$ where \f$ i=1,2,...,n \f$ is the
+     * integration point index of given integration method.
+     *
+     * @see Jacobian
+     * @see InverseOfJacobian
+     */
+    virtual VectorType& DeterminantOfJacobian( VectorType& rResult,
+            IntegrationMethod ThisMethod ) const
+    {
+        KRATOS_THROW_ERROR( std::logic_error, "Jacobian is not square" , "" );
+        return rResult;
+    }
+
+    /**
+     * Determinant of jacobian in specific integration point of
+     * given integration method. This method calculate determinant
+     * of jacobian in given integration point of given integration
+     * method.
+     *
+     * @param IntegrationPointIndex index of integration point which
+     * jacobians has to be calculated in it.
+     *
+     * @param IntegrationPointIndex index of integration point
+     * which determinant of jacobians has to be calculated in it.
+     *
+     * @return Determinamt of jacobian matrix \f$ |J|_i \f$ where \f$
+     * i \f$ is the given integration point index of given
+     * integration method.
+     *
+     * @see Jacobian
+     * @see InverseOfJacobian
+     */
+    virtual double DeterminantOfJacobian( IndexType IntegrationPointIndex,
+            IntegrationMethod ThisMethod ) const
+    {
+        KRATOS_THROW_ERROR( std::logic_error, "Jacobian is not square" , "" );
+        return 0.0;
+    }
+
+    /**
+     * Determinant of jacobian in given point.
+     * This method calculate determinant of jacobian
+     * matrix in given point.
+     *
+     * @param rPoint point which determinant of jacobians has to
+     * be calculated in it.
+     * @return Determinamt of jacobian matrix \f$ |J| \f$ in given
+     * point.
+     *
+     * @see DeterminantOfJacobian
+     * @see InverseOfJacobian
+     *
+     * KLUDGE: PointType needed for proper functionality
+     * KLUDGE: works only with explicitly generated MatrixType object
+     */
+    virtual double DeterminantOfJacobian( const CoordinatesArrayType& rPoint ) const
+    {
+        KRATOS_THROW_ERROR( std::logic_error, "Jacobian is not square" , "" );
+        return 0.0;
+    }
+
+    /**
+     * Inverse of jacobians for given integration method.
+     * This method calculate inverse of jacobians matrices in all
+     * integrations points of given integration method.
+     *
+     * @param ThisMethod integration method which inverse of jacobians has to
+     * be calculated in its integration points.
+     * @return Inverse of jacobian
+     * matrices \f$ J^{-1}_i \f$ where \f$ i=1,2,...,n \f$ is the integration
+     * point index of given integration method.
+     *
+     * @see Jacobian
+     * @see DeterminantOfJacobian
+     *
+     * KLUDGE: works only with explicitly generated MatrixType object
+     */
+    virtual JacobiansType& InverseOfJacobian( JacobiansType& rResult,
+            IntegrationMethod ThisMethod ) const
+    {
+        KRATOS_THROW_ERROR( std::logic_error, "Jacobian is not square" , "" );
+        return rResult;
+    }
+
+    /**
+     * Inverse of jacobian in specific integration point of given integration
+     * method.
+     * This method calculate Inverse of jacobian matrix in given
+     * integration point of given integration method.
+     *
+     * @param IntegrationPointIndex index of integration point which
+     * inverse of jacobians has to be calculated in it.
+     *
+     * @param ThisMethod integration method which inverse of jacobians has to
+     * be calculated in its integration points.
+     *
+     * @return Inverse of jacobian matrix \f$ J^{-1}_i \f$ where \f$
+     * i \f$ is the given integration point index of given
+     * integration method.
+     *
+     * @see Jacobian
+     * @see DeterminantOfJacobian
+     *
+     * KLUDGE: works only with explicitly generated MatrixType object
+     */
+    virtual MatrixType& InverseOfJacobian( MatrixType& rResult,
+            IndexType IntegrationPointIndex,
+            IntegrationMethod ThisMethod ) const
+    {
+        KRATOS_THROW_ERROR( std::logic_error, "Jacobian is not square" , "" );
+        return rResult;
+    }
+
+    /**
+     * Inverse of jacobian in given point.
+     * This method calculate inverse of jacobian matrix in given point.
+     *
+     * @param rPoint point which inverse of jacobians has to
+     * be calculated in it.
+     * @return Inverse of jacobian matrix \f$ J^{-1} \f$ in given point.
+     *
+     * @see DeterminantOfJacobian
+     * @see InverseOfJacobian
+     *
+     * KLUDGE: works only with explicitly generated MatrixType object
+     */
+    virtual MatrixType& InverseOfJacobian( MatrixType& rResult, const CoordinatesArrayType& rPoint ) const
+    {
+        KRATOS_THROW_ERROR( std::logic_error, "Jacobian is not square" , "" );
+        return rResult;
+    }
+
+    /**
+     * Shape Function
+     */
+
+    /**
+     * Calculates the value of a given shape function at a given point.
+     *
+     * @param ShapeFunctionIndex The number of the desired shape function
+     * @param rPoint the given point in local coordinates at which the
+     * value of the shape function is calculated
+     *
+     * @return the value of the shape function at the given point
+     */
+    virtual double ShapeFunctionValue( IndexType ShapeFunctionIndex,
+            const CoordinatesArrayType& rPoint ) const
+    {
+        //compute all Bezier shape functions & derivatives at rPoint
+        VectorType bezier_functions_values(mOrder + 1);
+        BezierUtils::bernstein(bezier_functions_values, mOrder, rPoint[0]);
+        
+        //compute the Bezier weight
+        VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
+        double denom = inner_prod(bezier_functions_values, bezier_weights);
+        
+        //compute the shape function values
+        VectorType shape_functions_values(mNumber);
+        noalias( shape_functions_values ) = prod(mExtractionOperator, bezier_functions_values);
+        
+        return shape_functions_values(ShapeFunctionIndex) *
+                    mCtrlWeights(ShapeFunctionIndex) / denom;
+    }
+    
+    /**
+     * Calculates the value of all shape functions at a given point.
+     *
+     * @param ShapeFunctionIndex The number of the desired shape function
+     * @param rPoint the given point in local coordinates at which the
+     * value of the shape function is calculated
+     */
+    virtual VectorType& ShapeFunctionValues( VectorType& rResults,
+            const CoordinatesArrayType& rPoint ) const
+    {
+        //compute all Bezier shape functions & derivatives at rPoint
+        VectorType bezier_functions_values(mOrder + 1);
+        BezierUtils::bernstein(bezier_functions_values, mOrder, rPoint[0]);
+        
+        //compute the Bezier weight
+        VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
+        double denom = inner_prod(bezier_functions_values, bezier_weights);
+        
+        //compute the shape function values
+        rResults.resize(mNumber);
+        noalias( rResults ) = prod(mExtractionOperator, bezier_functions_values);
+        
+        for(unsigned int i = 0; i < mNumber; ++i)
+            rResults(i) *= (mCtrlWeights(i) / denom);
+        
+        return rResults;
+    }
+
+    /**
+     * Calculates the local gradients at a given point
+     */
+    virtual MatrixType& ShapeFunctionsLocalGradients( MatrixType& rResult,
+            const CoordinatesArrayType& rPoint ) const
+    {
+        //compute all Bezier shape functions & derivatives at rPoint
+        VectorType bezier_functions_values(mOrder + 1);
+        VectorType bezier_functions_derivatives(mOrder + 1);
+        BezierUtils::bernstein(bezier_functions_values, bezier_functions_derivatives, mOrder, rPoint[0]);
+        
+        //compute the Bezier weight
+        VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
+        double denom = inner_prod(bezier_functions_values, bezier_weights);
+        
+        //compute the shape function values
+        VectorType shape_functions_values = prod(mExtractionOperator, bezier_functions_values);
+        for(int i = 0; i < mNumber; ++i)
+            shape_functions_values(i) *= (mCtrlWeights(i) / denom);
+        
+        //compute the shape function local gradients
+        rResult.resize(mNumber, 1);
+        double tmp = inner_prod(bezier_functions_derivatives, bezier_weights);
+        VectorType tmp_gradients =
+            prod(
+                mExtractionOperator,
+                    (1 / denom) * bezier_functions_derivatives -
+                        (tmp / pow(denom, 2)) * bezier_functions_values
+            );
+        for(int i = 0; i < mNumber; ++i)
+            rResult(i, 0) = tmp_gradients(i) * mCtrlWeights(i);
+
+        return rResult;
+    }
+
+    void ShapeFunctionsValuesAndLocalGradients( VectorType& shape_functions_values,
+            MatrixType& shape_functions_local_gradients, const CoordinatesArrayType& rPoint ) const
+    {
+        //compute all Bezier shape functions & derivatives at rPoint
+        VectorType bezier_functions_values(mOrder + 1);
+        VectorType bezier_functions_derivatives(mOrder + 1);
+        BezierUtils::bernstein(bezier_functions_values, bezier_functions_derivatives, mOrder, rPoint[0]);
+        
+        //compute the Bezier weight
+        VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
+        double denom = inner_prod(bezier_functions_values, bezier_weights);
+        
+        //compute the shape function values
+        shape_functions_values.resize(mNumber);
+        noalias( shape_functions_values ) = prod(mExtractionOperator, bezier_functions_values);
+        for(int i = 0; i < mNumber; ++i)
+            shape_functions_values(i) *= (mCtrlWeights(i) / denom);
+        
+        //compute the shape function local gradients
+        shape_functions_local_gradients.resize(mNumber, 1);
+        double tmp = inner_prod(bezier_functions_derivatives, bezier_weights);
+        VectorType tmp_gradients =
+            prod(
+                mExtractionOperator,
+                    (1 / denom) * bezier_functions_derivatives -
+                        (tmp / pow(denom, 2)) * bezier_functions_values
+            );
+        for(int i = 0; i < mNumber; ++i)
+            shape_functions_local_gradients(i, 0) = tmp_gradients(i) * mCtrlWeights(i);
+    }
+
+    /**
+     * Calculates the Gradients of the shape functions.
+     * Calculates the gradients of the shape functions with regard to the global
+     * coordinates in all
+     * integration points (\f$ \frac{\partial N^i}{\partial X_j} \f$)
+     *
+     * @param rResult a container which takes the calculated gradients
+     * @param ThisMethod the given IntegrationMethod
+     * @return the gradients of all shape functions with regard to the global coordinates
+     *
+     * KLUDGE: method call only works with explicit JacobiansType rather than creating
+     * JacobiansType within argument list
+     */
+    virtual ShapeFunctionsGradientsType& ShapeFunctionsIntegrationPointsGradients(
+            ShapeFunctionsGradientsType& rResult,
+            IntegrationMethod ThisMethod ) const
+    {
+        KRATOS_THROW_ERROR( std::logic_error, "This method is not implemented." , __FUNCTION__);
+
+        return rResult;
+    }
+
+    /**
+     * Input and output
+     */
+    /**
+     * Turn back information as a string.
+     *
+     * @return String contains information about this geometry.
+     * @see PrintData()
+     * @see PrintInfo()
+     */
+    virtual std::string Info() const
+    {
+        return "1 dimensional Bezier extraction from NURBS curve in 3D space";
+    }
+
+    /**
+     * Print information about this object.
+     *
+     * @param rOStream Stream to print into it.
+     * @see PrintData()
+     * @see Info()
+     */
+    virtual void PrintInfo( std::ostream& rOStream ) const
+    {
+        rOStream << Info();
+    }
+
+    /**
+     * Print geometry's data into given stream.
+     * Prints it's points by the order they stored in the geometry
+     * and then center point of geometry.
+     *
+     * @param rOStream Stream to print into it.
+     * @see PrintInfo()
+     * @see Info()
+     */
+    virtual void PrintData( std::ostream& rOStream ) const
+    {
+        BaseType::PrintData( rOStream );
+        std::cout << std::endl;
+        MatrixType jacobian;
+        Jacobian( jacobian, PointType() );
+        rOStream << "    Jacobian in the origin\t : " << jacobian;
+    }
+
+    /**
+     * TO BE CALLED BY ELEMENT
+     */
+    virtual void GenerateGeometryData(
+        ValuesContainerType& Knots1, //not used
+        ValuesContainerType& Knots2, //not used
+        ValuesContainerType& Knots3, //not used
+        ValuesContainerType& Weights,
+        MatrixType& ExtractionOperator,
+        int Degree1,
+        int Degree2, //not used
+        int Degree3, //not used
+        int NumberOfIntegrationMethod
+    )
+    {
+        mCtrlWeights = Weights;
+        mOrder = Degree1;
+        mNumber = mCtrlWeights.size();
+        
+        // select the type of extraction operator to save in memory
+        if(ExtractionOperator.size1() == 2 && ExtractionOperator.size2() != 2)
+        // extraction operator is stored as compressed matrix
+        {
+            unsigned int size_ex_n = (unsigned int)(ExtractionOperator(0, 0) - 1);
+            unsigned int size_ex_nz = ExtractionOperator.size2() - 1;
+            if( ( (double)(size_ex_nz) ) / (size_ex_n * size_ex_n) < 0.2 )
+            {
+                mExtractionOperator = IsogeometricMathUtils::MCSR2CSR(ExtractionOperator);
+            }
+            else
+                mExtractionOperator = IsogeometricMathUtils::MCSR2MAT(ExtractionOperator);
+        }
+        else if((ExtractionOperator.size1() != 2) && (ExtractionOperator.size1() == ExtractionOperator.size2()))
+        // extraction operator is stored as full matrix
+            mExtractionOperator = ExtractionOperator;
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "Invalid extraction operator", __FUNCTION__)
+        
+
+        // size checking
+        if(mNumber != this->size())
+        {
+            KRATOS_THROW_ERROR(std::logic_error, "The parametric parameters is not compatible, knots.length != n+p+1.", __FUNCTION__)
+        }
+
+        //TODO: calculate everything related to geometry data here
+        //generate all integration points
+        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(NumberOfIntegrationMethod);
+
+        //generate all shape function values and derivatives
+        ShapeFunctionsValuesContainerType shape_functions_values;
+        ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
+
+        for (unsigned int i = 0; i < NumberOfIntegrationMethod; ++i)
+        {
+            CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients
+            (
+                shape_functions_values[i],
+                shape_functions_local_gradients[i],
+                all_integration_points[i]
+            );
+        }
+
+        GeometryData::Pointer pNewGeometryData = GeometryData::Pointer(
+            new GeometryData(
+                3,  //ThisDimension
+                3,  //ThisWorkingSpaceDimension
+                1,  //ThisLocalSpaceDimension
+                GeometryData::GI_GAUSS_2,           //ThisDefaultMethod
+                all_integration_points,             //ThisIntegrationPoints
+                shape_functions_values,             //ThisShapeFunctionsValues
+                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+            )
+        );
+
+        mpGeometryData.swap(pNewGeometryData);
+        BaseType::mpGeometryData = &(*mpGeometryData);
+    }
+
+    virtual void AssignGeometryData
+    (
+        ValuesContainerType& Knots1,
+        ValuesContainerType& Knots2,
+        ValuesContainerType& Knots3,
+        ValuesContainerType& Weights,
+        MatrixType& ExtractionOperator,
+        int Degree1,
+        int Degree2,
+        int Degree3,
+        int NumberOfIntegrationMethod
+    )
+    {
+        mCtrlWeights = Weights;
+        mOrder = Degree1;
+        mNumber = mOrder + 1;
+        mExtractionOperator = ExtractionOperator;
+
+        // size checking
+        if(mExtractionOperator.size1() != this->PointsNumber())
+            KRATOS_THROW_ERROR(std::logic_error, "The number of row of extraction operator must be equal to number of nodes", __FUNCTION__)
+        if(mExtractionOperator.size2() != (mOrder + 1))
+            KRATOS_THROW_ERROR(std::logic_error, "The number of column of extraction operator must be equal to (p_u+1)", __FUNCTION__)
+        
+        // find the existing integration rule or create new one if not existed
+        BezierUtils::RegisterIntegrationRule<2, 2, 2>(NumberOfIntegrationMethod, Degree1);
+        
+        // get the geometry_data according to integration rule. Note that this is a static geometry_data of a reference Bezier element, not the real Bezier element.
+        mpGeometryData = BezierUtils::RetrieveIntegrationRule<2, 2, 2>(NumberOfIntegrationMethod, Degree1);
+        BaseType::mpGeometryData = &(*mpGeometryData);
+    }
+
+protected:
+
+    /**
+     * there are no protected class members
+     */
+
+private:
+
+    /**
+     * Member Variables
+     */
+
+    GeometryData::Pointer mpGeometryData;
+
+    MatrixType mExtractionOperator;
+
+    ValuesContainerType mCtrlWeights;//weight of control points
+
+    int mOrder;//order of the curve
+
+    int mNumber;//number of shape functions define the curve
+
+    ///@}
+    ///@name Serialization
+    ///@{
+
+    friend class Serializer;
+
+    virtual void save( Serializer& rSerializer ) const
+    {
+        KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, BaseType );
+    }
+
+    virtual void load( Serializer& rSerializer )
+    {
+        KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, BaseType );
+    }
+
+    /**
+     * Private Operations
+     */
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // method to build GeometryData
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Calculates the values of all shape function in all integration points.
+     * Integration points are expected to be given in local coordinates
+     *
+     * @param ThisMethod the current integration method
+     * @return the matrix of values of every shape function in each integration point
+     *
+     * KLUDGE: values are hard-coded!
+     */
+    MatrixType CalculateShapeFunctionsIntegrationPointsValues(IntegrationMethod ThisMethod ) const
+    {
+        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod);
+        const IntegrationPointsArrayType& integration_points = all_integration_points[ThisMethod];
+        //number of integration points
+        const int integration_points_number = integration_points.size();
+        //setting up return matrix
+        MatrixType shape_functions_values( integration_points_number, mNumber );
+        //loop over all integration points
+
+        //TODO: this can be optimized
+        for(unsigned int pnt = 0; pnt < integration_points_number; ++pnt)
+        {
+            for(unsigned int node = 0; node < mNumber; node++)
+            {
+                shape_functions_values( pnt, node ) = ShapeFunctionValue(node, integration_points[pnt]);
+            }
+        }
+
+        return shape_functions_values;
+    }
+
+    /**
+     * Calculates the local gradients of all shape functions in all integration points.
+     * Integration points are expected to be given in local coordinates
+     *
+     * @param ThisMethod the current integration method
+     * @return the vector of the gradients of all shape functions
+     * in each integration point
+     *
+     * KLUGDE: gradients are hard-coded!
+     */
+    ShapeFunctionsGradientsType
+    CalculateShapeFunctionsIntegrationPointsLocalGradients(IntegrationMethod ThisMethod ) const
+    {
+        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod);
+        const IntegrationPointsArrayType& IntegrationPoints = all_integration_points[ThisMethod];
+        ShapeFunctionsGradientsType DN_De( IntegrationPoints.size() );
+        std::fill( DN_De.begin(), DN_De.end(), MatrixType( mNumber, 1 ) );
+
+        for ( unsigned int it_gp = 0; it_gp < IntegrationPoints.size(); it_gp++ )
+        {
+            ShapeFunctionsLocalGradients(DN_De[it_gp], IntegrationPoints[it_gp]);
+        }
+
+        return DN_De;
+    }
+
+    /**
+     * TODO
+     */
+    virtual void CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients
+    (
+        MatrixType& shape_functions_values,
+        ShapeFunctionsGradientsType& shape_functions_local_gradients,
+        const IntegrationPointsArrayType& integration_points
+    ) const
+    {
+        shape_functions_local_gradients.resize(integration_points.size());
+        std::fill(shape_functions_local_gradients.begin(), shape_functions_local_gradients.end(), MatrixType());
+        shape_functions_values.resize(integration_points.size(), mNumber);
+
+        for (unsigned int it_gp = 0; it_gp < integration_points.size(); ++it_gp)
+        {
+            VectorType temp_values;
+            ShapeFunctionsValuesAndLocalGradients(
+                temp_values,
+                shape_functions_local_gradients[it_gp],
+                integration_points[it_gp]
+            );
+            for(unsigned int node = 0; node < mNumber; ++node)
+            {
+                shape_functions_values( it_gp, node ) = temp_values(node);
+            }
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // end of method to build to GeometryData
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // method to construct GeometryData
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    virtual IntegrationPointsContainerType AllIntegrationPoints(int NumberOfIntegrationMethod) const
+    {
+        //generate integration points for GI_GAUSS_1 rule. Note that GI_GAUSS_1 is the default rule which take the minimum order of integration in each direction
+        std::vector<IntegrationPointsArrayType> GaussRule;
+
+        //define the base integration rule for 1st parametric dimension. This ensures that the number of integration points in each direction equal to order + 1
+        std::vector<IntegrationPointsArrayType> BaseRule;
+        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints1, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
+        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints2, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
+        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints3, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
+        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints4, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
+        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints5, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
+        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints6, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
+        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints7, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
+        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints8, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
+        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints9, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
+        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints10, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
+        
+        ///////////////////////////////////////////////////////////////
+        // Remarks: this current implementation supports integration with order up to 9
+        IndexType k, j1, offset1;
+
+        //TODO: parallelize this process
+        for (k = 0; k < NumberOfIntegrationMethod; ++k)
+        {
+            offset1 = k + mOrder; // this allows for one more order than the order of the curve
+            
+            if(offset1 >= BaseRule.size())
+                KRATOS_THROW_ERROR(std::logic_error, "There are not enough Gauss point to support for integration", __FUNCTION__)
+            
+            IntegrationPointsArrayType TempGaussRule;
+            
+            for(j1 = 0; j1 < BaseRule[offset1].size(); ++j1)
+            {
+                IntegrationPointType& temp1 = BaseRule[offset1][j1];
+
+                IntegrationPointType temp;
+
+                temp.X() = (temp1.X() + 1) / 2;
+                temp.Weight() = 0.5 * temp1.Weight();
+
+                TempGaussRule.push_back(temp);
+            }
+
+            GaussRule.push_back(TempGaussRule);
+        }
+
+        KRATOS_WATCH(NumberOfIntegrationMethod)
+        
+        IntegrationPointsContainerType integration_points;
+        for (k = 0; k < NumberOfIntegrationMethod; ++k)
+        {
+            integration_points[k] = GaussRule[k];
+            
+//            std::cout << "GaussRule[" << k << "]: " << std::endl;
+//            for(int i = 0; i < GaussRule[k].size(); ++i)
+//            {
+//                std::cout << " " << GaussRule[k][i] << std::endl;
+//            }
+//            std::cout << std::endl;
+        }
+
+        return integration_points;
+    }
+
+    //This 2 methods works but invoking repetitive calculation of shape functions. This can be optimized by merging these functions in one call. These functions are kept as reference but never be called to compute geometry_data
+    ShapeFunctionsValuesContainerType AllShapeFunctionsValues()
+    {
+        ShapeFunctionsValuesContainerType shape_functions_values =
+        {
+            {
+                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_1 ),
+                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_2 ),
+                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_3 ),
+                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_4 ),
+                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_5 )
+            }
+        };
+        return shape_functions_values;
+    }
+
+    ShapeFunctionsLocalGradientsContainerType AllShapeFunctionsLocalGradients()
+    {
+        ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients =
+        {
+            {
+                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_1 ),
+                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_2 ),
+                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_3 ),
+                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_4 ),
+                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_5 )
+            }
+        };
+        return shape_functions_local_gradients;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // end of method to construct GeometryData
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Private Friends
+     */
+
+    template<class TOtherPointType> friend class Geo1dBezier;
+
+    /**
+     * Un accessible methods
+     */
+
+};    // Class Geo1dBezier
+
+/**
+ * Input and output
+ */
+
+/**
+ * input stream function
+ */
+template<class TPointType> inline std::istream& operator >>(
+        std::istream& rIStream, Geo1dBezier<TPointType>& rThis);
+
+/**
+ * output stream function
+ */
+template<class TPointType> inline std::ostream& operator <<(
+        std::ostream& rOStream, const Geo1dBezier<TPointType>& rThis)
+{
+    rThis.PrintInfo(rOStream);
+    rOStream << std::endl;
+    rThis.PrintData(rOStream);
+
+    return rOStream;
+}
+
+}    // namespace Kratos.
+
+#endif
+
