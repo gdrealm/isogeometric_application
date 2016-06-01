@@ -314,7 +314,7 @@ namespace Kratos
                                                 p_temp_info->p1,
                                                 p_temp_info->p2,
                                                 p_temp_info->p3,
-                                                2);
+                                                3);//2);
 
             rThisElements.push_back(r_clone_element.Create(ReorderedElementId(id), p_temp_geometry, p_temp_properties));
             ++number_of_read_elements;
@@ -407,7 +407,7 @@ namespace Kratos
                                                 p_temp_info->p1,
                                                 p_temp_info->p2,
                                                 p_temp_info->p3,
-                                                2);
+                                                3);//2);
 
             rThisConditions.push_back(r_clone_condition.Create(ReorderedConditionId(id), p_temp_geometry, p_temp_properties));
             ++number_of_read_conditions;

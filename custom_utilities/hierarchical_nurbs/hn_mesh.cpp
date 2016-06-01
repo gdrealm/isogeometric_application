@@ -237,7 +237,7 @@ namespace Kratos
             std::getline(infile, line);
             boost::trim_if(line, boost::is_any_of("\t ")); // ignore trailing spaces
             boost::split(words, line, boost::is_any_of(" \t"), boost::token_compress_on);
-            
+
             if(words.size() != 0)
             {
                 if(words[0] == std::string("#") || words[0][0] == '#')
@@ -310,7 +310,7 @@ namespace Kratos
                         else
                             KRATOS_THROW_ERROR(std::logic_error, "Wrong knot dimension index. Something must be wrong", "")
                     }
-                    
+
                     ++dim_index;
                     if(dim_index == mDim)
                     {
@@ -1042,6 +1042,11 @@ namespace Kratos
         }
     }
 
+
+    void HnMesh::BuildBoundaryMesh(HnMesh& rMesh, std::string boundary_mesh_type) const
+    {
+       // TODO 
+    }
 
 
     void HnMesh::ExportCellTopology(std::string fn, bool cell_numbering) const

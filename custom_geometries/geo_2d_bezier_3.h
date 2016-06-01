@@ -61,6 +61,8 @@
 #include "custom_geometries/isogeometric_geometry.h"
 #include "integration/quadrature.h"
 #include "custom_utilities/bspline_utils.h"
+#include "custom_utilities/bezier_utils.h"
+#include "custom_geometries/geo_2d_bezier.h"
 //#include "integration/quadrature.h"
 //#include "integration/line_gauss_legendre_integration_points.h"
 
@@ -71,10 +73,10 @@
 
 namespace Kratos
 {
-/**
- * A geometry representing NURBS surface
- */
 
+/**
+ * A geometry representing Bezier decomposition surface in 3D
+ */
 template<class TPointType>
 class Geo2dBezier3 : public Geo2dBezier<TPointType>
 {

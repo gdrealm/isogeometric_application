@@ -402,7 +402,6 @@ public:
         KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", *this)
     }
 
-
     /**
      * Subroutine to pass in the data to the Bezier element. This subroutine shall be called from the element/condition
      */
@@ -422,7 +421,6 @@ public:
         KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", *this)
     }
 
-        
     /**
      * TODO to be removed
      */
@@ -474,6 +472,12 @@ public:
         KRATOS_THROW_ERROR( std::logic_error, "This function is not available for isogeometric geometry" , "" );
         return rResult;
     }
+
+    virtual void ExtractLocalCoordinates(std::vector<PointType>& rPoints)
+    {
+        KRATOS_THROW_ERROR( std::logic_error, "Calling base class function" , __FUNCTION__ );
+    }
+
 
     /******************************************************
         OVERRIDE FROM GEOMETRY

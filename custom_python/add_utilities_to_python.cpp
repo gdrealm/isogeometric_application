@@ -58,11 +58,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "custom_utilities/bspline_utils.h"
 #include "custom_utilities/isogeometric_classical_post_utility.h"
 #include "custom_utilities/isogeometric_post_utility.h"
-#include "custom_utilities/isogeometric_posteriori_estimator.h"
 #include "custom_utilities/nurbs_test_utils.h"
 #include "custom_utilities/bezier_test_utils.h"
 #include "custom_utilities/isogeometric_merge_utility.h"
-#include "custom_utilities/isogeometric_contact_utility.h"
 #include "custom_utilities/tsplines/tsmesh_2d.h"
 #include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
 #include "custom_utilities/domain_manager.h"
@@ -276,7 +274,7 @@ void IsogeometricApplication_AddCustomUtilitiesToPython()
     .def("GlobalNodalRenumbering", &IsogeometricClassicalPostUtility::GlobalNodalRenumbering)
     ;
 
-class_<IsogeometricPostUtility, IsogeometricPostUtility::Pointer, boost::noncopyable>("IsogeometricPostUtility", init<>())
+    class_<IsogeometricPostUtility, IsogeometricPostUtility::Pointer, boost::noncopyable>("IsogeometricPostUtility", init<>())
     .def("TransferNodalResults", &IsogeometricPostUtility::TransferNodalResults<Variable<double> >)
     .def("TransferNodalResults", &IsogeometricPostUtility::TransferNodalResults<Variable<Vector> >)
     .def("TransferNodalResults", &IsogeometricPostUtility::TransferNodalResults<Variable<array_1d<double, 3> > >)
@@ -323,22 +321,6 @@ class_<IsogeometricPostUtility, IsogeometricPostUtility::Pointer, boost::noncopy
     .def("DumpNodalVariablesList", &IsogeometricMergeUtility::DumpNodalVariablesList)
     ;
     
-    class_<IsogeometricContactUtility, IsogeometricContactUtility::Pointer, boost::noncopyable>
-    ("IsogeometricContactUtility", init<int>())
-//    .def("CalculateOnIntegrationPoints", &IsogeometricContactUtility::CalculateOnIntegrationPoints)
-//    .def("ComputeCOG", &IsogeometricContactUtility::ComputeCOG)
-    .def("SetUpContactConditions", &IsogeometricContactUtility::SetUpContactConditions)
-    .def("Update", &IsogeometricContactUtility::Update)
-    .def("IsConverged", &IsogeometricContactUtility::IsConverged)
-    .def("Clean", &IsogeometricContactUtility::Clean)
-    ;
-
-    class_<IsogeometricPosterioriEstimator, IsogeometricPosterioriEstimator::Pointer, boost::noncopyable>
-    ("IsogeometricPosterioriEstimator", init<>())
-    .def("ComputeSimplePosterioriError", &IsogeometricPosterioriEstimator::ComputeSimplePosterioriError)
-    .def("ComputeSimplePosterioriErrorOnNodes", &IsogeometricPosterioriEstimator::ComputeSimplePosterioriErrorOnNodes)
-    ;
-
     class_<TsMesh2D, TsMesh2D::Pointer, boost::noncopyable>
     ("TsMesh2D", init<>())
     .def("BeginConstruct", &TsMesh2D::BeginConstruct)

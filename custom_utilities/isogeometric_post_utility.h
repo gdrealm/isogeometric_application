@@ -29,11 +29,12 @@
 #include "includes/element.h"
 #include "includes/properties.h"
 #include "includes/ublas_interface.h"
+#include "includes/legacy_structural_app_vars.h"
 #include "spaces/ublas_space.h"
 #include "linear_solvers/linear_solver.h"
 #include "utilities/openmp_utils.h"
-#include "custom_elements/kinematic_linear_isogeometric.h"
-#include "isogeometric_application.h"
+#include "custom_geometries/isogeometric_geometry.h"
+#include "isogeometric_application/isogeometric_application.h"
 #include "utilities/auto_collapse_spatial_binning.h"
 
 // #define DEBUG_LEVEL1
@@ -150,7 +151,7 @@ public:
         typename TVariableType::Type Results;
         CoordinatesArrayType LocalPos;
         int ElementId;
-        
+
 //        #pragma omp parallel for
         //TODO: check this. This is not parallelized.
         for(typename NodesArrayType::ptr_iterator it = pTargetNodes.ptr_begin(); it != pTargetNodes.ptr_end(); ++it)
@@ -160,7 +161,7 @@ public:
             Results = CalculateOnPoint(rThisVariable, Results, pElements(ElementId), LocalPos);
             (*it)->GetSolutionStepValue(rThisVariable) = Results;
         }
-        
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "Transfer nodal point results for " << rThisVariable.Name() << " completed: " << end_compute - start_compute << " s" << std::endl;

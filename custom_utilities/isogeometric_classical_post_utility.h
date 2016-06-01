@@ -29,12 +29,13 @@
 #include "includes/element.h"
 #include "includes/properties.h"
 #include "includes/ublas_interface.h"
+#include "includes/deprecated_variables.h"
 #include "spaces/ublas_space.h"
 #include "linear_solvers/linear_solver.h"
 #include "utilities/openmp_utils.h"
-#include "custom_elements/kinematic_linear_isogeometric.h"
-#include "isogeometric_application.h"
 #include "utilities/auto_collapse_spatial_binning.h"
+#include "custom_geometries/isogeometric_geometry.h"
+#include "isogeometric_application.h"
 
 // #define DEBUG_LEVEL1
 //#define DEBUG_LEVEL2
@@ -1841,10 +1842,10 @@ private:
 
         unsigned int Dim = (*(ElementsArray.ptr_begin()))->GetGeometry().WorkingSpaceDimension();
         unsigned int VariableSize;
-        if(rThisVariable == STRESSES
-            || rThisVariable == PLASTIC_STRAIN_VECTOR
-            || rThisVariable == PRESTRESS
-            || rThisVariable == STRAIN
+        if(rThisVariable.Name() == std::string("STRESSES")
+            || rThisVariable.Name() == std::string("PLASTIC_STRAIN_VECTOR")
+            || rThisVariable.Name() == std::string("PRESTRESS")
+            || rThisVariable.Name() == std::string("STRAIN")
             // TODO: extend for more variables
         )
         {
@@ -2011,7 +2012,7 @@ private:
             it->GetSolutionStepValue(rThisVariable) = tmp;
         }
     }
-    
+
     ///@}
     ///@name Private  Access
     ///@{

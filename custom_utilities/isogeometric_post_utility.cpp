@@ -1,3 +1,4 @@
+#include "includes/deprecated_variables.h"
 #include "isogeometric_post_utility.h"
 
 namespace Kratos
@@ -215,10 +216,10 @@ namespace Kratos
 
         unsigned int Dim = (*(ElementsArray.ptr_begin()))->GetGeometry().WorkingSpaceDimension();
         unsigned int VariableSize;
-        bool is_allowed = (rThisVariable == STRESSES)
-                       || (rThisVariable == PLASTIC_STRAIN_VECTOR)
-                       || (rThisVariable == PRESTRESS)
-                       || (rThisVariable == STRAIN)
+        bool is_allowed = (rThisVariable.Name() == std::string("STRESSES"))
+                       || (rThisVariable.Name() == std::string("PLASTIC_STRAIN_VECTOR"))
+                       || (rThisVariable.Name() == std::string("PRESTRESS"))
+                       || (rThisVariable.Name() == std::string("STRAIN"))
             // TODO: extend for more variables
             ;
 
@@ -372,14 +373,14 @@ namespace Kratos
         // solve the system
         // solver must support the multisove method
         pSolver->Solve(M, g, b);
-        
+
         #ifdef DEBUG_MULTISOLVE
         KRATOS_WATCH(M)
         KRATOS_WATCH(g)
         KRATOS_WATCH(b)
         KRATOS_WATCH(*pSolver)
         #endif
-                
+
         // transfer the solution to the nodal variables
         Vector tmp(VariableSize);
         for(ModelPart::NodeIterator it = r_model_part.NodesBegin(); it != r_model_part.NodesEnd(); ++it)

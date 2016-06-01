@@ -70,10 +70,10 @@
 
 namespace Kratos
 {
-/**
- * A geometry representing NURBS curve
- */
 
+/**
+ * A geometry representing a NURBS patch in 3D
+ */
 template<class TPointType>
 class Geo3dNURBS: public IsogeometricGeometry<TPointType>
 {

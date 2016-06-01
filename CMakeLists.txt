@@ -75,18 +75,18 @@ set( KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/hierarchical_nurbs/hn_cell.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/hierarchical_nurbs/hn_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isogeometric_post_utility.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isogeometric_posteriori_estimator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_isogeometric.cpp
-#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_nurbs.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/total_lagrangian_isogeometric.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/unsaturated_soils_element_2phase_small_strain_isogeometric.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric_2d.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_load_isogeometric.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_pressure_isogeometric.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/master_contact_face_3D_isogeometric.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/slave_contact_face_3D_isogeometric.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/contact_link_3D_kinematic_linear_isogeometric.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isogeometric_posteriori_estimator.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_isogeometric.cpp
+##    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_nurbs.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/total_lagrangian_isogeometric.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/unsaturated_soils_element_2phase_small_strain_isogeometric.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric_2d.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_load_isogeometric.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_pressure_isogeometric.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/master_contact_face_3D_isogeometric.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/slave_contact_face_3D_isogeometric.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/contact_link_3D_kinematic_linear_isogeometric.cpp
 )
 
 ###############################################################
@@ -94,8 +94,7 @@ set( KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES
 add_library(KratosIsogeometricApplication SHARED ${KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES})
 
 target_link_libraries(KratosIsogeometricApplication KratosCore)
-target_link_libraries(KratosIsogeometricApplication KratosStructuralApplication)
-target_link_libraries(KratosIsogeometricApplication KratosPhaseFieldApplication)
+#target_link_libraries(KratosIsogeometricApplication KratosStructuralApplication)
 target_link_libraries(KratosIsogeometricApplication iga_tetgen150)
 if(${ISOGEOMETRIC_USE_HDF5} MATCHES TRUE)
     target_link_libraries(KratosIsogeometricApplication ${HDF5_LIBRARIES})

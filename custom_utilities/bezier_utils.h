@@ -442,7 +442,7 @@ public:
             //define the integration rule
             IntegrationPointsContainerType all_integration_points
                 = AllIntegrationPoints(NumberOfIntegrationMethod, Order);
-            
+
             ShapeFunctionsValuesContainerType shape_functions_values;
             ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
 
@@ -455,7 +455,7 @@ public:
                     all_integration_points[i]
                 );
             }
-            
+
             //create the geometry_data pointer
             GeometryData::Pointer pNewGeometryData = GeometryData::Pointer(
                 new GeometryData(
@@ -468,10 +468,10 @@ public:
                     shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
                 )
             );
-            
+
             //insert value to map
             mIntegrationMethods.insert(PairType(Key, pNewGeometryData));
-            
+
             std::cout << "Registerred BezierGeometryData " << Key << " successfully" << std::endl;
         }
     }

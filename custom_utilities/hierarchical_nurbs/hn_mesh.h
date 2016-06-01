@@ -222,6 +222,13 @@ public:
     void CheckNestedSpace();
 
     /**************************************************************************
+                            AUXILIARY SUBROUTINES
+    **************************************************************************/
+
+    /// Build the hierarchical boundary mesh
+    void BuildBoundaryMesh(HnMesh& rMesh, std::string boundary_mesh_type) const;
+
+    /**************************************************************************
                             MATLAB INTERFACE
     **************************************************************************/
 

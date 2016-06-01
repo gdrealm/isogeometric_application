@@ -23,31 +23,6 @@
 #include "includes/define.h"
 #include "includes/kratos_application.h"
 #include "includes/variables.h"
-#include "includes/deprecated_variables.h"
-#include "includes/legacy_structural_app_vars.h"
-#include "includes/element.h"
-#include "includes/condition.h"
-
-#include "custom_elements/kinematic_linear_nurbs.h"
-#include "custom_elements/kinematic_linear_isogeometric.h"
-#include "custom_elements/total_lagrangian_isogeometric.h"
-#include "custom_elements/unsaturated_soils_element_2phase_small_strain_isogeometric.h"
-#include "custom_conditions/line_force_isogeometric.h"
-#include "custom_conditions/line_force_isogeometric_2d.h"
-#include "custom_conditions/face_load_isogeometric.h"
-#include "custom_conditions/face_pressure_isogeometric.h"
-#include "custom_conditions/slave_contact_face_3D_isogeometric.h"
-#include "custom_conditions/master_contact_face_3D_isogeometric.h"
-#include "custom_geometries/geo_1d_nurbs.h"
-#include "custom_geometries/geo_2d_nurbs.h"
-#include "custom_geometries/geo_3d_nurbs.h"
-#include "custom_geometries/geo_1d_bezier.h"
-#include "custom_geometries/geo_2d_bezier.h"
-#include "custom_geometries/geo_2d_bezier_3.h"
-#include "custom_geometries/geo_3d_bezier.h"
-#include "structural_application/custom_elements/kinematic_linear.h"
-#include "structural_application/custom_elements/unsaturated_soils_element_2phase_small_strain.h"
-#include "phase_field_application/custom_elements/phase_field_fracture.h"
 
 namespace Kratos
 {
@@ -74,12 +49,9 @@ namespace Kratos
     KRATOS_DEFINE_VARIABLE( Vector, EXTRACTION_OPERATOR_CSR_ROWPTR )
     KRATOS_DEFINE_VARIABLE( Vector, EXTRACTION_OPERATOR_CSR_COLIND )
     KRATOS_DEFINE_VARIABLE( Vector, EXTRACTION_OPERATOR_CSR_VALUES )
-    
+
     KRATOS_DEFINE_3D_VARIABLE_WITH_COMPONENTS(LOCAL_COORDINATES)
 
-    KRATOS_DEFINE_VARIABLE( double, STABILISATION_FACTOR )
-    KRATOS_DEFINE_VARIABLE( double, SHEAR_MODULUS )
-    
 	///@} 
 	///@name Type Definitions
 	///@{ 
@@ -162,19 +134,19 @@ namespace Kratos
 		}
 
 		///// Print object's data.
-      virtual void PrintData(std::ostream& rOStream) const
-      {
-      	KRATOS_WATCH("in KratosIsogeometricApplication");
-      	KRATOS_WATCH(KratosComponents<VariableData>::GetComponents().size() );
-		rOStream << "Variables:" << std::endl;
-		KratosComponents<VariableData>().PrintData(rOStream);
-		rOStream << std::endl;
-		rOStream << "Elements:" << std::endl;
-		KratosComponents<Element>().PrintData(rOStream);
-		rOStream << std::endl;
-		rOStream << "Conditions:" << std::endl;
-		KratosComponents<Condition>().PrintData(rOStream);
-      }
+        virtual void PrintData(std::ostream& rOStream) const
+        {
+          	KRATOS_WATCH("in KratosIsogeometricApplication");
+          	KRATOS_WATCH(KratosComponents<VariableData>::GetComponents().size() );
+		    rOStream << "Variables:" << std::endl;
+		    KratosComponents<VariableData>().PrintData(rOStream);
+		    rOStream << std::endl;
+		    rOStream << "Elements:" << std::endl;
+		    KratosComponents<Element>().PrintData(rOStream);
+		    rOStream << std::endl;
+		    rOStream << "Conditions:" << std::endl;
+		    KratosComponents<Condition>().PrintData(rOStream);
+        }
 
 
 		///@}      
@@ -230,37 +202,6 @@ namespace Kratos
 		///@name Member Variables 
 		///@{ 
         
-//        const KinematicLinearNURBS mKinematicLinearGeo1dNURBS; //TODO: doesn't work, segmentation fault error
-//        const KinematicLinearNURBS mKinematicLinearGeo2dNURBS;
-//        const KinematicLinearNURBS mKinematicLinearGeo3dNURBS;
-        const KinematicLinearIsogeometric mKinematicLinearGeo1dNURBS;
-        const KinematicLinearIsogeometric mKinematicLinearGeo2dNURBS;
-        const KinematicLinearIsogeometric mKinematicLinearGeo3dNURBS;
-        const KinematicLinearIsogeometric mKinematicLinearGeo1dBezier;
-        const KinematicLinearIsogeometric mKinematicLinearGeo2dBezier;
-        const KinematicLinearIsogeometric mKinematicLinearGeo3dBezier;
-        const TotalLagrangianIsogeometric mTotalLagrangianGeo3dBezier;
-        const UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric mUnsaturatedSoilsElement_2phase_SmallStrain_Geo3dBezier;
-        
-        const LineForceIsogeometric mLineLoadNURBS;
-        const LineForceIsogeometric2D mLineLoadNURBS2D;
-        const LineForceIsogeometric mLineLoadBezier;
-        const LineForceIsogeometric2D mLineLoadBezier2D;
-
-        const FaceLoadIsogeometric mFaceLoadNURBS;
-        const FaceLoadIsogeometric mFaceLoadBezier;
-        const FacePressureIsogeometric mFacePressureNURBS;
-        const FacePressureIsogeometric mFacePressureBezier;
-        
-        const MasterContactFace3DIsogeometric mMasterContactFace3DBezier;
-        const SlaveContactFace3DIsogeometric mSlaveContactFace3DBezier;
-
-        const KinematicLinear mKinematicLinearBezier2D;
-        const KinematicLinear mKinematicLinearBezier3D;
-        const UnsaturatedSoilsElement_2phase_SmallStrain mUnsaturatedSoilsElement_2phase_SmallStrainBezier3D;
-
-        const PhaseFieldFracture mPhaseFieldFractureBezier2D;
-        const PhaseFieldFracture mPhaseFieldFractureBezier3D;
 
 		///@} 
 		///@name Private Operators

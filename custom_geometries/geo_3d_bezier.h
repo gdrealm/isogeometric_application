@@ -877,7 +877,32 @@ public:
                       "Calling base class ShapeFunctionsSecondDerivatives at" , *this );
         return rResult;
     }
-    
+
+    /**
+     * Compute the Bezier control points
+     */
+    virtual void ExtractLocalCoordinates(std::vector<PointType>& rPoints)
+    {
+        std::size_t number_of_points = this->PointsNumber();
+        std::size_t number_of_local_points = mExtractionOperator.size2();
+        if(rPoints.size() != number_of_local_points)
+            rPoints.resize(number_of_local_points);
+
+        // compute the Bezier weight
+        VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
+
+        // compute the Bezier control points
+        for(std::size_t i = 0; i < number_of_local_points; ++i)
+        {
+            noalias(rPoints[i]) = ZeroVector(3);
+            for(std::size_t j = 0; j < number_of_points; ++j)
+            {
+                noalias(rPoints[i]) += mExtractionOperator(j, i) * this->GetPoint(j) * mCtrlWeights[j] / bezier_weights[i];
+            }
+        }
+
+    }
+
     /**
      * Returns whether given arbitrary point is inside the Geometry
      */
@@ -959,7 +984,11 @@ public:
 
         // size checking
         if(mExtractionOperator.size1() != this->PointsNumber())
+        {
+            KRATOS_WATCH(this->PointsNumber())
+            KRATOS_WATCH(mExtractionOperator)
             KRATOS_THROW_ERROR(std::logic_error, "The number of row of extraction operator must be equal to number of nodes", __FUNCTION__)
+        }
         if(mExtractionOperator.size2() != (mOrder1 + 1) * (mOrder2 + 1) * (mOrder3 + 1))
         {
             KRATOS_WATCH(mExtractionOperator)

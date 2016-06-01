@@ -61,6 +61,7 @@
 #include "custom_geometries/isogeometric_geometry.h"
 #include "integration/quadrature.h"
 #include "custom_utilities/bspline_utils.h"
+#include "custom_utilities/bezier_utils.h"
 //#include "integration/quadrature.h"
 //#include "integration/line_gauss_legendre_integration_points.h"
 
