@@ -53,7 +53,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "custom_geometries/geo_2d_bezier_3.h"
 #include "custom_geometries/geo_3d_bezier.h"
 #include "custom_utilities/isogeometric_math_utils.h"
-
+#include "isogeometric_application.h"
 
 namespace Kratos
 {
@@ -306,6 +306,8 @@ namespace Kratos
                 p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo2dBezier3<NodeType>(temp_element_nodes));
 
             Vector dummy;
+            int max_integration_method = (*p_temp_properties)[NUM_IGA_INTEGRATION_METHOD];
+//            KRATOS_WATCH(max_integration_method)
             p_temp_geometry->AssignGeometryData(dummy,
                                                 dummy,
                                                 dummy,
@@ -314,7 +316,7 @@ namespace Kratos
                                                 p_temp_info->p1,
                                                 p_temp_info->p2,
                                                 p_temp_info->p3,
-                                                3);//2);
+                                                max_integration_method);
 
             rThisElements.push_back(r_clone_element.Create(ReorderedElementId(id), p_temp_geometry, p_temp_properties));
             ++number_of_read_elements;
@@ -399,6 +401,8 @@ namespace Kratos
                 p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo2dBezier3<NodeType>(temp_condition_nodes));
 
             Vector dummy;
+            int max_integration_method = (*p_temp_properties)[NUM_IGA_INTEGRATION_METHOD];
+            KRATOS_WATCH(max_integration_method)
             p_temp_geometry->AssignGeometryData(dummy,
                                                 dummy,
                                                 dummy,
@@ -407,7 +411,7 @@ namespace Kratos
                                                 p_temp_info->p1,
                                                 p_temp_info->p2,
                                                 p_temp_info->p3,
-                                                3);//2);
+                                                max_integration_method);
 
             rThisConditions.push_back(r_clone_condition.Create(ReorderedConditionId(id), p_temp_geometry, p_temp_properties));
             ++number_of_read_conditions;

@@ -268,16 +268,6 @@ public:
     virtual ~Geo2dBezier()
     {}
 
-    GeometryData::KratosGeometryFamily GetGeometryFamily()
-    {
-        return GeometryData::Kratos_generic_family;
-    }
-
-    GeometryData::KratosGeometryType GetGeometryType()
-    {
-        return GeometryData::Kratos_generic_type;
-    }
-
     /**
      * Operators
      */
@@ -349,19 +339,14 @@ public:
      * Informations
      */
 
-    virtual inline SizeType NURBS_Dimension() const
+    virtual GeometryData::KratosGeometryFamily GetGeometryFamily()
     {
-        return 2;
+        return GeometryData::Kratos_NURBS;
     }
 
-    virtual inline SizeType NURBS_WorkingSpaceDimension() const
+    virtual GeometryData::KratosGeometryType GetGeometryType()
     {
-        return 2;
-    }
-
-    virtual inline SizeType NURBS_LocalSpaceDimension() const
-    {
-        return 2;
+        return GeometryData::Kratos_Bezier2D;
     }
 
     /**
@@ -592,7 +577,7 @@ public:
         VectorType bezier_functions_derivatives2(mNumber2);
         BezierUtils::bernstein(bezier_functions_values1, bezier_functions_derivatives1, mOrder1, rCoordinates[0]);
         BezierUtils::bernstein(bezier_functions_values2, bezier_functions_derivatives2, mOrder2, rCoordinates[1]);
-        
+
         //compute trivariate Bezier shape functions values
         VectorType bezier_functions_values(mNumber1 * mNumber2);
         for(IndexType i = 0; i < mNumber1; ++i)
@@ -605,18 +590,18 @@ public:
                     bezier_functions_values2(j);
             }
         }
-        
+
         //compute the Bezier weight
         VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
         double denom = inner_prod(bezier_functions_values, bezier_weights);
-        
+
         //compute the shape function values
         if(rResults.size() != this->PointsNumber())
             rResults.resize(this->PointsNumber());
         noalias( rResults ) = prod(mExtractionOperator, bezier_functions_values);
         for(IndexType i = 0; i < this->PointsNumber(); ++i)
             rResults(i) *= (mCtrlWeights(i) / denom);
-            
+
         return rResults;
     }
 
@@ -628,7 +613,7 @@ public:
         #ifdef DEBUG_LEVEL3
         std::cout << typeid(*this).name() << "::" << __FUNCTION__ << std::endl;
         #endif
-        
+
         //compute all univariate Bezier shape functions & derivatives at rPoint
         VectorType bezier_functions_values1(mNumber1);
         VectorType bezier_functions_values2(mNumber2);
@@ -636,7 +621,7 @@ public:
         VectorType bezier_functions_derivatives2(mNumber2);
         BezierUtils::bernstein(bezier_functions_values1, bezier_functions_derivatives1, mOrder1, rCoordinates[0]);
         BezierUtils::bernstein(bezier_functions_values2, bezier_functions_derivatives2, mOrder2, rCoordinates[1]);
-        
+
         //compute trivariate Bezier shape functions values
         VectorType bezier_functions_values(mNumber1 * mNumber2);
         for(IndexType i = 0; i < mNumber1; ++i)
@@ -649,7 +634,7 @@ public:
                     bezier_functions_values2(j);
             }
         }
-        
+
         //compute trivariate Bezier shape functions derivatives w.r.t local coordinates
         VectorType bezier_functions_local_derivatives1(mNumber1 * mNumber2);
         VectorType bezier_functions_local_derivatives2(mNumber1 * mNumber2);
@@ -667,11 +652,11 @@ public:
                     bezier_functions_derivatives2(j);
             }
         }
-        
+
         //compute the Bezier weight
         VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
         double denom = inner_prod(bezier_functions_values, bezier_weights);
-        
+
         //compute the shape function local gradients
         rResults.resize(this->PointsNumber(), 2);
         double tmp1 = inner_prod(bezier_functions_local_derivatives1, bezier_weights);
@@ -693,7 +678,7 @@ public:
             rResults(i, 0) = tmp_gradients1(i) * mCtrlWeights(i);
             rResults(i, 1) = tmp_gradients2(i) * mCtrlWeights(i);
         }
-        
+
         return rResults;
     }
 
@@ -705,7 +690,7 @@ public:
         #ifdef DEBUG_LEVEL3
         std::cout << typeid(*this).name() << "::" << __FUNCTION__ << std::endl;
         #endif
-        
+
         //compute all univariate Bezier shape functions & derivatives at rPoint
         VectorType bezier_functions_values1(mNumber1);
         VectorType bezier_functions_values2(mNumber2);
@@ -723,7 +708,7 @@ public:
                                bezier_functions_second_derivatives2,
                                mOrder2,
                                rCoordinates[1]);
-        
+
         //compute trivariate Bezier shape functions values
         VectorType bezier_functions_values(mNumber1 * mNumber2);
         for(IndexType i = 0; i < mNumber1; ++i)
@@ -736,7 +721,7 @@ public:
                     bezier_functions_values2(j);
             }
         }
-        
+
         //compute trivariate Bezier shape functions derivatives w.r.t local coordinates
         VectorType bezier_functions_local_derivatives1(mNumber1 * mNumber2);
         VectorType bezier_functions_local_derivatives2(mNumber1 * mNumber2);
@@ -776,11 +761,11 @@ public:
                     bezier_functions_second_derivatives2(j);
             }
         }
-        
+
         //compute the Bezier weight
         VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
         double denom = inner_prod(bezier_functions_values, bezier_weights);
-        
+
         //compute the shape function local second gradients
         rResults.resize(this->PointsNumber());
         double aux1 = inner_prod(bezier_functions_local_derivatives1, bezier_weights);
@@ -820,7 +805,7 @@ public:
             rResults[i](1, 0) = rResults[i](0, 1);
             rResults[i](1, 1) = tmp_gradients22(i) * mCtrlWeights(i);
         }
-        
+
         return rResults;
     }
     

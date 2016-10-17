@@ -248,16 +248,6 @@ public:
     virtual ~Geo1dNURBS()
     {}
 
-    GeometryData::KratosGeometryFamily GetGeometryFamily()
-    {
-        return GeometryData::Kratos_generic_family;
-    }
-
-    GeometryData::KratosGeometryType GetGeometryType()
-    {
-        return GeometryData::Kratos_generic_type;
-    }
-
     /**
      * Operators
      */

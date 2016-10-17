@@ -253,16 +253,6 @@ public:
     virtual ~Geo3dNURBS()
     {}
 
-    GeometryData::KratosGeometryFamily GetGeometryFamily()
-    {
-        return GeometryData::Kratos_generic_family;
-    }
-
-    GeometryData::KratosGeometryType GetGeometryType()
-    {
-        return GeometryData::Kratos_generic_type;
-    }
-
     /**
      * Operators
      */
@@ -1830,8 +1820,8 @@ private:
     {
         //check the size of relevant integration method
         if( (NumberOfIntegrationMethod > GeometryData::NumberOfIntegrationMethods - mOrder1 + 1) ||
-                (NumberOfIntegrationMethod > GeometryData::NumberOfIntegrationMethods - mOrder2 + 1) ||
-                (NumberOfIntegrationMethod > GeometryData::NumberOfIntegrationMethods - mOrder3 + 1) )
+            (NumberOfIntegrationMethod > GeometryData::NumberOfIntegrationMethods - mOrder2 + 1) ||
+            (NumberOfIntegrationMethod > GeometryData::NumberOfIntegrationMethods - mOrder3 + 1) )
         {
             KRATOS_WATCH(GeometryData::NumberOfIntegrationMethods)
             KRATOS_WATCH(mOrder1)
@@ -1855,7 +1845,7 @@ private:
         BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints8, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
         BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints9, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
         BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints10, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        
+
         ///////////////////////////////////////////////////////////////
         // Remarks: this current implementation supports integration with order up to 9
 
@@ -1865,23 +1855,23 @@ private:
         this->FilterUniqueKnots(UnrepeatedKnots1, mKnots1);
         this->FilterUniqueKnots(UnrepeatedKnots2, mKnots2);
         this->FilterUniqueKnots(UnrepeatedKnots3, mKnots3);
-        
+
         KRATOS_WATCH(UnrepeatedKnots1)
         KRATOS_WATCH(UnrepeatedKnots2)
         KRATOS_WATCH(UnrepeatedKnots3)
-        
+
         unsigned int i1, i2, i3, j1, j2, j3, k, offset1, offset2, offset3;
         double a1, b1, left1, right1;
         double a2, b2, left2, right2;
         double a3, b3, left3, right3;
-        
+
         //TODO: parallelize this process
-        for (k = 0; k < NumberOfIntegrationMethod; ++k)
+        for(k = 0; k < NumberOfIntegrationMethod; ++k)
         {
             offset1 = k + mOrder1; // this allows for one more order than the order of the curve
             offset2 = k + mOrder2; // this allows for one more order than the order of the curve
             offset3 = k + mOrder3; // this allows for one more order than the order of the curve
-            
+
             IntegrationPointsArrayType TempGaussRule;
 
             for(i1 = 0; i1 < UnrepeatedKnots1.size() - 1; ++i1)
@@ -1899,7 +1889,7 @@ private:
 
                     a2 = (right2 - left2) / 2;
                     b2 = (right2 + left2) / 2;
-    
+
                     for(i3 = 0; i3 < UnrepeatedKnots3.size() - 1; ++i3)
                     {
                         left3 = UnrepeatedKnots3[i3];
@@ -1907,7 +1897,7 @@ private:
 
                         a3 = (right3 - left3) / 2;
                         b3 = (right3 + left3) / 2;
-    
+
                         for(j1 = 0; j1 < BaseRule[offset1].size(); ++j1)
                         {
                             IntegrationPointType& temp1 = BaseRule[offset1][j1];
@@ -1915,11 +1905,11 @@ private:
                             for(j2 = 0; j2 < BaseRule[offset2].size(); ++j2)
                             {
                                 IntegrationPointType& temp2 = BaseRule[offset2][j2];
-                                
+
                                 for(j3 = 0; j3 < BaseRule[offset3].size(); ++j3)
                                 {
                                     IntegrationPointType& temp3 = BaseRule[offset3][j3];
-    
+
                                     IntegrationPointType temp;
 
                                     temp.X() = a1 * temp1.X() + b1;
@@ -1938,7 +1928,7 @@ private:
         }
 
         KRATOS_WATCH(NumberOfIntegrationMethod)
-        
+
         IntegrationPointsContainerType integration_points;
         for (k = 0; k < NumberOfIntegrationMethod; ++k)
         {

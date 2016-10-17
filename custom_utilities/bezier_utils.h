@@ -485,7 +485,7 @@ public:
     {
         //define the key
         BezierGeometryDataKey Key(NumberOfIntegrationMethod, Order1, Order2, 0, TDimension, TWorkingSpaceDimension, TLocalSpaceDimension);
-        
+
         //find the key in existing map
         if(mIntegrationMethods.find(Key) != mIntegrationMethods.end())
         //found the key
@@ -510,7 +510,7 @@ public:
                     all_integration_points[i]
                 );
             }
-            
+
             GeometryData::Pointer pNewGeometryData = GeometryData::Pointer(
                 new GeometryData(
                     TDimension,
@@ -522,14 +522,14 @@ public:
                     shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
                 )
             );
-            
+
             //insert value to map
             mIntegrationMethods.insert(PairType(Key, pNewGeometryData));
-            
+
             std::cout << "Registerred BezierGeometryData " << Key << " successfully" << std::endl;
         }
     }
-    
+
     template<std::size_t TDimension, std::size_t TWorkingSpaceDimension, std::size_t TLocalSpaceDimension>
     static void RegisterIntegrationRule(
         unsigned int NumberOfIntegrationMethod,
@@ -970,17 +970,17 @@ public:
                 }
             }
 
-            KRATOS_WATCH(base_offset1)
-            KRATOS_WATCH(base_offset2)
-            KRATOS_WATCH(base_offset3)
+//            KRATOS_WATCH(base_offset1)
+//            KRATOS_WATCH(base_offset2)
+//            KRATOS_WATCH(base_offset3)
 
-            KRATOS_WATCH(offset1)
-            KRATOS_WATCH(offset2)
-            KRATOS_WATCH(offset3)
+//            KRATOS_WATCH(offset1)
+//            KRATOS_WATCH(offset2)
+//            KRATOS_WATCH(offset3)
 
-            KRATOS_WATCH(BaseRule[offset1].size())
-            KRATOS_WATCH(BaseRule[offset2].size())
-            KRATOS_WATCH(BaseRule[offset3].size())
+//            KRATOS_WATCH(BaseRule[offset1].size())
+//            KRATOS_WATCH(BaseRule[offset2].size())
+//            KRATOS_WATCH(BaseRule[offset3].size())
 
             std::cout << BaseRule[offset1].size() * BaseRule[offset2].size() * BaseRule[offset3].size() << " integration points are generated" << std::endl;
         }

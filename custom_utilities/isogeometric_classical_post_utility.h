@@ -37,7 +37,7 @@
 #include "custom_geometries/isogeometric_geometry.h"
 #include "isogeometric_application.h"
 
-// #define DEBUG_LEVEL1
+//#define DEBUG_LEVEL1
 //#define DEBUG_LEVEL2
 //#define DEBUG_MULTISOLVE
 //#define DEBUG_GENERATE_MESH
@@ -552,7 +552,7 @@ public:
         boost::progress_display show_progress2( pConditions.size() );
         for (typename ConditionsArrayType::ptr_iterator it = pConditions.ptr_begin(); it != pConditions.ptr_end(); ++it)
         {
-            // This is wrong, we will not skill the IS_INACTIVE conditions
+            // This is wrong, we will not kill the IS_INACTIVE conditions
             // TODO: to be deleted
 //            if((*it)->GetValue( IS_INACTIVE ))
 //            {
@@ -609,7 +609,9 @@ public:
 
             ++show_progress2;
         }
-        
+        KRATOS_WATCH(ElementCounter)
+        KRATOS_WATCH(ConditionCounter)
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "GeneratePostModelPart2 completed: " << (end_compute - start_compute) << " s" << std::endl;
@@ -814,13 +816,13 @@ public:
             int i, j;
             CoordinatesArrayType p_ref;
             CoordinatesArrayType p;
-            
+
             #ifdef DEBUG_LEVEL1
             KRATOS_WATCH(NumDivision1)
             KRATOS_WATCH(NumDivision2)
             std::cout << "Generating Nodes..." << std::endl;
             #endif
-            
+
             // create and add nodes
             p_ref[2] = 0.0;
             for(i = 0; i <= NumDivision1; ++i)
@@ -880,8 +882,8 @@ public:
                     temp_nodes.push_back(*(FindKey(rModelPart.Nodes(), Node4, NodeKey).base()));
                     temp_nodes.push_back(*(FindKey(rModelPart.Nodes(), Node3, NodeKey).base()));
 
-//                    int NewEntityId = ++EntityCounter;
-                    int NewEntityId = rE.Id();
+                    int NewEntityId = ++EntityCounter;
+//                    int NewEntityId = rE.Id(); ++EntityCounter;
                     typename T::Pointer NewEntity = rSample.Create(NewEntityId, temp_nodes, pDummyProperties);
                     AddToModelPart<T>(rModelPart, NewEntity);
                     if(type == 1)
@@ -919,7 +921,7 @@ public:
             KRATOS_WATCH(NumDivision3)
             std::cout << "Generating Nodes..." << std::endl;
             #endif
-            
+
             // create and add nodes
             for(i = 0; i <= NumDivision1; ++i)
             {
@@ -959,10 +961,10 @@ public:
                     }
                 }
             }
-                
+
             //for correct mapping to element, the repetitive node is allowed.
 //           rModelPart.Nodes().Unique();
-            
+
             #ifdef DEBUG_LEVEL1
             KRATOS_WATCH(rModelPart.Nodes().size())
             if(type == 1)
@@ -970,7 +972,7 @@ public:
             else
                 std::cout << "Generating Conditions..." << std::endl;
             #endif
-            
+
             // create and add element
             typename T::NodesArrayType temp_nodes;
             for(i = 0; i < NumDivision1; ++i)
@@ -1014,7 +1016,7 @@ public:
                 rModelPart.Elements().Unique();
             else if(type == 2)
                 rModelPart.Conditions().Unique();
-            
+
             #ifdef DEBUG_LEVEL1
             if(type == 1)
                 KRATOS_WATCH(rModelPart.Elements().size())
@@ -1023,7 +1025,7 @@ public:
             #endif
         }
     }
-    
+
     /**
      * Utility function to generate elements/conditions for element/condition.
      * This uses a collapse utility to automatically merge the coincident nodes

@@ -344,6 +344,16 @@ public:
     ///@name Operations
     ///@{
 
+    virtual GeometryData::KratosGeometryFamily GetGeometryFamily()
+    {
+        return GeometryData::Kratos_generic_family;
+    }
+
+    virtual GeometryData::KratosGeometryType GetGeometryType()
+    {
+        return GeometryData::Kratos_generic_type;
+    }
+
 //    virtual typename BaseType::Pointer Create( PointsArrayType const& ThisPoints ) const
 //    {
 //        return BaseType::Pointer( new IsogeometricGeometry( ThisPoints, BaseType::mpGeometryData ) );
@@ -368,20 +378,20 @@ public:
         return p_clone;
     }
 
-    virtual inline SizeType NURBS_Dimension() const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
-    }
+//    virtual inline SizeType NURBS_Dimension() const
+//    {
+//        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+//    }
 
-    virtual inline SizeType NURBS_WorkingSpaceDimension() const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
-    }
+//    virtual inline SizeType NURBS_WorkingSpaceDimension() const
+//    {
+//        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+//    }
 
-    virtual inline SizeType NURBS_LocalSpaceDimension() const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
-    }
+//    virtual inline SizeType NURBS_LocalSpaceDimension() const
+//    {
+//        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+//    }
 
     /**
      * TODO to be removed
@@ -473,7 +483,7 @@ public:
         return rResult;
     }
 
-    virtual void ExtractLocalCoordinates(std::vector<PointType>& rPoints)
+    virtual void ExtractLocalCoordinates(PointsArrayType& rPoints)
     {
         KRATOS_THROW_ERROR( std::logic_error, "Calling base class function" , __FUNCTION__ );
     }

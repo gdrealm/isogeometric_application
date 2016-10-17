@@ -70,10 +70,10 @@
 
 namespace Kratos
 {
-/**
- * A geometry representing NURBS curve
- */
 
+/**
+ * A geometry representing NURBS surface
+ */
 template<class TPointType>
 class Geo2dNURBS: public IsogeometricGeometry<TPointType>
 {
@@ -252,16 +252,6 @@ public:
      */
     virtual ~Geo2dNURBS()
     {}
-
-    GeometryData::KratosGeometryFamily GetGeometryFamily()
-    {
-        return GeometryData::Kratos_generic_family;
-    }
-
-    GeometryData::KratosGeometryType GetGeometryType()
-    {
-        return GeometryData::Kratos_generic_type;
-    }
 
     /**
      * Operators

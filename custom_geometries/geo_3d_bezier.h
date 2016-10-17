@@ -265,16 +265,6 @@ public:
     virtual ~Geo3dBezier()
     {}
 
-    GeometryData::KratosGeometryFamily GetGeometryFamily()
-    {
-        return GeometryData::Kratos_generic_family;
-    }
-
-    GeometryData::KratosGeometryType GetGeometryType()
-    {
-        return GeometryData::Kratos_generic_type;
-    }
-
     /**
      * Operators
      */
@@ -346,21 +336,16 @@ public:
      * Informations
      */
 
-    virtual inline SizeType NURBS_Dimension() const
+    virtual GeometryData::KratosGeometryFamily GetGeometryFamily()
     {
-        return 3;
+        return GeometryData::Kratos_NURBS;
     }
 
-    virtual inline SizeType NURBS_WorkingSpaceDimension() const
+    virtual GeometryData::KratosGeometryType GetGeometryType()
     {
-        return 3;
+        return GeometryData::Kratos_Bezier3D;
     }
 
-    virtual inline SizeType NURBS_LocalSpaceDimension() const
-    {
-        return 3;
-    }
-    
     /**
      * This method calculates and returns Length or charactereistic
      * length of this geometry depending on it's dimension. For one
@@ -881,26 +866,25 @@ public:
     /**
      * Compute the Bezier control points
      */
-    virtual void ExtractLocalCoordinates(std::vector<PointType>& rPoints)
+    virtual void ExtractLocalCoordinates(PointsArrayType& rPoints)
     {
         std::size_t number_of_points = this->PointsNumber();
         std::size_t number_of_local_points = mExtractionOperator.size2();
-        if(rPoints.size() != number_of_local_points)
-            rPoints.resize(number_of_local_points);
+        rPoints.clear();
+        rPoints.reserve(number_of_local_points);
 
         // compute the Bezier weight
         VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
 
         // compute the Bezier control points
+        typedef typename PointType::Pointer PointPointerType;
         for(std::size_t i = 0; i < number_of_local_points; ++i)
         {
-            noalias(rPoints[i]) = ZeroVector(3);
+            PointPointerType pPoint = PointPointerType(new PointType(0, 0.0, 0.0, 0.0));
             for(std::size_t j = 0; j < number_of_points; ++j)
-            {
-                noalias(rPoints[i]) += mExtractionOperator(j, i) * this->GetPoint(j) * mCtrlWeights[j] / bezier_weights[i];
-            }
+                noalias(*pPoint) += mExtractionOperator(j, i) * this->GetPoint(j) * mCtrlWeights[j] / bezier_weights[i];
+            rPoints.push_back(pPoint);
         }
-
     }
 
     /**

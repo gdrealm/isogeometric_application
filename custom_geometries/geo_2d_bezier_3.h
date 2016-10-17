@@ -264,16 +264,6 @@ public:
     virtual ~Geo2dBezier3()
     {}
 
-    GeometryData::KratosGeometryFamily GetGeometryFamily()
-    {
-        return GeometryData::Kratos_generic_family;
-    }
-
-    GeometryData::KratosGeometryType GetGeometryType()
-    {
-        return GeometryData::Kratos_generic_type;
-    }
-
     /**
      * Operators
      */
@@ -341,24 +331,19 @@ public:
         KRATOS_THROW_ERROR(std::logic_error, "NURBS geometry does not support for Clone", *this)
     }
 
-    virtual inline SizeType NURBS_Dimension() const
-    {
-        return 2;
-    }
-
-    virtual inline SizeType NURBS_WorkingSpaceDimension() const
-    {
-        return 3;
-    }
-
-    virtual inline SizeType NURBS_LocalSpaceDimension() const
-    {
-        return 2;
-    }
-
     /**
      * Informations
      */
+
+    virtual GeometryData::KratosGeometryFamily GetGeometryFamily()
+    {
+        return GeometryData::Kratos_NURBS;
+    }
+
+    virtual GeometryData::KratosGeometryType GetGeometryType()
+    {
+        return GeometryData::Kratos_Bezier2D3;
+    }
 
     /**
      * This method calculates and returns area or surface area of
@@ -503,6 +488,30 @@ public:
     }
 
     /**
+     * Compute the Bezier control points
+     */
+    virtual void ExtractLocalCoordinates(PointsArrayType& rPoints)
+    {
+        std::size_t number_of_points = this->PointsNumber();
+        std::size_t number_of_local_points = BaseType::mExtractionOperator.size2();
+        rPoints.clear();
+        rPoints.reserve(number_of_local_points);
+
+        // compute the Bezier weight
+        VectorType bezier_weights = prod(trans(BaseType::mExtractionOperator), BaseType::mCtrlWeights);
+
+        // compute the Bezier control points
+        typedef typename PointType::Pointer PointPointerType;
+        for(std::size_t i = 0; i < number_of_local_points; ++i)
+        {
+            PointPointerType pPoint = PointPointerType(new PointType(0, 0.0, 0.0, 0.0));
+            for(std::size_t j = 0; j < number_of_points; ++j)
+                noalias(*pPoint) += BaseType::mExtractionOperator(j, i) * this->GetPoint(j) * BaseType::mCtrlWeights[j] / bezier_weights[i];
+            rPoints.push_back(pPoint);
+        }
+    }
+
+    /**
      * Input and output
      */
     /**
@@ -568,7 +577,7 @@ public:
         BaseType::mOrder2 = Degree2;
         BaseType::mNumber1 = BaseType::mOrder1 + 1;
         BaseType::mNumber2 = BaseType::mOrder2 + 1;
-        
+
         // select the type of extraction operator to save in memory
         if(ExtractionOperator.size1() == 2 && ExtractionOperator.size2() != 2)
         // extraction operator is stored as compressed matrix
@@ -593,10 +602,10 @@ public:
         {
             KRATOS_THROW_ERROR(std::logic_error, "The parametric parameters is not compatible.", __FUNCTION__)
         }
-        
+
         // find the existing integration rule or create new one if not existed
         BezierUtils::RegisterIntegrationRule<2, 3, 2>(NumberOfIntegrationMethod, Degree1, Degree2);
-        
+
         // get the geometry_data according to integration rule. Note that this is a static geometry_data of a reference Bezier element, not the real Bezier element.
         BaseType::mpBezierGeometryData = BezierUtils::RetrieveIntegrationRule<2, 3, 2>(NumberOfIntegrationMethod, Degree1, Degree2);
         BaseType::BaseType::mpGeometryData = &(*BaseType::mpBezierGeometryData);
