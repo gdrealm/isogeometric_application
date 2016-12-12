@@ -1,0 +1,118 @@
+function layer_finalise(fid)
+
+%% auxilliary routines
+fprintf(fid, '\tdef CollapseLayer(self, layer_list):\n');
+fprintf(fid, '\t\timport math\n');
+fprintf(fid, '\t\ttol = 1.0e-6\n');
+fprintf(fid, '\n');
+fprintf(fid, '\t\t# collapse each layer specified in layer list\n');
+fprintf(fid, '\t\tfor str_layer in  layer_list:\n');
+fprintf(fid, '\t\t\tnode_map = {}\n');
+fprintf(fid, '\t\t\tnon_repetitive_nodes = []\n');
+fprintf(fid, '\t\t\t# iterate all the nodes to check for node repetition\n');
+fprintf(fid, '\t\t\tfor i_node in self.layer_nodes_sets[str_layer]:\n');
+fprintf(fid, '\t\t\t\tn = self.layer_nodes_sets[str_layer][i_node]\n');
+fprintf(fid, '\t\t\t\tfor i_other_node in self.layer_nodes_sets[str_layer]:\n');
+fprintf(fid, '\t\t\t\t\tn1 = self.layer_nodes_sets[str_layer][i_other_node]\n');
+fprintf(fid, '\t\t\t\t\td = math.sqrt(math.pow(n[0] - n1[0], 2) + math.pow(n[1] - n1[1], 2) + math.pow(n[2] - n1[2], 2))\n');
+fprintf(fid, '\t\t\t\t\tif d < tol:\n');
+fprintf(fid, '\t\t\t\t\t\tnode_map[i_node] = i_other_node\n');
+fprintf(fid, '\t\t\t\t\t\tif i_other_node == i_node:\n');
+fprintf(fid, '\t\t\t\t\t\t\tnon_repetitive_nodes.append(i_node)\n');
+fprintf(fid, '\t\t\t\t\t\tbreak\n');
+fprintf(fid, '\n');
+fprintf(fid, '\t\t\t# reform the layer nodal set\n');
+fprintf(fid, '\t\t\tnew_nodes_set = {}\n');
+fprintf(fid, '\t\t\tnode_map_nonrepetitive = {}\n');
+fprintf(fid, '\t\t\tcnt = 1\n');
+fprintf(fid, '\t\t\tfor i_node in non_repetitive_nodes:\n');
+fprintf(fid, '\t\t\t\tnew_nodes_set[cnt] = self.layer_nodes_sets[str_layer][i_node]\n');
+fprintf(fid, '\t\t\t\tnode_map_nonrepetitive[i_node] = cnt\n');
+fprintf(fid, '\t\t\t\tcnt = cnt + 1\n');
+fprintf(fid, '\t\t\tself.layer_nodes_sets[str_layer] = new_nodes_set\n');
+fprintf(fid, '\n');
+fprintf(fid, '\t\t\t# reform the entity connectivities\n');
+fprintf(fid, '\t\t\tfor i_entity in self.layer_entities_sets[str_layer]:\n');
+fprintf(fid, '\t\t\t\tnew_entity = []\n');
+fprintf(fid, '\t\t\t\tfor i_node in self.layer_entities_sets[str_layer][i_entity]:\n');
+fprintf(fid, '\t\t\t\t\tnew_entity.append(node_map_nonrepetitive[node_map[i_node]])\n');
+fprintf(fid, '\t\t\t\tself.layer_entities_sets[str_layer][i_entity] = new_entity\n');
+fprintf(fid, '\n');
+fprintf(fid, '\tdef GlueLayer(self, str_source_layer, str_target_layer):\n');
+fprintf(fid, '\t\timport math\n');
+fprintf(fid, '\t\ttol = 1.0e-6\n');
+fprintf(fid, '\n');
+fprintf(fid, '\t\t# signal that the str_source_layer has been glued to str_target_layer\n');
+fprintf(fid, '\t\tself.layer_attributes[str_source_layer][''master''] = str_target_layer\n');
+fprintf(fid, '\t\t\n');
+fprintf(fid, '\t\t# first check the largest nodal id in target_layer\n');
+fprintf(fid, '\t\ti_max_node = max(self.layer_nodes_sets[str_target_layer])\n');
+fprintf(fid, '\n');
+fprintf(fid, '\t\t# iterate all the nodes in source_layer to find the repetitive nodes\n');
+fprintf(fid, '\t\tnode_map = {}\n');
+fprintf(fid, '\t\tfor i_node in self.layer_nodes_sets[str_source_layer]:\n');
+fprintf(fid, '\t\t\tn = self.layer_nodes_sets[str_source_layer][i_node]\n');
+fprintf(fid, '\t\t\tfor i_other_node in self.layer_nodes_sets[str_target_layer]:\n');
+fprintf(fid, '\t\t\t\tn1 = self.layer_nodes_sets[str_target_layer][i_other_node]\n');
+fprintf(fid, '\t\t\t\td = math.sqrt(math.pow(n[0] - n1[0], 2) + math.pow(n[1] - n1[1], 2) + math.pow(n[2] - n1[2], 2))\n');
+fprintf(fid, '\t\t\t\tif d < tol:\n');
+fprintf(fid, '\t\t\t\t\tnode_map[i_node] = i_other_node\n');
+fprintf(fid, '\t\t\t\t\tbreak\n');
+fprintf(fid, '\t\t#print "node_map:", node_map\n');
+fprintf(fid, '\n');
+fprintf(fid, '\t\t# reform the nodal set of source_layer\n');
+fprintf(fid, '\t\tnew_nodes_set = {}\n');
+fprintf(fid, '\t\tcnt = i_max_node + 1\n');
+fprintf(fid, '\t\tfor i_node in self.layer_nodes_sets[str_source_layer]:\n');
+fprintf(fid, '\t\t\tif i_node not in node_map:\n');
+fprintf(fid, '\t\t\t\tnew_nodes_set[cnt] = self.layer_nodes_sets[str_source_layer][i_node]\n');
+fprintf(fid, '\t\t\t\tnode_map[i_node] = cnt\n');
+fprintf(fid, '\t\t\t\tcnt = cnt + 1\n');
+fprintf(fid, '\t\tself.layer_nodes_sets[str_source_layer] = new_nodes_set\n');
+fprintf(fid, '\n');
+fprintf(fid, '\t\t# reform the entity set of source_layer\n');
+fprintf(fid, '\t\tfor i_entity in self.layer_entities_sets[str_source_layer]:\n');
+fprintf(fid, '\t\t\tnew_entity = []\n');
+fprintf(fid, '\t\t\tfor i_node in self.layer_entities_sets[str_source_layer][i_entity]:\n');
+fprintf(fid, '\t\t\t\tnew_entity.append(node_map[i_node])\n');
+fprintf(fid, '\t\t\tself.layer_entities_sets[str_source_layer][i_entity] = new_entity\n');
+fprintf(fid, '\n');
+fprintf(fid, '\tdef RenumberAll(self):\n');
+fprintf(fid, '\t\tcnt = 1\n');
+fprintf(fid, '\t\tfor str_layer in self.layer_list:\n');
+fprintf(fid, '\t\t\tif ''master'' not in self.layer_attributes[str_layer]:\n');
+fprintf(fid, '\t\t\t\t# renumber all nodes in current layer\n');
+fprintf(fid, '\t\t\t\tnew_nodes_set = {}\n');
+fprintf(fid, '\t\t\t\tnode_map = {}\n');
+fprintf(fid, '\t\t\t\tfor i_node in self.layer_nodes_sets[str_layer]:\n');
+fprintf(fid, '\t\t\t\t\tnew_nodes_set[cnt] = self.layer_nodes_sets[str_layer][i_node]\n');
+fprintf(fid, '\t\t\t\t\tnode_map[i_node] = cnt\n');
+fprintf(fid, '\t\t\t\t\tcnt = cnt + 1\n');
+fprintf(fid, '\t\t\t\tself.layer_nodes_sets[str_layer] = new_nodes_set\n');
+fprintf(fid, '\t\t\t\t#print "node_map:", node_map\n');
+fprintf(fid, '\n');
+fprintf(fid, '\t\t\t\t# reform the entity connectivities in current layer\n');
+fprintf(fid, '\t\t\t\tfor i_entity in self.layer_entities_sets[str_layer]:\n');
+fprintf(fid, '\t\t\t\t\tnew_entity = []\n');
+fprintf(fid, '\t\t\t\t\tfor i_node in self.layer_entities_sets[str_layer][i_entity]:\n');
+fprintf(fid, '\t\t\t\t\t\tnew_entity.append(node_map[i_node])\n');
+fprintf(fid, '\t\t\t\t\tself.layer_entities_sets[str_layer][i_entity] = new_entity\n');
+fprintf(fid, '\n');
+fprintf(fid, '\tdef AddEntityInfoKey(self, str_layer, key_list):\n');
+fprintf(fid, '\t\tfor key in key_list:\n');
+fprintf(fid, '\t\t\tself.layer_entity_info_sets[str_layer][key] = {}\n');
+fprintf(fid, '\n');
+
+%% print information
+fprintf(fid, '#import pprint\n');
+fprintf(fid, '#layers = LayerProvider()\n');
+fprintf(fid, '#pp = pprint.PrettyPrinter(indent=4,depth=6)\n');
+fprintf(fid, '#pp.pprint(layers.layer_nodes_sets)\n');
+fprintf(fid, '#pp.pprint(layers.layer_entities_sets)\n');
+fprintf(fid, '#pp.pprint(layers.layer_entity_info_sets)\n');
+
+%% finalise
+fclose(fid);
+
+end
+

@@ -226,15 +226,15 @@ public:
     static Matrix MAT2MCSR(const Matrix& A)
     {
         int n = A.size1();
-        
+
         if(A.size2() != n)
             KRATOS_THROW_ERROR(std::logic_error, "The matrix needs to be square", "")
-        
+
         std::vector<int> idx;
         std::vector<double> val;
-        
+
         // firstly write the diagonal part of the matrix
-        for(std::size_t i = 0; i < n; ++i)
+        for(int i = 0; i < n; ++i)
         {
             val.push_back(A(i, i));
             idx.push_back(0);
@@ -242,13 +242,13 @@ public:
 
         // unused value
         val.push_back(0.0);
-        
+
         // secondly traverse to off-diagonal element and write to idx and val
         int cnt = n + 1;
-        for(std::size_t i = 0; i < n; ++i)
+        for(int i = 0; i < n; ++i)
         {
             idx[i] = cnt;
-            for(std::size_t j = 0; j < n; ++j)
+            for(int j = 0; j < n; ++j)
             {
                 if(j != i and A(i, j) != 0)
                 {
@@ -258,16 +258,16 @@ public:
                 }
             }
         }
-        
+
         idx[n] = cnt;
-        
+
         Matrix B(2, cnt - 1);
-        for(std::size_t i = 0; i < cnt - 1; ++i)
+        for(int i = 0; i < cnt - 1; ++i)
         {
             B(0, i) = static_cast<double>(idx[i] - 1);
             B(1, i) = val[i];
         }
-        
+
         return B;
     }
 
