@@ -510,9 +510,17 @@ public:
             //select the correct post element type
             std::string element_name;
             if(Dim == 2 && ReducedDim == 2)
+            {
                 element_name = std::string("KinematicLinear2D4N");
+            }
+            else if(Dim == 3 && ReducedDim == 2)
+            {
+                element_name = std::string("KinematicLinear2D4N");
+            }
             else if(Dim == 3 && ReducedDim == 3)
+            {
                 element_name = std::string("KinematicLinear3D8N");
+            }
             else
             {
                 std::stringstream ss;

@@ -1,0 +1,5 @@
+zdeprecated
+zmisc
+*.cpp.*
+*.h.*
+*.pyc

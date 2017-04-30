@@ -402,7 +402,7 @@ namespace Kratos
 
             Vector dummy;
             int max_integration_method = (*p_temp_properties)[NUM_IGA_INTEGRATION_METHOD];
-            KRATOS_WATCH(max_integration_method)
+//            KRATOS_WATCH(max_integration_method)
             p_temp_geometry->AssignGeometryData(dummy,
                                                 dummy,
                                                 dummy,
