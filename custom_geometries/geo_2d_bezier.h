@@ -777,7 +777,7 @@ public:
             prod(
                 mExtractionOperator,
                     (1 / denom) * bezier_functions_local_second_derivatives11
-                    - (aux1 / pow(denom, 2)) * bezier_functions_local_derivatives1// * 2
+                    - (aux1 / pow(denom, 2)) * bezier_functions_local_derivatives1 * 2
                     - (auxs11 / pow(denom, 2)) * bezier_functions_values
                     + 2.0 * pow(aux1, 2) / pow(denom, 3) * bezier_functions_values
             );
@@ -793,13 +793,13 @@ public:
             prod(
                 mExtractionOperator,
                     (1 / denom) * bezier_functions_local_second_derivatives22
-                    - (aux2 / pow(denom, 2)) * bezier_functions_local_derivatives2// * 2
+                    - (aux2 / pow(denom, 2)) * bezier_functions_local_derivatives2 * 2
                     - (auxs22 / pow(denom, 2)) * bezier_functions_values
                     + 2.0 * pow(aux2, 2) / pow(denom, 3) * bezier_functions_values
             );
         for(IndexType i = 0; i < this->PointsNumber(); ++i)
         {
-            rResults[i].resize(2, 2);
+            rResults[i].resize(2, 2, false);
             rResults[i](0, 0) = tmp_gradients11(i) * mCtrlWeights(i);
             rResults[i](0, 1) = tmp_gradients12(i) * mCtrlWeights(i);
             rResults[i](1, 0) = rResults[i](0, 1);

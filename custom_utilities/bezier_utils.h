@@ -219,7 +219,7 @@ public:
      * Computes Bernstein basis function B(i, p)(x) on [0, 1]
      * Remark when debugging hierarchical NURBS, it may be not correct
      */
-    static inline double bernstein(int i, int p, double x)
+    static inline double bernstein(const int& i, const int& p, const double& x)
     {
         //bound checking
         if(i < 0 || i > p)
@@ -253,7 +253,7 @@ public:
     /**
      * Computes Bernstein basis function B(i, p)(x) on [0, 1] using recursive iteration
      */
-    static double bernstein2(int i, int p, double x)
+    static double bernstein2(const int& i, const int& p, const double& x)
     {
         if(i < 0 || i > p)
             return 0.0;
@@ -274,7 +274,7 @@ public:
     /**
      * Computes Bernstein basis function value & derivative B(i, p)(x) on [0, 1]
      */
-    static inline void bernstein(double& v, double& d, int i, int p, double x)
+    static inline void bernstein(double& v, double& d, const int& i, const int& p, const double& x)
     {
         if(i < 0 || i > p)
         {
@@ -303,7 +303,7 @@ public:
     /**
      * Computes Bernstein basis function value & derivative & second derivative B(i, p)(x) on [0, 1]
      */
-    static inline void bernstein(double& v, double& d, double& d2, int i, int p, double x)
+    static inline void bernstein(double& v, double& d, double& d2, const int& i, const int& p, const double& x)
     {
         if(i < 0 || i > p)
         {
@@ -339,11 +339,11 @@ public:
         
         v = b * tmp1 + a * tmp2;
         d = p * (tmp2 - tmp1);
-        d2 = p * p * (tmp3 - 2 * tmp4 + tmp5);
+        d2 = p * (p-1) * (tmp3 - 2 * tmp4 + tmp5);
     }
     
     template<class ValuesContainerType>
-    static inline void bernstein(ValuesContainerType& rS, int p, double x)
+    static inline void bernstein(ValuesContainerType& rS, const int& p, const double& x)
     {
         double a = x;
         double b = 1 - x;
@@ -405,8 +405,8 @@ public:
     static inline void bernstein(ValuesContainerType& rS,
                                  ValuesContainerType& rD,
                                  ValuesContainerType& rD2,
-                                 int p,
-                                 double x)
+                                 const int& p,
+                                 const double& x)
     {
         for(int i = 0; i < p + 1; ++i)
         {
