@@ -749,7 +749,7 @@ public:
             for(IndexType j = 0; j < mNumber2; ++j)
             {
                 IndexType index = j + i * mNumber2;
-                    
+
                 bezier_functions_local_second_derivatives11(index) = 
                     bezier_functions_second_derivatives1(i) *
                     bezier_functions_values2(j);
@@ -777,7 +777,7 @@ public:
             prod(
                 mExtractionOperator,
                     (1 / denom) * bezier_functions_local_second_derivatives11
-                    - (aux1 / pow(denom, 2)) * bezier_functions_local_derivatives1 * 2
+                    - (aux1 / pow(denom, 2)) * bezier_functions_local_derivatives1// * 2
                     - (auxs11 / pow(denom, 2)) * bezier_functions_values
                     + 2.0 * pow(aux1, 2) / pow(denom, 3) * bezier_functions_values
             );
@@ -793,7 +793,7 @@ public:
             prod(
                 mExtractionOperator,
                     (1 / denom) * bezier_functions_local_second_derivatives22
-                    - (aux2 / pow(denom, 2)) * bezier_functions_local_derivatives2 * 2
+                    - (aux2 / pow(denom, 2)) * bezier_functions_local_derivatives2// * 2
                     - (auxs22 / pow(denom, 2)) * bezier_functions_values
                     + 2.0 * pow(aux2, 2) / pow(denom, 3) * bezier_functions_values
             );
