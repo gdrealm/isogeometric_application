@@ -497,28 +497,107 @@ public:
 
         return rResult;
     }
-    
+
     /**
-     * TODO
+     * Jacobians for given  method.
+     * This method calculates jacobians matrices in all integrations
+     * points of given integration method.
+     *
+     * @param ThisMethod integration method which jacobians has to
+     * be calculated in its integration points.
+     * @return JacobiansType a VectorType of jacobian
+     * matrices \f$ J_i \f$ where \f$ i=1,2,...,n \f$ is the
+     * integration point index of given integration method.
+     *
+     * @see DeterminantOfJacobian
+     * @see InverseOfJacobian
      */
-    virtual VectorType& DeterminantOfJacobian( VectorType& rResults,
-            IntegrationMethod ThisMethod ) const
+    virtual JacobiansType& Jacobian( JacobiansType& rResult,
+            IntegrationMethod ThisMethod, Matrix& DeltaPosition ) const
     {
-        JacobiansType J;
-        J = Jacobian( J, ThisMethod );
+        MatrixType shape_functions_values;
+        ShapeFunctionsGradientsType shape_functions_local_gradients;
         
-        if ( rResults.size() != J.size() )
+        //getting derivatives of shape functions
+        CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
+            shape_functions_values,
+            shape_functions_local_gradients,
+            ThisMethod
+        );
+        
+        SizeType NumberOfIntegrationPoints = this->IntegrationPointsNumber( ThisMethod );
+
+        if ( rResult.size() != NumberOfIntegrationPoints )
         {
-            rResults.resize(J.size());
+            JacobiansType temp( NumberOfIntegrationPoints );
+            rResult.swap( temp );
         }
 
-        for ( unsigned int pnt = 0; pnt < J.size(); ++pnt )
+        //loop over all integration points
+        for ( IndexType pnt = 0; pnt < NumberOfIntegrationPoints; ++pnt )
         {
-            rResults[pnt] = MathUtils<double>::Det(J[pnt]);
-        }
+            //defining single jacobian matrix
+            MatrixType jacobian = ZeroMatrix( 2, 2 );
+            
+            //loop over all nodes
+            for ( IndexType i = 0; i < this->PointsNumber(); ++i )
+            {
+                jacobian( 0, 0 ) += ( this->GetPoint( i ).X() - DeltaPosition(i, 0) ) * ( shape_functions_local_gradients[pnt]( i, 0 ) );
+                jacobian( 0, 1 ) += ( this->GetPoint( i ).X() - DeltaPosition(i, 0) ) * ( shape_functions_local_gradients[pnt]( i, 1 ) );
+                jacobian( 1, 0 ) += ( this->GetPoint( i ).Y() - DeltaPosition(i, 1) ) * ( shape_functions_local_gradients[pnt]( i, 0 ) );
+                jacobian( 1, 1 ) += ( this->GetPoint( i ).Y() - DeltaPosition(i, 1) ) * ( shape_functions_local_gradients[pnt]( i, 1 ) );
+            }
 
-        return rResults;
+            rResult[pnt] = jacobian;
+        } //end of loop over all integration points
+
+        return rResult;
     }
+
+    // REMARKS: Those InverseOfJacobian, DeterminantOfJacobian below is implemented in abstract Geometry class
+//    /**
+//     * TODO
+//     */
+//    virtual VectorType& DeterminantOfJacobian( VectorType& rResults,
+//            IntegrationMethod ThisMethod ) const
+//    {
+//        JacobiansType J;
+//        J = Jacobian( J, ThisMethod );
+//        
+//        if ( rResults.size() != J.size() )
+//        {
+//            rResults.resize(J.size());
+//        }
+
+//        for ( unsigned int pnt = 0; pnt < J.size(); ++pnt )
+//        {
+//            rResults[pnt] = MathUtils<double>::Det(J[pnt]);
+//        }
+
+//        return rResults;
+//    }
+
+//    /**
+//     * TODO
+//     */
+//    virtual VectorType& DeterminantOfJacobian( VectorType& rResults,
+//            IntegrationMethod ThisMethod, Matrix& DeltaPosition ) const
+//    {
+//        JacobiansType J;
+//        J = Jacobian( J, ThisMethod, DeltaPosition );
+//        
+//        if ( rResults.size() != J.size() )
+//        {
+//            rResults.resize(J.size());
+//        }
+
+//        for ( unsigned int pnt = 0; pnt < J.size(); ++pnt )
+//        {
+//            rResults[pnt] = MathUtils<double>::Det(J[pnt]);
+//        }
+
+//        return rResults;
+//    }
     
     virtual JacobiansType& Jacobian0( JacobiansType& rResult, IntegrationMethod ThisMethod ) const
     {

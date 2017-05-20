@@ -1596,6 +1596,7 @@ namespace Kratos
         outfile << "Begin BezierBlock\n";
 
         outfile << "    Begin IsogeometricBezierData\n";
+        outfile << "    // geom_id  number_of_anchors  local_dim  workspace_dim  order_1  order_2  order_3\n";
         std::vector<int> rowPtr;
         std::vector<int> colInd;
         std::vector<double> values;
@@ -1609,7 +1610,11 @@ namespace Kratos
             else if(mDim == 3)
                 outfile << "3 3 ";
 
-            outfile << mOrder1 << " " << mOrder2 << " " << mOrder3 << std::endl;
+            outfile << mOrder1 << " " << mOrder2;
+            if(mDim == 3)
+                outfile << " " << mOrder3 << std::endl;
+            else
+                outfile << " 0" << std::endl;
 
             const std::vector<double>& weights = (*it)->GetAnchorWeights();
             outfile << "        [" << weights.size() << "] (";
