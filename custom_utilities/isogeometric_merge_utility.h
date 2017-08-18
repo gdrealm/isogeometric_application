@@ -69,17 +69,17 @@ public:
     ~LoosePointType() {}
     bool operator<(const LoosePointType& rOther) const
     {
-        if(mrP.X0() < rOther.mrP.X0() - tol)
+        if(mrP.X0() < rOther.mrP.X0() - 1.0e-6)
             return true;
-        if(mrP.X0() > rOther.mrP.X0() + tol)
+        if(mrP.X0() > rOther.mrP.X0() + 1.0e-6)
             return false;
-        if(mrP.Y0() < rOther.mrP.Y0() - tol)
+        if(mrP.Y0() < rOther.mrP.Y0() - 1.0e-6)
             return true;
-        if(mrP.Y0() > rOther.mrP.Y0() + tol)
+        if(mrP.Y0() > rOther.mrP.Y0() + 1.0e-6)
             return false;
-        if(mrP.Z0() < rOther.mrP.Z0() - tol)
+        if(mrP.Z0() < rOther.mrP.Z0() - 1.0e-6)
             return true;
-        if(mrP.Z0() > rOther.mrP.Z0() + tol)
+        if(mrP.Z0() > rOther.mrP.Z0() + 1.0e-6)
             return false;
         return false;
     }
@@ -87,12 +87,6 @@ public:
 //    PointType GetPoint() {return mrP;}
 private:
     PointType& mrP;
-
-    #ifdef BOOST_NO_CXX11_CONSTEXPR
-    const static double tol = 1.0e-6;
-    #else
-    constexpr static double tol = 1.0e-6;
-    #endif
 };
 
 

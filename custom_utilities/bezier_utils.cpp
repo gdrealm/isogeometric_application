@@ -121,12 +121,13 @@ void BezierUtils::bezier_extraction_tsplines_1d(
     int ki = 1;
     int si = 1;
     int i, j, k, loc, r, save, s, mult, add, total_add = 0;
-    double numer, alpha, alphas[p];
+    double numer, alpha;
+    double* alphas = new double[p];
     while(b < mbar)
     {
         // count multiplicity of knots at location b
         add = 0;
-        if((si <= m) and (spans[si-1] == ki))
+        if((si <= m) && (spans[si-1] == ki))
         {
             mult = 0;
             add = 1;
@@ -158,7 +159,7 @@ void BezierUtils::bezier_extraction_tsplines_1d(
             // initialize the next extraction operator row
             Crows.push_back(ZeroVector(p + 1));
             loc = nt + 1 - nb + total_add; // identify the next location to be 1.0
-            if((loc >= 1) and (loc <= p+1))
+            if((loc >= 1) && (loc <= p+1))
                 Crows[nb][loc - 1] = 1.0;
 
             // compute the interpolation coefficients
@@ -199,6 +200,8 @@ void BezierUtils::bezier_extraction_tsplines_1d(
 //            }
 //        }
     }
+
+    delete alphas;
 }
 
 void BezierUtils::bezier_extraction_tsplines_2d(std::vector<Vector>& Crows,

@@ -69,7 +69,7 @@ public:
     /// Check the activeness of the edge. The edge is active if two vertices are active.
     bool IsActive() const
     {
-        return pV1()->IsActive() and pV2()->IsActive();
+        return pV1()->IsActive() && pV2()->IsActive();
     }
 
     /// Return the corresponding index of the edge
@@ -122,7 +122,7 @@ public:
         int edge_xi_index2 = BaseType::pV2()->Index1();
         int edge_xi_index_min = std::min(edge_xi_index1, edge_xi_index2);
         int edge_xi_index_max = std::max(edge_xi_index1, edge_xi_index2);
-        return (anchor_xi_index >= edge_xi_index_min) and (anchor_xi_index <= edge_xi_index_max);
+        return (anchor_xi_index >= edge_xi_index_min) && (anchor_xi_index <= edge_xi_index_max);
     }
     
     /// Get the edge type of this specific edge
@@ -193,7 +193,7 @@ public:
         int edge_eta_index2 = BaseType::pV2()->Index2();
         int edge_eta_index_min = std::min(edge_eta_index1, edge_eta_index2);
         int edge_eta_index_max = std::max(edge_eta_index1, edge_eta_index2);
-        return (anchor_eta_index >= edge_eta_index_min) and (anchor_eta_index <= edge_eta_index_max);
+        return (anchor_eta_index >= edge_eta_index_min) && (anchor_eta_index <= edge_eta_index_max);
     }
     
     /// Get the edge type of this specific edge

@@ -80,7 +80,7 @@ public:
     /// Check the activeness of the vertex
     bool IsActive() const
     {
-        return (pXi()->IsActive()) and (pEta()->IsActive()) and (pZeta()->IsActive());
+        return (pXi()->IsActive()) && (pEta()->IsActive()) && (pZeta()->IsActive());
     }
 
     /// Get and Set the type of this joint
@@ -91,9 +91,9 @@ public:
     bool IsTJoint() const
     {
         return (mType == T_JOINT_LEFT)
-            or (mType == T_JOINT_RIGHT)
-            or (mType == T_JOINT_UP)
-            or (mType == T_JOINT_DOWN);
+            || (mType == T_JOINT_RIGHT)
+            || (mType == T_JOINT_UP)
+            || (mType == T_JOINT_DOWN);
     }
 
     /// Information

@@ -163,32 +163,6 @@ private:
 
     void ReadConditionsWithGeometryBlock(NodesContainerType& rThisNodes, PropertiesContainerType& rThisProperties, BezierInfoContainerType& rGeometryInfo, ConditionsContainerType& rThisConditions);
 
-    /// Copy FindKey from base class
-    template<class TContainerType, class TKeyType>
-    typename TContainerType::iterator FindKey(TContainerType& ThisContainer, TKeyType ThisKey, std::string ComponentName)
-    {
-        typename TContainerType::iterator i_result;
-        if((i_result = ThisContainer.find(ThisKey)) == ThisContainer.end())
-        {
-            std::stringstream buffer;
-            buffer << ComponentName << " #" << ThisKey << " is not found.";
-            buffer << " [Line " << mNumberOfLines << " ]";
-            KRATOS_THROW_ERROR(std::invalid_argument, buffer.str(), "");
-        }
-
-        return i_result;
-    }
-
-    template<class TValueType>
-    TValueType& ExtractValue(std::string rWord, TValueType & rValue)
-    {
-        std::stringstream value(rWord);
-
-        value >> rValue;
-
-        return rValue;
-    }
-
 };
 
 }

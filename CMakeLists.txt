@@ -59,8 +59,8 @@ set( KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/isogeometric_application.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_processes_to_python.cpp
-    ${PROJECT_SOURCE_DIR}/kratos/sources/io.cpp
-    ${PROJECT_SOURCE_DIR}/kratos/sources/model_part_io.cpp
+#    ${PROJECT_SOURCE_DIR}/kratos/sources/io.cpp
+#    ${PROJECT_SOURCE_DIR}/kratos/sources/model_part_io.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_io/bezier_model_part_io.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_io_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/isogeometric_python_application.cpp

@@ -230,8 +230,8 @@ public:
         unsigned int j, r;
         double saved, temp;
 
-        double left[rP + 1];
-        double right[rP + 1];
+        double* left = new double[rP + 1];
+        double* right = new double[rP + 1];
         
         std::fill(left, left + rP + 1, 0.0);
         std::fill(right, right + rP + 1, 0.0);
@@ -252,6 +252,8 @@ public:
 
             rS[j] = saved;
         }
+
+        delete left, right;
     }
     //N = 10000000: 8.18893
     //N = 100000000: 76.7523, 81.9167

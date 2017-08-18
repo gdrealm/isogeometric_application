@@ -146,40 +146,40 @@ private:
     {
         double anchor_xi;
         double anchor_eta;
-        if((mOrder1 % 2 != 0) and (mOrder2 % 2 != 0))
+        if((mOrder1 % 2 != 0) && (mOrder2 % 2 != 0))
         {
             // for odd order T-splines topology mesh, the vertex is also the anchor
             for(vertex_container_t::const_iterator it = mVertices.begin(); it != mVertices.end(); ++it)
-                if((*it)->pXi()->IsActive() and (*it)->pEta()->IsActive())
+                if((*it)->pXi()->IsActive() && (*it)->pEta()->IsActive())
                 {
                     anchor_xi = static_cast<double>((*it)->Index1());
                     anchor_eta = static_cast<double>((*it)->Index2());
                     rAnchors.push_back(anchor_t(anchor_xi, anchor_eta));
                 }
         }
-        else if((mOrder1 % 2 == 0) and (mOrder2 % 2 != 0))
+        else if((mOrder1 % 2 == 0) && (mOrder2 % 2 != 0))
         {
             // the anchors are the middle of all horizontal edges
             for(edge_container_t::const_iterator it = mEdges.begin(); it != mEdges.end(); ++it)
-                if((*it)->EdgeType() == TsEdge::HORIZONTAL_EDGE and (*it)->IsActive())
+                if((*it)->EdgeType() == TsEdge::HORIZONTAL_EDGE && (*it)->IsActive())
                 {
                     anchor_xi = 0.5 * static_cast<double>((*it)->pV1()->Index1() + (*it)->pV2()->Index1());
                     anchor_eta = static_cast<double>((*it)->Index());
                     rAnchors.push_back(anchor_t(anchor_xi, anchor_eta));
                 }
         }
-        else if((mOrder1 % 2 != 0) and (mOrder2 % 2 == 0))
+        else if((mOrder1 % 2 != 0) && (mOrder2 % 2 == 0))
         {
             // the anchors are the middle of all vertical edges
             for(edge_container_t::const_iterator it = mEdges.begin(); it != mEdges.end(); ++it)
-                if((*it)->EdgeType() == TsEdge::VERTICAL_EDGE and (*it)->IsActive())
+                if((*it)->EdgeType() == TsEdge::VERTICAL_EDGE && (*it)->IsActive())
                 {
                     anchor_xi = static_cast<double>((*it)->Index());
                     anchor_eta = 0.5 * static_cast<double>((*it)->pV1()->Index2() + (*it)->pV2()->Index2());
                     rAnchors.push_back(anchor_t(anchor_xi, anchor_eta));
                 }
         }
-        else if((mOrder1 % 2 == 0) and (mOrder2 % 2 == 0))
+        else if((mOrder1 % 2 == 0) && (mOrder2 % 2 == 0))
         {
             // the anchors are the middle of the cells
             std::set<cell_t> cells;
@@ -216,17 +216,17 @@ private:
             if((*it)->EdgeType() == TsEdge::VERTICAL_EDGE) //vertical edge
             {
                 int edge_xi_index = (*it)->Index();
-                if((*it)->IsCut(Anchor_eta_index) and edge_xi_index < Anchor_xi_index)
+                if((*it)->IsCut(Anchor_eta_index) && edge_xi_index < Anchor_xi_index)
                     tmp_knot_index_left.insert(edge_xi_index);
-                if((*it)->IsCut(Anchor_eta_index) and edge_xi_index > Anchor_xi_index)
+                if((*it)->IsCut(Anchor_eta_index) && edge_xi_index > Anchor_xi_index)
                     tmp_knot_index_right.insert(edge_xi_index);
             }
             if((*it)->EdgeType() == TsEdge::HORIZONTAL_EDGE) //horizontal edge
             {
                 int edge_eta_index = (*it)->Index();
-                if((*it)->IsCut(Anchor_xi_index) and edge_eta_index < Anchor_eta_index)
+                if((*it)->IsCut(Anchor_xi_index) && edge_eta_index < Anchor_eta_index)
                     tmp_knot_index_down.insert(edge_eta_index);
-                if((*it)->IsCut(Anchor_xi_index) and edge_eta_index > Anchor_eta_index)
+                if((*it)->IsCut(Anchor_xi_index) && edge_eta_index > Anchor_eta_index)
                     tmp_knot_index_up.insert(edge_eta_index);
             }
         }
@@ -424,7 +424,7 @@ private:
                 return U.size();
             
             for(std::size_t i = 0; i < U.size() - 1; ++i)
-                if(Xi >= U[i] and Xi < U[i + 1])
+                if(Xi >= U[i] && Xi < U[i + 1])
                     return i + 1;
         }
         

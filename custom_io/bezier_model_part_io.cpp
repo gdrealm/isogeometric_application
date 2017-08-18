@@ -175,26 +175,26 @@ namespace Kratos
             BezierInfo::Pointer p_temp_info = BezierInfo::Pointer(new BezierInfo());
 
             std::size_t id;
-            ExtractValue(word, id);
+            ModelPartIO::ExtractValue(word, id);
             p_temp_info->SetId(id);
 
             ModelPartIO::ReadWord(word);
-            ExtractValue(word, p_temp_info->n);
+            ModelPartIO::ExtractValue(word, p_temp_info->n);
 
             ModelPartIO::ReadWord(word);
-            ExtractValue(word, p_temp_info->local_space_dim);
+            ModelPartIO::ExtractValue(word, p_temp_info->local_space_dim);
 
             ModelPartIO::ReadWord(word);
-            ExtractValue(word, p_temp_info->global_space_dim);
+            ModelPartIO::ExtractValue(word, p_temp_info->global_space_dim);
 
             ModelPartIO::ReadWord(word);
-            ExtractValue(word, p_temp_info->p1);
+            ModelPartIO::ExtractValue(word, p_temp_info->p1);
 
             ModelPartIO::ReadWord(word);
-            ExtractValue(word, p_temp_info->p2);
+            ModelPartIO::ExtractValue(word, p_temp_info->p2);
 
             ModelPartIO::ReadWord(word);
-            ExtractValue(word, p_temp_info->p3);
+            ModelPartIO::ExtractValue(word, p_temp_info->p3);
 
             ModelPartIO::ReadVectorialValue(p_temp_info->weights);
 
@@ -210,12 +210,12 @@ namespace Kratos
 
             if(p_temp_info->mat_type == 0)
             {
-                ModelPartIO::ReadVectorialValue(p_temp_info->C);
+                p_temp_info->C = ModelPartIO::ReadVectorialValue(p_temp_info->C);
             }
             else if(p_temp_info->mat_type == 1)
             {
                 Matrix Temp;
-                ModelPartIO::ReadVectorialValue(Temp);
+                Temp = ModelPartIO::ReadVectorialValue(Temp);
 
                 // check if the input is 2 rows
                 if(Temp.size1() != 2)
@@ -232,11 +232,11 @@ namespace Kratos
             else if(p_temp_info->mat_type == 2)
             {
                 Vector rowPtr;
-                ModelPartIO::ReadVectorialValue(rowPtr);
+                rowPtr = ModelPartIO::ReadVectorialValue(rowPtr);
                 Vector colInd;
-                ModelPartIO::ReadVectorialValue(colInd);
+                colInd = ModelPartIO::ReadVectorialValue(colInd);
                 Vector values;
-                ModelPartIO::ReadVectorialValue(values);
+                values = ModelPartIO::ReadVectorialValue(values);
                 p_temp_info->C = IsogeometricMathUtils::Triplet2CSR(rowPtr, colInd, values);
             }
 
@@ -291,17 +291,17 @@ namespace Kratos
                 break;
 
             // Reading the element id
-            ExtractValue(word, id);
+            ModelPartIO::ExtractValue(word, id);
 
             // Reading the properties id
             ModelPartIO::ReadWord(word);
-            ExtractValue(word, properties_id);
+            ModelPartIO::ExtractValue(word, properties_id);
             Properties::Pointer p_temp_properties = *(ModelPartIO::FindKey(rThisProperties, properties_id, "Properties").base());
 
             // Reading the geometry id
             ModelPartIO::ReadWord(word);
-            ExtractValue(word, geometry_id);
-            BezierInfo::Pointer p_temp_info = *(this->FindKey(rGeometryInfo, geometry_id, "BezierInfo").base());
+            ModelPartIO::ExtractValue(word, geometry_id);
+            BezierInfo::Pointer p_temp_info = *(ModelPartIO::FindKey(rGeometryInfo, geometry_id, "BezierInfo").base());
 
             // Reading the connectivities
             temp_element_nodes.clear();
@@ -310,7 +310,7 @@ namespace Kratos
             {
                 // Reading the node id;
                 ModelPartIO::ReadWord(word);
-                ExtractValue(word, node_id);
+                ModelPartIO::ExtractValue(word, node_id);
                 temp_element_nodes.push_back(*(ModelPartIO::FindKey(rThisNodes, ModelPartIO::ReorderedNodeId(node_id), "Node").base()));
             }
 
@@ -392,17 +392,17 @@ namespace Kratos
                 break;
 
             // Reading the element id
-            ExtractValue(word, id);
+            ModelPartIO::ExtractValue(word, id);
 
             // Reading the properties id
             ModelPartIO::ReadWord(word);
-            ExtractValue(word, properties_id);
+            ModelPartIO::ExtractValue(word, properties_id);
             Properties::Pointer p_temp_properties = *(ModelPartIO::FindKey(rThisProperties, properties_id, "Properties").base());
 
             // Reading the geometry id
             ModelPartIO::ReadWord(word);
-            ExtractValue(word, geometry_id);
-            BezierInfo::Pointer p_temp_info = *(this->FindKey(rGeometryInfo, geometry_id, "BezierInfo").base());
+            ModelPartIO::ExtractValue(word, geometry_id);
+            BezierInfo::Pointer p_temp_info = *(ModelPartIO::FindKey(rGeometryInfo, geometry_id, "BezierInfo").base());
 
             // Reading the connectivities
             temp_condition_nodes.clear();
@@ -411,7 +411,7 @@ namespace Kratos
             {
                 // Reading the node id;
                 ModelPartIO::ReadWord(word);
-                ExtractValue(word, node_id);
+                ModelPartIO::ExtractValue(word, node_id);
                 temp_condition_nodes.push_back(*(ModelPartIO::FindKey(rThisNodes, ModelPartIO::ReorderedNodeId(node_id), "Node").base()));
             }
 

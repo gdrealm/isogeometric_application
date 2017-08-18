@@ -88,9 +88,9 @@ public:
         int anchor_cover_eta_max = *std::max_element(rKnotsIndex2.begin(), rKnotsIndex2.end());
         
         if(     LeftIndex()  >= anchor_cover_xi_min
-            and RightIndex() <= anchor_cover_xi_max
-            and DownIndex()  >= anchor_cover_eta_min
-            and UpIndex()    <= anchor_cover_eta_max )
+            && RightIndex() <= anchor_cover_xi_max
+            && DownIndex()  >= anchor_cover_eta_min
+            && UpIndex()    <= anchor_cover_eta_max )
         {
             return true;
         }

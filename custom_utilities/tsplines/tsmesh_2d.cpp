@@ -243,14 +243,14 @@ namespace Kratos
         // By default, set first p knots and last p knots to inactive state
         for(std::size_t i = 0; i < mKnots1.size(); ++i)
         {
-            if((i < mOrder1) or (i > mKnots1.size() - mOrder1 - 1))
+            if((i < mOrder1) || (i > mKnots1.size() - mOrder1 - 1))
                 mKnots1[i]->SetActive(false);
             else
                 mKnots1[i]->SetActive(true);
         }
         for(std::size_t i = 0; i < mKnots2.size(); ++i)
         {
-            if((i < mOrder2) or (i > mKnots2.size() - mOrder2 - 1))
+            if((i < mOrder2) || (i > mKnots2.size() - mOrder2 - 1))
                 mKnots2[i]->SetActive(false);
             else
                 mKnots2[i]->SetActive(true);
@@ -271,7 +271,7 @@ namespace Kratos
         for(edge_container_t::const_iterator it = mEdges.begin(); it != mEdges.end(); ++it)
         {
             if(std::find(mVertices.begin(), mVertices.end(), (*it)->pV1()) == mVertices.end()
-               or std::find(mVertices.begin(), mVertices.end(), (*it)->pV2()) == mVertices.end())
+               || std::find(mVertices.begin(), mVertices.end(), (*it)->pV2()) == mVertices.end())
                 KRATOS_THROW_ERROR(std::logic_error, "The edge does not contain a vertex in the vertex list, wrong edge is", (*it)->Id())
         }
         std::cout << "Check OK! All edges contain vertices in the vertex list" << std::endl;
@@ -307,8 +307,8 @@ namespace Kratos
         for(vertex_neighbour_type::iterator it = VertexNeighbours.begin(); it != VertexNeighbours.end(); ++it)
         {
             // check for border vertex
-            if((it->first->pXi()->Value() == mKnots1Min) or (it->first->pXi()->Value() == mKnots1Max)
-                or (it->first->pEta()->Value() == mKnots2Min) or (it->first->pEta()->Value() == mKnots2Max))
+            if((it->first->pXi()->Value() == mKnots1Min) || (it->first->pXi()->Value() == mKnots1Max)
+                || (it->first->pEta()->Value() == mKnots2Min) || (it->first->pEta()->Value() == mKnots2Max))
             {
                 it->first->SetType(TsVertex::BORDER_JOINT);
 //                std::cout << "Border joint is detected at " << it->first->Index1() << " " << it->first->Index2() << std::endl;
@@ -428,11 +428,11 @@ namespace Kratos
             for(edge_container_t::const_iterator it_edge = mEdges.begin(); it_edge != mEdges.end(); ++it_edge)
             {
                 if(_extend)
-                    is_active_edge = (*it_edge)->EdgeType() == TsEdge::VERTICAL_EDGE or (*it_edge)->EdgeType() == TsEdge::VIRTUAL_VERTICAL_EDGE;
+                    is_active_edge = (*it_edge)->EdgeType() == TsEdge::VERTICAL_EDGE || (*it_edge)->EdgeType() == TsEdge::VIRTUAL_VERTICAL_EDGE;
                 else
                     is_active_edge = (*it_edge)->EdgeType() == TsEdge::VERTICAL_EDGE;
 
-                is_active_edge = is_active_edge and (*it_edge)->IsActive();
+                is_active_edge = is_active_edge && (*it_edge)->IsActive();
 
                 if(is_active_edge) //active vertical edge
                     if((*it_edge)->IsCut(index_eta))
@@ -461,11 +461,11 @@ namespace Kratos
             for(edge_container_t::const_iterator it_edge = mEdges.begin(); it_edge != mEdges.end(); ++it_edge)
             {
                 if(_extend)
-                    is_active_edge = (*it_edge)->EdgeType() == TsEdge::HORIZONTAL_EDGE or (*it_edge)->EdgeType() == TsEdge::VIRTUAL_HORIZONTAL_EDGE;
+                    is_active_edge = (*it_edge)->EdgeType() == TsEdge::HORIZONTAL_EDGE || (*it_edge)->EdgeType() == TsEdge::VIRTUAL_HORIZONTAL_EDGE;
                 else
                     is_active_edge = (*it_edge)->EdgeType() == TsEdge::HORIZONTAL_EDGE;
 
-                is_active_edge = is_active_edge and (*it_edge)->IsActive();
+                is_active_edge = is_active_edge && (*it_edge)->IsActive();
 
                 if(is_active_edge) //active horizontal edge
                     if((*it_edge)->IsCut(index_xi))
@@ -500,7 +500,7 @@ namespace Kratos
                 {
                     for(std::size_t k = 0; k < HorizontalSegments.size(); ++k)
                     {
-                        if((HorizontalSegments[k].first > Temp[j]) and (HorizontalSegments[k].first < Temp[j+1]))
+                        if((HorizontalSegments[k].first > Temp[j]) && (HorizontalSegments[k].first < Temp[j+1]))
                         {
 //                            std::cout << "Found box " << cut_segments[k].first << " " << cut_segments[k].second
 //                                      << " " << Temp[j] << " " << Temp[j+1] << std::endl;
@@ -541,7 +541,7 @@ namespace Kratos
             for(std::size_t j = 0; j < VirtualVerticalEdges.size(); ++j)
             {
                 if(VirtualHorizontalEdges[i]->IsCut(VirtualVerticalEdges[j]->Index())
-                   and VirtualVerticalEdges[j]->IsCut(VirtualHorizontalEdges[i]->Index()))
+                   && VirtualVerticalEdges[j]->IsCut(VirtualHorizontalEdges[i]->Index()))
                 {
                     isAnalysisSuitable = false;
                     return isAnalysisSuitable;
@@ -586,7 +586,7 @@ namespace Kratos
     {
         // firstly clear all existing virtual edges
         for(edge_container_t::iterator it = mEdges.begin(); it != mEdges.end();)
-            if((*it)->EdgeType() == TsEdge::VIRTUAL_HORIZONTAL_EDGE or (*it)->EdgeType() == TsEdge::VIRTUAL_VERTICAL_EDGE)
+            if((*it)->EdgeType() == TsEdge::VIRTUAL_HORIZONTAL_EDGE || (*it)->EdgeType() == TsEdge::VIRTUAL_VERTICAL_EDGE)
                 mEdges.erase(it++);
             else
                 ++it;
@@ -620,7 +620,7 @@ namespace Kratos
                     if((*it_edge)->EdgeType() == TsEdge::VERTICAL_EDGE) //vertical edge
                     {
                         int edge_xi_index = (*it_edge)->Index();
-                        if((*it_edge)->IsCut(eta_index) and edge_xi_index < xi_index)
+                        if((*it_edge)->IsCut(eta_index) && edge_xi_index < xi_index)
                             tmp_knot_index_left.insert(edge_xi_index);
                     }
                 }
@@ -661,7 +661,7 @@ namespace Kratos
                     if((*it_edge)->EdgeType() == TsEdge::VERTICAL_EDGE) //vertical edge
                     {
                         int edge_xi_index = (*it_edge)->Index();
-                        if((*it_edge)->IsCut(eta_index) and edge_xi_index > xi_index)
+                        if((*it_edge)->IsCut(eta_index) && edge_xi_index > xi_index)
                             tmp_knot_index_right.insert(edge_xi_index);
                     }
                 }
@@ -702,7 +702,7 @@ namespace Kratos
                     if((*it_edge)->EdgeType() == TsEdge::HORIZONTAL_EDGE) //horizontal edge
                     {
                         int edge_eta_index = (*it_edge)->Index();
-                        if((*it_edge)->IsCut(xi_index) and edge_eta_index > eta_index)
+                        if((*it_edge)->IsCut(xi_index) && edge_eta_index > eta_index)
                             tmp_knot_index_up.insert(edge_eta_index);
                     }
                 }
@@ -743,7 +743,7 @@ namespace Kratos
                     if((*it_edge)->EdgeType() == TsEdge::HORIZONTAL_EDGE) //horizontal edge
                     {
                         int edge_eta_index = (*it_edge)->Index();
-                        if((*it_edge)->IsCut(xi_index) and edge_eta_index < eta_index)
+                        if((*it_edge)->IsCut(xi_index) && edge_eta_index < eta_index)
                             tmp_knot_index_down.insert(edge_eta_index);
                     }
                 }
@@ -1084,7 +1084,7 @@ namespace Kratos
         {
             for(edge_container_t::const_iterator it = mEdges.begin(); it != mEdges.end(); ++it)
             {
-                if((*it)->EdgeType() == TsEdge::VIRTUAL_HORIZONTAL_EDGE or (*it)->EdgeType() == TsEdge::VIRTUAL_VERTICAL_EDGE)
+                if((*it)->EdgeType() == TsEdge::VIRTUAL_HORIZONTAL_EDGE || (*it)->EdgeType() == TsEdge::VIRTUAL_VERTICAL_EDGE)
                 {
                     outfile << "line([" << (*it)->pV1()->Index1() << " " << (*it)->pV2()->Index1() << "],";
                     outfile << "[" << (*it)->pV1()->Index2() << " " << (*it)->pV2()->Index2() << "],'LineStyle',':');" << std::endl;
@@ -1100,7 +1100,7 @@ namespace Kratos
         {
             for(edge_container_t::const_iterator it = mEdges.begin(); it != mEdges.end(); ++it)
             {
-                if((*it)->EdgeType() == TsEdge::VIRTUAL_HORIZONTAL_EDGE or (*it)->EdgeType() == TsEdge::VIRTUAL_VERTICAL_EDGE)
+                if((*it)->EdgeType() == TsEdge::VIRTUAL_HORIZONTAL_EDGE || (*it)->EdgeType() == TsEdge::VIRTUAL_VERTICAL_EDGE)
                 {
                     outfile << "line([" << (*it)->pV1()->pXi()->Value() << " " << (*it)->pV2()->pXi()->Value() << "],";
                     outfile << "[" << (*it)->pV1()->pEta()->Value() << " " << (*it)->pV2()->pEta()->Value() << "],'LineStyle',':');" << std::endl;

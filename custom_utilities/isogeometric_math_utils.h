@@ -250,7 +250,7 @@ public:
             idx[i] = cnt;
             for(int j = 0; j < n; ++j)
             {
-                if(j != i and A(i, j) != 0)
+                if(j != i && A(i, j) != 0)
                 {
                     val.push_back(A(i, j));
                     idx.push_back(j);

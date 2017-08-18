@@ -376,7 +376,7 @@ private:
                 return U.size();
             
             for(std::size_t i = 0; i < U.size()-1; ++i)
-                if(Xi >= U[i] and Xi < U[i + 1])
+                if(Xi >= U[i] && Xi < U[i + 1])
                     return i + 1;
         }
         
