@@ -1,39 +1,5 @@
 /*
- ==============================================================================
- Kratos
- A General Purpose Software for Multi-Physics Finite Element Analysis
- Version 1.0 (Released on march 05, 2007).
-
- Copyright 2007
- Pooyan Dadvand, Riccardo Rossi
- pooyan@cimne.upc.edu
- rrossi@cimne.upc.edu
- CIMNE (International Center for Numerical Methods in Engineering),
- Gran Capita' s/n, 08034 Barcelona, Spain
-
- Permission is hereby granted, free  of charge, to any person obtaining
- a  copy  of this  software  and  associated  documentation files  (the
- "Software"), to  deal in  the Software without  restriction, including
- without limitation  the rights to  use, copy, modify,  merge, publish,
- distribute,  sublicense and/or  sell copies  of the  Software,  and to
- permit persons to whom the Software  is furnished to do so, subject to
- the following condition:
-
- Distribution of this code for  any  commercial purpose  is permissible
- ONLY BY DIRECT ARRANGEMENT WITH THE COPYRIGHT OWNER.
-
- The  above  copyright  notice  and  this permission  notice  shall  be
- included in all copies or substantial portions of the Software.
-
- THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
- EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- IN NO EVENT  SHALL THE AUTHORS OR COPYRIGHT HOLDERS  BE LIABLE FOR ANY
- CLAIM, DAMAGES OR  OTHER LIABILITY, WHETHER IN AN  ACTION OF CONTRACT,
- TORT  OR OTHERWISE, ARISING  FROM, OUT  OF OR  IN CONNECTION  WITH THE
- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- ==============================================================================
+see isogeometric_application/LICENSE.txt
  */
 
 //
@@ -348,19 +314,6 @@ public:
     {
         return GeometryData::Kratos_Bezier2D;
     }
-
-    /**
-     * This method calculates and returns area or surface area of
-     * this geometry depending to it's dimension. For one dimensional
-     * geometry it returns zero, for two dimensional it gives area
-     * and for three dimensional geometries it gives surface area.
-     *
-     * @return double value contains area or surface area.
-     * @see Length()
-     * @see Volume()
-     * @see DomainSize()
-     */
-    // TODO
 
     /**
      * TODO
@@ -887,7 +840,19 @@ public:
 
         return rResults;
     }
-    
+
+    virtual bool IsInside( const CoordinatesArrayType& rPoint, CoordinatesArrayType& rResult )
+    {
+        this->PointLocalCoordinates( rResult, rPoint );
+
+        double tol = 1.0e-6;
+        if ( (rResult[0] > -tol) && (rResult[0] < 1 + tol) )
+            if ( (rResult[1] > -tol) && (rResult[1] < 1 + tol) )
+                return true;
+
+        return false;
+    }
+
     /**
      * Input and output
      */
@@ -962,12 +927,15 @@ public:
         if(mExtractionOperator.size2() != (mOrder1 + 1) * (mOrder2 + 1))
             KRATOS_THROW_ERROR(std::logic_error, "The number of column of extraction operator must be equal to (p_u+1) * (p_v+1), mExtractionOperator.size2() =", mExtractionOperator.size2())
 
-        // find the existing integration rule or create new one if not existed
-        BezierUtils::RegisterIntegrationRule<2, 2, 2>(NumberOfIntegrationMethod, Degree1, Degree2);
+        if(NumberOfIntegrationMethod > 0)
+        {
+            // find the existing integration rule or create new one if not existed
+            BezierUtils::RegisterIntegrationRule<2, 2, 2>(NumberOfIntegrationMethod, Degree1, Degree2);
 
-        // get the geometry_data according to integration rule. Note that this is a static geometry_data of a reference Bezier element, not the real Bezier element.
-        mpBezierGeometryData = BezierUtils::RetrieveIntegrationRule<2, 2, 2>(NumberOfIntegrationMethod, Degree1, Degree2);
-        BaseType::mpGeometryData = &(*mpBezierGeometryData);
+            // get the geometry_data according to integration rule. Note that this is a static geometry_data of a reference Bezier element, not the real Bezier element.
+            mpBezierGeometryData = BezierUtils::RetrieveIntegrationRule<2, 2, 2>(NumberOfIntegrationMethod, Degree1, Degree2);
+            BaseType::mpGeometryData = &(*mpBezierGeometryData);
+        }
     }
 
 protected:

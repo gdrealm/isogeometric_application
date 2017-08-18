@@ -238,7 +238,11 @@ public:
             NewNode->SetSolutionStepVariablesList(&(pModelPart->GetNodalSolutionStepVariablesList())); // to make sure it synchronized with model_part variables list
             NewNode->SetBufferSize(pModelPart->GetBufferSize());
 //            pModelPart->AddNode(NewNode); // for some reason it created segmentation fault error
+            #if defined(KRATOS_SD_REF_NUMBER_2)
             pModelPart->Nodes().push_back(*NewNode);
+            #elif defined(KRATOS_SD_REF_NUMBER_3)
+            pModelPart->Nodes().push_back(NewNode);
+            #endif
 //            // TODO: transfer nodal data
 
 //            NodeType temp_node;

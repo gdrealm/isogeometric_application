@@ -1,3 +1,4 @@
+// see isogeometric_application/LICENSE.txt
 //   
 //   Project Name:        Kratos       
 //   Last Modified by:    $Author: hbui $
@@ -596,7 +597,7 @@ public:
         BezierGeometryDataKey Key(NumberOfIntegrationMethod, Order1, 0, 0, TDimension, TWorkingSpaceDimension, TLocalSpaceDimension);
         return mIntegrationMethods[Key];
     }
-    
+
     template<std::size_t TDimension, std::size_t TWorkingSpaceDimension, std::size_t TLocalSpaceDimension>
     static GeometryData::Pointer RetrieveIntegrationRule(
         unsigned int NumberOfIntegrationMethod,
@@ -607,7 +608,7 @@ public:
         BezierGeometryDataKey Key(NumberOfIntegrationMethod, Order1, Order2, 0, TDimension, TWorkingSpaceDimension, TLocalSpaceDimension);
         return mIntegrationMethods[Key];
     }
-    
+
     template<std::size_t TDimension, std::size_t TWorkingSpaceDimension, std::size_t TLocalSpaceDimension>
     static GeometryData::Pointer RetrieveIntegrationRule(
         unsigned int NumberOfIntegrationMethod,
@@ -619,7 +620,124 @@ public:
         BezierGeometryDataKey Key(NumberOfIntegrationMethod, Order1, Order2, Order3, TDimension, TWorkingSpaceDimension, TLocalSpaceDimension);
         return mIntegrationMethods[Key];
     }
-    
+
+    template<std::size_t TDimension, std::size_t TWorkingSpaceDimension, std::size_t TLocalSpaceDimension>
+    static GeometryData::Pointer CreateIntegrationRule(
+        const GeometryData::IntegrationMethod ThisIntegrationMethod,
+        unsigned int Order1,
+        const IntegrationPointsArrayType& integration_points
+    )
+    {
+        IntegrationPointsContainerType all_integration_points;
+        ShapeFunctionsValuesContainerType shape_functions_values;
+        ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
+
+        all_integration_points[ThisIntegrationMethod] = integration_points;
+
+        CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
+            Order1,
+            shape_functions_values[ThisIntegrationMethod],
+            shape_functions_local_gradients[ThisIntegrationMethod],
+            all_integration_points[ThisIntegrationMethod]
+        );
+
+        GeometryData::Pointer pNewGeometryData = GeometryData::Pointer(
+            new GeometryData(
+                TDimension,
+                TWorkingSpaceDimension,
+                TLocalSpaceDimension,
+                ThisIntegrationMethod,              //ThisDefaultMethod
+                all_integration_points,             //ThisIntegrationPoints
+                shape_functions_values,             //ThisShapeFunctionsValues
+                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+            )
+        );
+
+        std::cout << "Create BezierGeometryData successfully for " << integration_points.size() << " integration points" << std::endl;
+
+        return pNewGeometryData;
+    }
+
+    template<std::size_t TDimension, std::size_t TWorkingSpaceDimension, std::size_t TLocalSpaceDimension>
+    static GeometryData::Pointer CreateIntegrationRule(
+        const GeometryData::IntegrationMethod ThisIntegrationMethod,
+        unsigned int Order1,
+        unsigned int Order2,
+        const IntegrationPointsArrayType& integration_points
+    )
+    {
+        IntegrationPointsContainerType all_integration_points;
+        ShapeFunctionsValuesContainerType shape_functions_values;
+        ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
+
+        all_integration_points[ThisIntegrationMethod] = integration_points;
+
+        CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
+            Order1,
+            Order2,
+            shape_functions_values[ThisIntegrationMethod],
+            shape_functions_local_gradients[ThisIntegrationMethod],
+            all_integration_points[ThisIntegrationMethod]
+        );
+
+        GeometryData::Pointer pNewGeometryData = GeometryData::Pointer(
+            new GeometryData(
+                TDimension,
+                TWorkingSpaceDimension,
+                TLocalSpaceDimension,
+                ThisIntegrationMethod,              //ThisDefaultMethod
+                all_integration_points,             //ThisIntegrationPoints
+                shape_functions_values,             //ThisShapeFunctionsValues
+                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+            )
+        );
+
+        std::cout << "Create BezierGeometryData successfully for " << integration_points.size() << " integration points" << std::endl;
+
+        return pNewGeometryData;
+    }
+
+    template<std::size_t TDimension, std::size_t TWorkingSpaceDimension, std::size_t TLocalSpaceDimension>
+    static GeometryData::Pointer CreateIntegrationRule(
+        const GeometryData::IntegrationMethod ThisIntegrationMethod,
+        unsigned int Order1,
+        unsigned int Order2,
+        unsigned int Order3,
+        const IntegrationPointsArrayType& integration_points
+    )
+    {
+        IntegrationPointsContainerType all_integration_points;
+        ShapeFunctionsValuesContainerType shape_functions_values;
+        ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
+
+        all_integration_points[ThisIntegrationMethod] = integration_points;
+
+        CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
+            Order1,
+            Order2,
+            Order3,
+            shape_functions_values[ThisIntegrationMethod],
+            shape_functions_local_gradients[ThisIntegrationMethod],
+            all_integration_points[ThisIntegrationMethod]
+        );
+
+        GeometryData::Pointer pNewGeometryData = GeometryData::Pointer(
+            new GeometryData(
+                TDimension,
+                TWorkingSpaceDimension,
+                TLocalSpaceDimension,
+                ThisIntegrationMethod,              //ThisDefaultMethod
+                all_integration_points,             //ThisIntegrationPoints
+                shape_functions_values,             //ThisShapeFunctionsValues
+                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+            )
+        );
+
+        std::cout << "Create BezierGeometryData successfully for " << integration_points.size() << " integration points" << std::endl;
+
+        return pNewGeometryData;
+    }
+
     /********************************************************
             End of Bezier integration utilities
      ********************************************************/

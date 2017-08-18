@@ -352,6 +352,14 @@ boundary_v0w0 = zeros(1,u_dim);
 boundary_v0w1 = zeros(1,u_dim);
 boundary_v1w0 = zeros(1,u_dim);
 boundary_v1w1 = zeros(1,u_dim);
+boundary_u0v0w0 = zeros(1,1);
+boundary_u1v0w0 = zeros(1,1);
+boundary_u0v1w0 = zeros(1,1);
+boundary_u1v1w0 = zeros(1,1);
+boundary_u0v0w1 = zeros(1,1);
+boundary_u1v0w1 = zeros(1,1);
+boundary_u0v1w1 = zeros(1,1);
+boundary_u1v1w1 = zeros(1,1);
 cnt = 1;
 for i = 1:w_dim
     for j = 1:v_dim
@@ -405,6 +413,24 @@ for i = 1:w_dim
                 boundary_v1w1(k) = cnt;
             end
 
+            if k==1 && j==1 && i==1
+                boundary_u0v0w0 = cnt;
+            elseif k==1 && j==1 && i==w_dim
+                boundary_u0v0w1 = cnt;
+            elseif k==1 && j==v_dim && i==1
+                boundary_u0v1w0 = cnt;
+            elseif k==1 && j==v_dim && i==w_dim
+                boundary_u0v1w1 = cnt;
+            elseif k==u_dim && j==1 && i==1
+                boundary_u1v0w0 = cnt;
+            elseif k==u_dim && j==1 && i==w_dim
+                boundary_u1v0w1 = cnt;
+            elseif k==u_dim && j==v_dim && i==1
+                boundary_u1v1w0 = cnt;
+            elseif k==u_dim && j==v_dim && i==w_dim
+                boundary_u1v1w1 = cnt;
+            end
+
             cnt = cnt + 1;
         end
     end
@@ -450,6 +476,23 @@ print_integer_vector(fid,boundary_v1w0);
 fprintf(fid, '\t\tboundary_marker[''v1w1''] = ');
 print_integer_vector(fid,boundary_v1w1);
 
+fprintf(fid, '\t\tboundary_marker[''u0v0w0''] = ');
+print_integer_vector(fid,boundary_u0v0w0);
+fprintf(fid, '\t\tboundary_marker[''u1v0w0''] = ');
+print_integer_vector(fid,boundary_u1v0w0);
+fprintf(fid, '\t\tboundary_marker[''u0v1w0''] = ');
+print_integer_vector(fid,boundary_u0v1w0);
+fprintf(fid, '\t\tboundary_marker[''u1v1w0''] = ');
+print_integer_vector(fid,boundary_u1v1w0);
+fprintf(fid, '\t\tboundary_marker[''u0v0w1''] = ');
+print_integer_vector(fid,boundary_u0v0w1);
+fprintf(fid, '\t\tboundary_marker[''u1v0w1''] = ');
+print_integer_vector(fid,boundary_u1v0w1);
+fprintf(fid, '\t\tboundary_marker[''u0v1w1''] = ');
+print_integer_vector(fid,boundary_u0v1w1);
+fprintf(fid, '\t\tboundary_marker[''u1v1w1''] = ');
+print_integer_vector(fid,boundary_u1v1w1);
+
 fprintf(fid, '\t\tself.layer_boundary_marker[''%s''] = boundary_marker\n\n', name);
 
 %%
@@ -481,23 +524,3 @@ end
 %     fprintf(fid, ']\n');
 % end
 
-function print_integer_matrix(fid,M)
-    fprintf(fid,'[');
-    for i = 1:size(M,1)
-        for j = 1:size(M,2)
-            fprintf(fid,' %d,',M(i,j));
-        end
-    end
-    fprintf(fid, ']\n');
-end
-
-function print_integer_vector(fid,V)
-    fprintf(fid,'[');
-    for i = 1:length(V)
-        fprintf(fid,' %d',V(i));
-        if i < length(V)
-            fprintf(fid,',');
-        end
-    end
-    fprintf(fid, ']\n');
-end

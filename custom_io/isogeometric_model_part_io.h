@@ -864,6 +864,7 @@ private:
     {
         KRATOS_TRY
 
+        #if defined(KRATOS_SD_REF_NUMBER_2)
         NodeType temp_node;
         SizeType temp_id;
 
@@ -896,6 +897,40 @@ private:
             rThisNodes.push_back(temp_node);
             number_of_nodes_read++;
         }
+        #elif defined(KRATOS_SD_REF_NUMBER_3)
+        NodeType::Pointer temp_node = boost::make_shared< NodeType >( 0, 0.0, 0.0, 0.0);
+        SizeType temp_id;
+
+        std::string word;
+
+        SizeType number_of_nodes_read = 0;
+
+        std::cout << "Reading Nodes : ";
+
+        while(!mInput.eof())
+        {
+            ReadWord(word);
+            if(CheckEndBlock("Nodes", word))
+                break;
+
+            ExtractValue(word, temp_id);
+            temp_node->SetId(temp_id);
+            ReadWord(word);
+            ExtractValue(word, temp_node->X());
+            ReadWord(word);
+            ExtractValue(word, temp_node->Y());
+            ReadWord(word);
+            ExtractValue(word, temp_node->Z());
+
+            temp_node->X0() = temp_node->X();
+            temp_node->Y0() = temp_node->Y();
+            temp_node->Z0() = temp_node->Z();
+
+
+            rThisNodes.push_back(temp_node);
+            number_of_nodes_read++;
+        }
+        #endif
         std::cout << number_of_nodes_read << " nodes read" << std::endl;
 
         unsigned int numer_of_nodes_read = rThisNodes.size();
@@ -909,6 +944,8 @@ private:
     void ReadNodesBlock(ModelPart& rModelPart)
     {
         KRATOS_TRY
+
+        #if defined(KRATOS_SD_REF_NUMBER_2)
         NodeType temp_node;
         SizeType temp_id;
 
@@ -944,82 +981,56 @@ private:
             temp_node.Y0() = temp_node.Y();
             temp_node.Z0() = temp_node.Z();
 
+            rModelPart.Nodes().push_back(temp_node);
+            number_of_nodes_read++;
+        }
+        #elif defined(KRATOS_SD_REF_NUMBER_3)
+        NodeType::Pointer temp_node = boost::make_shared< NodeType >( 0, 0.0, 0.0, 0.0);
+        SizeType temp_id;
+
+        // Giving model part's variables list to the node
+        temp_node->SetSolutionStepVariablesList(&rModelPart.GetNodalSolutionStepVariablesList());
+
+        //set buffer size
+        temp_node->SetBufferSize(rModelPart.GetBufferSize());
+
+
+        std::string word;
+
+        SizeType number_of_nodes_read = 0;
+
+        std::cout << "Reading Nodes : ";
+
+        while(!mInput.eof())
+        {
+            ReadWord(word);
+            if(CheckEndBlock("Nodes", word))
+                break;
+
+            ExtractValue(word, temp_id);
+            temp_node->SetId(temp_id);
+            ReadWord(word);
+            ExtractValue(word, temp_node->X());
+            ReadWord(word);
+            ExtractValue(word, temp_node->Y());
+            ReadWord(word);
+            ExtractValue(word, temp_node->Z());
+
+            temp_node->X0() = temp_node->X();
+            temp_node->Y0() = temp_node->Y();
+            temp_node->Z0() = temp_node->Z();
 
             rModelPart.Nodes().push_back(temp_node);
             number_of_nodes_read++;
         }
+        #endif
+
         std::cout << number_of_nodes_read << " nodes read" << std::endl;
 
         unsigned int numer_of_nodes_read = rModelPart.Nodes().size();
         rModelPart.Nodes().Unique();
         if(rModelPart.Nodes().size() != numer_of_nodes_read)
             std::cout << "attention! we read " << numer_of_nodes_read << " but there are only " << rModelPart.Nodes().size() << " non repeated nodes" << std::endl;
-
-//	SizeType id;
-//	double x;
-//	double y;
-//	double z;
-//
-//	std::string word;
-//
-//	SizeType number_of_nodes_read = 0;
-//
-//	std::cout << "Reading Nodes : ";
-//
-//        std::vector< unsigned int > id_vector;
-//        std::vector< array_1d<double,3> > coordinates_vector;
-//
-//
-//	while(!mInput.eof())
-//	{
-//	  ReadWord(word);
-//	  if(CheckEndBlock("Nodes", word))
-//	    break;
-//
-//	  ExtractValue(word, id);
-//	  ReadWord(word);
-//	  ExtractValue(word, x);
-//	  ReadWord(word);
-//	  ExtractValue(word, y);
-//	  ReadWord(word);
-//	  ExtractValue(word, z);
-//
-//          id_vector.push_back(id);
-//          array_1d<double,3> coords;
-//          coords[0]=x;
-//          coords[1]=y;
-//          coords[2]=z;
-//          coordinates_vector.push_back(coords);
-//	  number_of_nodes_read++;
-//	}
-//
-//        #ifndef _OPENMP
-//            for(std::size_t i = 0 ; i < id_vector.size() ; i++)
-//            {
-//                const array_1d<double,3>& temp = coordinates_vector[i];
-//                rModelPart.CreateNewNode(id_vector[i],temp[0],temp[1],temp[2]);
-//            }
-//       #else
-//            int number_of_threads = omp_get_max_threads();
-//            vector<unsigned int> partition;
-//            CreatePartition(number_of_threads, id_vector.size(), partition);
-//            for( int k=0; k<number_of_threads; k++ )
-//            {
-//                #pragma omp parallel
-//                if( omp_get_thread_num() == k )
-//                {
-//                    for( std::size_t i = partition[k]; i < partition[k+1]; i++ )
-//                    {
-//                        const array_1d<double,3>& temp = coordinates_vector[i];
-//                        rModelPart.CreateNewNode(id_vector[i],temp[0],temp[1],temp[2]);
-//                    }
-//                }
-//            }
-//        #endif
-//
-//
-//
-//        std::cout << number_of_nodes_read << " nodes read" << std::endl;
 
         KRATOS_CATCH("")
     }
@@ -1072,7 +1083,12 @@ private:
     {
         KRATOS_TRY
 
+        #if defined(KRATOS_SD_REF_NUMBER_2)
         Properties temp_properties;
+        #elif defined(KRATOS_SD_REF_NUMBER_3)
+        Properties::Pointer props = boost::make_shared<Properties>();
+        Properties& temp_properties = *props;
+        #endif
 
         std::string word;
         std::string variable_name;
@@ -1089,16 +1105,16 @@ private:
             if(CheckEndBlock("Properties", variable_name))
                 break;
 
-	    if(KratosComponents<Variable<std::string> >::Has(variable_name))
+            if(KratosComponents<Variable<std::string> >::Has(variable_name))
             {
                 std::string value;
-		        std::string  temp;
+                std::string  temp;
 
                 ReadWord(value); // reading value
                 ExtractValue(value,temp);
                 temp_properties[KratosComponents<Variable<std::string> >::Get(variable_name)] = temp;
             }
-	    else if(KratosComponents<Variable<double> >::Has(variable_name))
+            else if(KratosComponents<Variable<double> >::Has(variable_name))
             {
                 std::string value;
                 double temp;
@@ -1146,14 +1162,13 @@ private:
                 buffer << " [Line " << mNumberOfLines << " ]";
                 KRATOS_THROW_ERROR(std::invalid_argument, buffer.str(), "");
             }
-
-
-
-
-
         }
 
+        #if defined(KRATOS_SD_REF_NUMBER_2)
         rThisProperties.push_back(temp_properties);
+        #elif defined(KRATOS_SD_REF_NUMBER_3)
+        rThisProperties.push_back(props);
+        #endif
 
         KRATOS_CATCH("")
     }
@@ -2362,7 +2377,11 @@ private:
         // adding necessary meshes to the model part.
         MeshType empty_mesh;
         for(SizeType i = number_of_meshes ; i < mesh_id + 1 ; i++)
+            #if defined(KRATOS_SD_REF_NUMBER_2)
             rModelPart.GetMeshes().push_back(empty_mesh.Clone());
+            #elif defined(KRATOS_SD_REF_NUMBER_3)
+            rModelPart.GetMeshes().push_back(boost::make_shared<MeshType>(empty_mesh.Clone()));
+            #endif
 
         MeshType& mesh = rModelPart.GetMesh(mesh_id);
 

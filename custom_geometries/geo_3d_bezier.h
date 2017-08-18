@@ -1,39 +1,5 @@
 /*
- ==============================================================================
- Kratos
- A General Purpose Software for Multi-Physics Finite Element Analysis
- Version 1.0 (Released on march 05, 2007).
-
- Copyright 2007
- Pooyan Dadvand, Riccardo Rossi
- pooyan@cimne.upc.edu
- rrossi@cimne.upc.edu
- CIMNE (International Center for Numerical Methods in Engineering),
- Gran Capita' s/n, 08034 Barcelona, Spain
-
- Permission is hereby granted, free  of charge, to any person obtaining
- a  copy  of this  software  and  associated  documentation files  (the
- "Software"), to  deal in  the Software without  restriction, including
- without limitation  the rights to  use, copy, modify,  merge, publish,
- distribute,  sublicense and/or  sell copies  of the  Software,  and to
- permit persons to whom the Software  is furnished to do so, subject to
- the following condition:
-
- Distribution of this code for  any  commercial purpose  is permissible
- ONLY BY DIRECT ARRANGEMENT WITH THE COPYRIGHT OWNER.
-
- The  above  copyright  notice  and  this permission  notice  shall  be
- included in all copies or substantial portions of the Software.
-
- THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
- EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- IN NO EVENT  SHALL THE AUTHORS OR COPYRIGHT HOLDERS  BE LIABLE FOR ANY
- CLAIM, DAMAGES OR  OTHER LIABILITY, WHETHER IN AN  ACTION OF CONTRACT,
- TORT  OR OTHERWISE, ARISING  FROM, OUT  OF OR  IN CONNECTION  WITH THE
- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- ==============================================================================
+see isogeometric_application/LICENSE.txt
  */
 
 //
@@ -1019,7 +985,7 @@ public:
 
         return false;
     }
-    
+
     /**
      * Input and output
      */
@@ -1099,44 +1065,47 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "The number of column of extraction operator must be equal to (p_u+1) * (p_v+1) * (p_w+1), error at", __FUNCTION__)
         }
 
-        // find the existing integration rule or create new one if not existed
-        BezierUtils::RegisterIntegrationRule<3, 3, 3>(NumberOfIntegrationMethod, Degree1, Degree2, Degree3);
-
-        // get the geometry_data according to integration rule. Note that this is a static geometry_data of a reference Bezier element, not the real Bezier element.
-        mpBezierGeometryData = BezierUtils::RetrieveIntegrationRule<3, 3, 3>(NumberOfIntegrationMethod, Degree1, Degree2, Degree3);
-        #ifndef ENABLE_PRECOMPUTE
-        BaseType::mpGeometryData = &(*mpBezierGeometryData);
-        #else
-        // precompute the values at each integration points; note that it can generate a LOT of data
-        IntegrationPointsContainerType all_integration_points
-                = BezierUtils::AllIntegrationPoints(NumberOfIntegrationMethod, mOrder1, mOrder2, mOrder3);
-
-        ShapeFunctionsValuesContainerType shape_functions_values;
-        ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
-
-        for(IndexType i = 0; i < NumberOfIntegrationMethod; ++i)
+        if(NumberOfIntegrationMethod > 0)
         {
-            CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
-                shape_functions_values[i],
-                shape_functions_local_gradients[i],
-                (GeometryData::IntegrationMethod)i
-            );
+            // find the existing integration rule or create new one if not existed
+            BezierUtils::RegisterIntegrationRule<3, 3, 3>(NumberOfIntegrationMethod, Degree1, Degree2, Degree3);
+
+            // get the geometry_data according to integration rule. Note that this is a static geometry_data of a reference Bezier element, not the real Bezier element.
+            mpBezierGeometryData = BezierUtils::RetrieveIntegrationRule<3, 3, 3>(NumberOfIntegrationMethod, Degree1, Degree2, Degree3);
+            #ifndef ENABLE_PRECOMPUTE
+            BaseType::mpGeometryData = &(*mpBezierGeometryData);
+            #else
+            // precompute the values at each integration points; note that it can generate a LOT of data
+            IntegrationPointsContainerType all_integration_points
+                    = BezierUtils::AllIntegrationPoints(NumberOfIntegrationMethod, mOrder1, mOrder2, mOrder3);
+
+            ShapeFunctionsValuesContainerType shape_functions_values;
+            ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
+
+            for(IndexType i = 0; i < NumberOfIntegrationMethod; ++i)
+            {
+                CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
+                    shape_functions_values[i],
+                    shape_functions_local_gradients[i],
+                    (GeometryData::IntegrationMethod)i
+                );
+            }
+
+            mpGeometryData = GeometryData::Pointer(
+                new GeometryData(
+                        3,
+                        3,
+                        3,
+                        GeometryData::GI_GAUSS_1,           //ThisDefaultMethod
+                        all_integration_points,             //ThisIntegrationPoints
+                        shape_functions_values,             //ThisShapeFunctionsValues
+                        shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+                    )
+                );
+
+            BaseType::mpGeometryData = &(*mpGeometryData);
+            #endif
         }
-
-        mpGeometryData = GeometryData::Pointer(
-            new GeometryData(
-                    3,
-                    3,
-                    3,
-                    GeometryData::GI_GAUSS_1,           //ThisDefaultMethod
-                    all_integration_points,             //ThisIntegrationPoints
-                    shape_functions_values,             //ThisShapeFunctionsValues
-                    shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
-                )
-            );
-
-        BaseType::mpGeometryData = &(*mpGeometryData);
-        #endif
     }
 
 protected:
@@ -1145,12 +1114,6 @@ protected:
      * there are no protected class members
      */
 
-private:
-
-    /**
-     * Static Member Variables
-     */
-//    static const GeometryData msGeometryData; // see COMMENTS below
     GeometryData::Pointer mpBezierGeometryData;
     #ifdef ENABLE_PRECOMPUTE
     GeometryData::Pointer mpGeometryData;
@@ -1167,6 +1130,13 @@ private:
     int mNumber1; //number of bezier shape functions define the surface on parametric direction 1
     int mNumber2; //number of bezier shape functions define the surface on parametric direction 2
     int mNumber3; //number of bezier shape functions define the surface on parametric direction 3
+
+private:
+
+    /**
+     * Static Member Variables
+     */
+//    static const GeometryData msGeometryData; // see COMMENTS below
 
     ///@}
     ///@name Serialization

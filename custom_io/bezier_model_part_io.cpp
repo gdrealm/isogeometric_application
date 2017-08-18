@@ -77,7 +77,11 @@ namespace Kratos
         while(true)
         {
             ModelPartIO::ReadWord(word);
+            #if defined(KRATOS_SD_REF_NUMBER_2)
             if(mFile.eof())
+            #elif defined(KRATOS_SD_REF_NUMBER_3)
+            if(mpStream->eof())
+            #endif
                 break;
             ModelPartIO::ReadBlockName(word);
             if(word == "ModelPartData")
@@ -123,14 +127,22 @@ namespace Kratos
     {
         std::string word;
 
-        while(!ModelPartIO::mFile.eof())
+        #if defined(KRATOS_SD_REF_NUMBER_2)
+        while(!mFile.eof())
+        #elif defined(KRATOS_SD_REF_NUMBER_3)
+        while(!mpStream->eof())
+        #endif
         {
             ModelPartIO::ReadWord(word);
 
             if(ModelPartIO::CheckEndBlock("BezierBlock", word))
                 break;
 
+            #if defined(KRATOS_SD_REF_NUMBER_2)
             if(mFile.eof())
+            #elif defined(KRATOS_SD_REF_NUMBER_3)
+            if(mpStream->eof())
+            #endif
                 break;
 
             ModelPartIO::ReadBlockName(word);
@@ -150,7 +162,11 @@ namespace Kratos
 
         std::cout << "  [Reading Bezier Geometries : ";
 
+        #if defined(KRATOS_SD_REF_NUMBER_2)
         while(!mFile.eof())
+        #elif defined(KRATOS_SD_REF_NUMBER_3)
+        while(!mpStream->eof())
+        #endif
         {
             ModelPartIO::ReadWord(word);
             if(ModelPartIO::CheckEndBlock("IsogeometricBezierData", word))
@@ -264,7 +280,11 @@ namespace Kratos
         Element const& r_clone_element = KratosComponents<Element>::Get(element_name);
         Element::NodesArrayType temp_element_nodes;
 
+        #if defined(KRATOS_SD_REF_NUMBER_2)
         while(!mFile.eof())
+        #elif defined(KRATOS_SD_REF_NUMBER_3)
+        while(!mpStream->eof())
+        #endif
         {
             ModelPartIO::ReadWord(word); // Reading the element id or End
             if(ModelPartIO::CheckEndBlock("ElementsWithGeometry", word))
@@ -298,12 +318,14 @@ namespace Kratos
             typedef BezierModelPartIO::NodeType NodeType;
             typedef IsogeometricGeometry<NodeType> IsogeometricGeometryType;
             typename IsogeometricGeometryType::Pointer p_temp_geometry;
-            if(p_temp_info->local_space_dim == 2 && p_temp_info->global_space_dim == 2)
-                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo2dBezier<NodeType>(temp_element_nodes));
-            else if(p_temp_info->local_space_dim == 3 && p_temp_info->global_space_dim == 3)
-                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo3dBezier<NodeType>(temp_element_nodes));
-            else if(p_temp_info->local_space_dim == 2 && p_temp_info->global_space_dim == 3)
-                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo2dBezier3<NodeType>(temp_element_nodes));
+
+//            if(p_temp_info->local_space_dim == 2 && p_temp_info->global_space_dim == 2)
+//                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo2dBezier<NodeType>(temp_element_nodes));
+//            else if(p_temp_info->local_space_dim == 3 && p_temp_info->global_space_dim == 3)
+//                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo3dBezier<NodeType>(temp_element_nodes));
+//            else if(p_temp_info->local_space_dim == 2 && p_temp_info->global_space_dim == 3)
+//                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo2dBezier3<NodeType>(temp_element_nodes));
+            p_temp_geometry = boost::dynamic_pointer_cast<IsogeometricGeometryType>(r_clone_element.GetGeometry().Create(temp_element_nodes));
 
             Vector dummy;
             int max_integration_method = (*p_temp_properties)[NUM_IGA_INTEGRATION_METHOD];
@@ -359,7 +381,11 @@ namespace Kratos
         Condition const& r_clone_condition = KratosComponents<Condition>::Get(condition_name);
         Condition::NodesArrayType temp_condition_nodes;
 
+        #if defined(KRATOS_SD_REF_NUMBER_2)
         while(!mFile.eof())
+        #elif defined(KRATOS_SD_REF_NUMBER_3)
+        while(!mpStream->eof())
+        #endif
         {
             ModelPartIO::ReadWord(word); // Reading the condition id or End
             if(ModelPartIO::CheckEndBlock("ConditionsWithGeometry", word))
@@ -393,12 +419,14 @@ namespace Kratos
             typedef BezierModelPartIO::NodeType NodeType;
             typedef IsogeometricGeometry<NodeType> IsogeometricGeometryType;
             typename IsogeometricGeometryType::Pointer p_temp_geometry;
-            if(p_temp_info->local_space_dim == 2 && p_temp_info->global_space_dim == 2)
-                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo2dBezier<NodeType>(temp_condition_nodes));
-            else if(p_temp_info->local_space_dim == 3 && p_temp_info->global_space_dim == 3)
-                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo3dBezier<NodeType>(temp_condition_nodes));
-            else if(p_temp_info->local_space_dim == 2 && p_temp_info->global_space_dim == 3)
-                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo2dBezier3<NodeType>(temp_condition_nodes));
+
+//            if(p_temp_info->local_space_dim == 2 && p_temp_info->global_space_dim == 2)
+//                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo2dBezier<NodeType>(temp_condition_nodes));
+//            else if(p_temp_info->local_space_dim == 3 && p_temp_info->global_space_dim == 3)
+//                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo3dBezier<NodeType>(temp_condition_nodes));
+//            else if(p_temp_info->local_space_dim == 2 && p_temp_info->global_space_dim == 3)
+//                p_temp_geometry = IsogeometricGeometryType::Pointer(new Geo2dBezier3<NodeType>(temp_condition_nodes));
+            p_temp_geometry = boost::dynamic_pointer_cast<IsogeometricGeometryType>(r_clone_condition.GetGeometry().Create(temp_condition_nodes));
 
             Vector dummy;
             int max_integration_method = (*p_temp_properties)[NUM_IGA_INTEGRATION_METHOD];

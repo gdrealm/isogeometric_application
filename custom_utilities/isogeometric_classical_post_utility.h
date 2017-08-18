@@ -30,6 +30,7 @@
 #include "includes/properties.h"
 #include "includes/ublas_interface.h"
 #include "includes/deprecated_variables.h"
+#include "includes/legacy_structural_app_vars.h"
 #include "spaces/ublas_space.h"
 #include "linear_solvers/linear_solver.h"
 #include "utilities/openmp_utils.h"
@@ -509,15 +510,15 @@ public:
 
             //select the correct post element type
             std::string element_name;
-            if(Dim == 2 && ReducedDim == 2)
+            if((Dim == 2) && (ReducedDim == 2))
             {
                 element_name = std::string("KinematicLinear2D4N");
             }
-            else if(Dim == 3 && ReducedDim == 2)
+            else if((Dim == 3) && (ReducedDim == 2))
             {
                 element_name = std::string("KinematicLinear2D4N");
             }
-            else if(Dim == 3 && ReducedDim == 3)
+            else if((Dim == 3) && (ReducedDim == 3))
             {
                 element_name = std::string("KinematicLinear3D8N");
             }
@@ -594,7 +595,9 @@ public:
                 ss << typeid(*(*it)).name();
                 ss << ", Dim = " << Dim;
                 ss << ", ReducedDim = " << ReducedDim;
-                KRATOS_THROW_ERROR(std::logic_error, ss.str(), __FUNCTION__);
+                ss << ". Condition " << (*it)->Id() << " will be skipped.";
+//                KRATOS_THROW_ERROR(std::logic_error, ss.str(), __FUNCTION__);
+                continue;
             }
 
             if(!KratosComponents<Condition>::Has(condition_name))
