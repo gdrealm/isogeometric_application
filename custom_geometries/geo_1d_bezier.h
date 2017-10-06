@@ -1121,7 +1121,7 @@ private:
      */
     MatrixType CalculateShapeFunctionsIntegrationPointsValues(IntegrationMethod ThisMethod ) const
     {
-        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod);
+        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod+1);
         const IntegrationPointsArrayType& integration_points = all_integration_points[ThisMethod];
         //number of integration points
         const int integration_points_number = integration_points.size();
@@ -1154,7 +1154,7 @@ private:
     ShapeFunctionsGradientsType
     CalculateShapeFunctionsIntegrationPointsLocalGradients(IntegrationMethod ThisMethod ) const
     {
-        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod);
+        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod+1);
         const IntegrationPointsArrayType& IntegrationPoints = all_integration_points[ThisMethod];
         ShapeFunctionsGradientsType DN_De( IntegrationPoints.size() );
         std::fill( DN_De.begin(), DN_De.end(), MatrixType( mNumber, 1 ) );
@@ -1196,6 +1196,18 @@ private:
         }
     }
 
+    virtual void CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients
+    (
+        MatrixType& shape_functions_values,
+        ShapeFunctionsGradientsType& shape_functions_local_gradients,
+        IntegrationMethod ThisMethod
+    ) const
+    {
+        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod+1);
+        const IntegrationPointsArrayType& integration_points = all_integration_points[ThisMethod];
+        CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(shape_functions_values, shape_functions_local_gradients, integration_points);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     // end of method to build to GeometryData
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1221,7 +1233,7 @@ private:
         BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints8, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
         BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints9, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
         BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints10, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        
+
         ///////////////////////////////////////////////////////////////
         // Remarks: this current implementation supports integration with order up to 9
         IndexType k, j1, offset1;
@@ -1251,8 +1263,8 @@ private:
             GaussRule.push_back(TempGaussRule);
         }
 
-        KRATOS_WATCH(NumberOfIntegrationMethod)
-        
+//        KRATOS_WATCH(NumberOfIntegrationMethod)
+
         IntegrationPointsContainerType integration_points;
         for (k = 0; k < NumberOfIntegrationMethod; ++k)
         {

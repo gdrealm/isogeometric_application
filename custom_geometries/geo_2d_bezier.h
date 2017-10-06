@@ -155,7 +155,7 @@ public:
      */
     typedef typename BaseType::ShapeFunctionsSecondDerivativesType
     ShapeFunctionsSecondDerivativesType;
-    
+
     /**
      * Type of the normal vector used for normal to edges in geomety.
      */
@@ -170,7 +170,7 @@ public:
      * Type of Matrix
      */
     typedef typename BaseType::MatrixType MatrixType;
-    
+
     /**
      * Type of Vector
      */
@@ -327,14 +327,14 @@ public:
         #ifdef DEBUG_LEVEL3
         std::cout << typeid(*this).name() << "::" << __FUNCTION__ << std::endl;
         #endif
-        
+
         IndexType NumberOfIntegrationPoints = this->IntegrationPointsNumber(ThisMethod);
-        
+
         shape_functions_values.resize(NumberOfIntegrationPoints, this->PointsNumber());
-        
+
         shape_functions_local_gradients.resize(NumberOfIntegrationPoints);
         std::fill(shape_functions_local_gradients.begin(), shape_functions_local_gradients.end(), MatrixType());
-        
+
         #ifdef DEBUG_LEVEL3
         KRATOS_WATCH(NumberOfIntegrationPoints)
         KRATOS_WATCH(mCtrlWeights)
@@ -342,7 +342,7 @@ public:
         KRATOS_WATCH(mNumber1)
         KRATOS_WATCH(mNumber2)
         #endif
-        
+
         const MatrixType& bezier_functions_values
 //                = this->ShapeFunctionsValues(ThisMethod); // this is correct but dangerous
             = mpBezierGeometryData->ShapeFunctionsValues( ThisMethod );
@@ -354,35 +354,35 @@ public:
         for(IndexType i = 0; i < NumberOfIntegrationPoints; ++i)
         {
             VectorType temp_bezier_values = row(bezier_functions_values, i);
-            
+
             //compute the Bezier weight
             VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
             double denom = inner_prod(temp_bezier_values, bezier_weights);
-            
+
             //compute the shape function values
             VectorType temp_values = prod(mExtractionOperator, temp_bezier_values);
             for(IndexType j = 0; j < this->PointsNumber(); ++j)
                 shape_functions_values(i, j) = (temp_values(j) * mCtrlWeights(j)) / denom;
-            
+
             //compute the shape function local gradients
             shape_functions_local_gradients[i].resize(this->PointsNumber(), 2);
             double tmp1 = inner_prod(row(bezier_functions_local_gradients[i], 0), bezier_weights);
             double tmp2 = inner_prod(row(bezier_functions_local_gradients[i], 1), bezier_weights);
-            
+
             VectorType tmp_gradients1 =
                 prod(
                     mExtractionOperator,
                         (1 / denom) * row(bezier_functions_local_gradients[i], 0) -
                             (tmp1 / pow(denom, 2)) * temp_bezier_values
                 );
-            
+
             VectorType tmp_gradients2 =
                 prod(
                     mExtractionOperator,
                         (1 / denom) * row(bezier_functions_local_gradients[i], 1) -
                             (tmp2 / pow(denom, 2)) * temp_bezier_values
                 );
-            
+
             for(IndexType j = 0; j < this->PointsNumber(); ++j)
             {
                 shape_functions_local_gradients[i](j, 0) = tmp_gradients1(j) * mCtrlWeights(j);
@@ -414,14 +414,14 @@ public:
     {
         MatrixType shape_functions_values;
         ShapeFunctionsGradientsType shape_functions_local_gradients;
-        
+
         //getting derivatives of shape functions
         CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             shape_functions_values,
             shape_functions_local_gradients,
             ThisMethod
         );
-        
+
         SizeType NumberOfIntegrationPoints = this->IntegrationPointsNumber( ThisMethod );
 
         if ( rResult.size() != NumberOfIntegrationPoints )
@@ -435,7 +435,7 @@ public:
         {
             //defining single jacobian matrix
             MatrixType jacobian = ZeroMatrix( 2, 2 );
-            
+
             //loop over all nodes
             for ( IndexType i = 0; i < this->PointsNumber(); ++i )
             {
@@ -470,14 +470,14 @@ public:
     {
         MatrixType shape_functions_values;
         ShapeFunctionsGradientsType shape_functions_local_gradients;
-        
+
         //getting derivatives of shape functions
         CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             shape_functions_values,
             shape_functions_local_gradients,
             ThisMethod
         );
-        
+
         SizeType NumberOfIntegrationPoints = this->IntegrationPointsNumber( ThisMethod );
 
         if ( rResult.size() != NumberOfIntegrationPoints )
@@ -491,7 +491,7 @@ public:
         {
             //defining single jacobian matrix
             MatrixType jacobian = ZeroMatrix( 2, 2 );
-            
+
             //loop over all nodes
             for ( IndexType i = 0; i < this->PointsNumber(); ++i )
             {
@@ -516,7 +516,7 @@ public:
 //    {
 //        JacobiansType J;
 //        J = Jacobian( J, ThisMethod );
-//        
+//
 //        if ( rResults.size() != J.size() )
 //        {
 //            rResults.resize(J.size());
@@ -538,7 +538,7 @@ public:
 //    {
 //        JacobiansType J;
 //        J = Jacobian( J, ThisMethod, DeltaPosition );
-//        
+//
 //        if ( rResults.size() != J.size() )
 //        {
 //            rResults.resize(J.size());
@@ -551,19 +551,19 @@ public:
 
 //        return rResults;
 //    }
-    
+
     virtual JacobiansType& Jacobian0( JacobiansType& rResult, IntegrationMethod ThisMethod ) const
     {
         MatrixType shape_functions_values;
         ShapeFunctionsGradientsType shape_functions_local_gradients;
-        
+
         //getting derivatives of shape functions
         CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             shape_functions_values,
             shape_functions_local_gradients,
             ThisMethod
         );
-        
+
         SizeType NumberOfIntegrationPoints = this->IntegrationPointsNumber( ThisMethod );
 
         if ( rResult.size() != NumberOfIntegrationPoints )
@@ -577,7 +577,7 @@ public:
         {
             //defining single jacobian matrix
             MatrixType jacobian = ZeroMatrix( 2, 2 );
-            
+
             //loop over all nodes
             for ( IndexType i = 0; i < this->PointsNumber(); ++i )
             {
@@ -617,7 +617,7 @@ public:
             for(IndexType j = 0; j < mNumber2; ++j)
             {
                 IndexType index = j + i * mNumber2;
-                bezier_functions_values(index) = 
+                bezier_functions_values(index) =
                     bezier_functions_values1(i) *
                     bezier_functions_values2(j);
             }
@@ -661,7 +661,7 @@ public:
             for(IndexType j = 0; j < mNumber2; ++j)
             {
                 IndexType index = j + i * mNumber2;
-                bezier_functions_values(index) = 
+                bezier_functions_values(index) =
                     bezier_functions_values1(i) *
                     bezier_functions_values2(j);
             }
@@ -675,11 +675,11 @@ public:
             for(IndexType j = 0; j < mNumber2; ++j)
             {
                 IndexType index = j + i * mNumber2;
-                    
-                bezier_functions_local_derivatives1(index) = 
+
+                bezier_functions_local_derivatives1(index) =
                     bezier_functions_derivatives1(i) *
                     bezier_functions_values2(j);
-                bezier_functions_local_derivatives2(index) = 
+                bezier_functions_local_derivatives2(index) =
                     bezier_functions_values1(i) *
                     bezier_functions_derivatives2(j);
             }
@@ -748,7 +748,7 @@ public:
             for(IndexType j = 0; j < mNumber2; ++j)
             {
                 IndexType index = j + i * mNumber2;
-                bezier_functions_values(index) = 
+                bezier_functions_values(index) =
                     bezier_functions_values1(i) *
                     bezier_functions_values2(j);
             }
@@ -762,11 +762,11 @@ public:
             for(IndexType j = 0; j < mNumber2; ++j)
             {
                 IndexType index = j + i * mNumber2;
-                    
-                bezier_functions_local_derivatives1(index) = 
+
+                bezier_functions_local_derivatives1(index) =
                     bezier_functions_derivatives1(i) *
                     bezier_functions_values2(j);
-                bezier_functions_local_derivatives2(index) = 
+                bezier_functions_local_derivatives2(index) =
                     bezier_functions_values1(i) *
                     bezier_functions_derivatives2(j);
             }
@@ -782,13 +782,13 @@ public:
             {
                 IndexType index = j + i * mNumber2;
 
-                bezier_functions_local_second_derivatives11(index) = 
+                bezier_functions_local_second_derivatives11(index) =
                     bezier_functions_second_derivatives1(i) *
                     bezier_functions_values2(j);
-                bezier_functions_local_second_derivatives12(index) = 
+                bezier_functions_local_second_derivatives12(index) =
                     bezier_functions_derivatives1(i) *
                     bezier_functions_derivatives2(j);
-                bezier_functions_local_second_derivatives22(index) = 
+                bezier_functions_local_second_derivatives22(index) =
                     bezier_functions_values1(i) *
                     bezier_functions_second_derivatives2(j);
             }
@@ -991,7 +991,7 @@ private:
         #ifdef DEBUG_LEVEL3
         std::cout << typeid(*this).name() << "::" << __FUNCTION__ << std::endl;
         #endif
-        
+
         //compute all univariate Bezier shape functions & derivatives at rPoint
         VectorType bezier_functions_values1(mNumber1);
         VectorType bezier_functions_values2(mNumber2);
@@ -999,7 +999,7 @@ private:
         VectorType bezier_functions_derivatives2(mNumber2);
         BezierUtils::bernstein(bezier_functions_values1, bezier_functions_derivatives1, mOrder1, rPoint[0]);
         BezierUtils::bernstein(bezier_functions_values2, bezier_functions_derivatives2, mOrder2, rPoint[1]);
-        
+
         //compute trivariate Bezier shape functions values
         VectorType bezier_functions_values(mNumber1 * mNumber2);
         for(IndexType i = 0; i < mNumber1; ++i)
@@ -1007,12 +1007,12 @@ private:
             for(IndexType j = 0; j < mNumber2; ++j)
             {
                 IndexType index = j + i * mNumber2;
-                bezier_functions_values(index) = 
+                bezier_functions_values(index) =
                     bezier_functions_values1(i) *
                     bezier_functions_values2(j);
             }
         }
-        
+
         //compute trivariate Bezier shape functions derivatives w.r.t local coordinates
         VectorType bezier_functions_local_derivatives1(mNumber1 * mNumber2);
         VectorType bezier_functions_local_derivatives2(mNumber1 * mNumber2);
@@ -1021,26 +1021,26 @@ private:
             for(IndexType j = 0; j < mNumber2; ++j)
             {
                 IndexType index = j + i * mNumber2;
-                    
-                bezier_functions_local_derivatives1(index) = 
+
+                bezier_functions_local_derivatives1(index) =
                     bezier_functions_derivatives1(i) *
                     bezier_functions_values2(j);
-                bezier_functions_local_derivatives2(index) = 
+                bezier_functions_local_derivatives2(index) =
                     bezier_functions_values1(i) *
                     bezier_functions_derivatives2(j);
             }
         }
-        
+
         //compute the Bezier weight
         VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
         double denom = inner_prod(bezier_functions_values, bezier_weights);
-        
+
         //compute the shape function values
         shape_functions_values.resize(this->PointsNumber());
         noalias( shape_functions_values ) = prod(mExtractionOperator, bezier_functions_values);
         for(IndexType i = 0; i < this->PointsNumber(); ++i)
             shape_functions_values(i) *= (mCtrlWeights(i) / denom);
-        
+
         //compute the shape function local gradients
         shape_functions_local_gradients.resize(this->PointsNumber(), 2);
         double tmp1 = inner_prod(bezier_functions_local_derivatives1, bezier_weights);

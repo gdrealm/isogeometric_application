@@ -216,7 +216,7 @@ public:
     /** Type of the normal vector used for normal to edges in geomety.
      */
     typedef typename BaseType::NormalType NormalType;
-    
+
     typedef typename BaseType::NormalType ValuesContainerType;
 
     /**
@@ -230,17 +230,17 @@ public:
     typedef typename BaseType::ptr_const_iterator           ptr_const_iterator;
     typedef typename BaseType::ptr_reverse_iterator         ptr_reverse_iterator;
     typedef typename BaseType::ptr_const_reverse_iterator   ptr_const_reverse_iterator;
-    
+
     /**
      * Type of Matrix
      */
     typedef Matrix MatrixType;
-    
+
     /**
      * Type of Vector
      */
     typedef Vector VectorType;
-    
+
     ///@}
     ///@name Life Cycle
     ///@{
@@ -413,7 +413,7 @@ public:
         int NumberOfIntegrationMethod
     )
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", *this)
+        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
     }
 
     /**
@@ -432,7 +432,7 @@ public:
         int NumberOfIntegrationMethod
     )
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", *this)
+        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
     }
 
     /**
@@ -444,7 +444,7 @@ public:
         const IntegrationPointsArrayType& integration_points
     ) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", *this)
+        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
     }
 
     virtual void CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
@@ -453,7 +453,7 @@ public:
         IntegrationMethod ThisMethod
     ) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", *this)
+        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
     }
 
     /**
@@ -461,7 +461,7 @@ public:
      */
     virtual JacobiansType& Jacobian0( JacobiansType& rResult, IntegrationMethod ThisMethod ) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", *this)
+        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
         return rResult;
     }
 
@@ -612,7 +612,7 @@ protected:
     ///@}
     ///@name Protected static Member Variables
     ///@{
-    
+
 
     ///@}
     ///@name Protected member Variables
@@ -711,7 +711,7 @@ private:
 //                Quadrature<LineGaussLegendreIntegrationPoints10, 1, IntegrationPoint<3> >::GenerateIntegrationPoints()
             }
         };
-        
+
         return integration_points;
     }
 
@@ -752,7 +752,7 @@ private:
         const CoordinatesArrayType& rPoint
     ) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", *this)
+        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
     }
 
     Matrix CalculateShapeFunctionsIntegrationPointsValues(IntegrationMethod ThisMethod, unsigned int Order) const
@@ -767,7 +767,7 @@ private:
         ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
         shape_functions_local_gradients.resize(integration_points_number);
         std::fill(shape_functions_local_gradients.begin(), shape_functions_local_gradients.end(), MatrixType());
-        
+
         //loop over all integration points
         //TODO: this can be optimized
         for(unsigned int pnt = 0; pnt < integration_points_number; ++pnt)
@@ -786,7 +786,7 @@ private:
 
         return shape_function_values;
     }
-    
+
     ShapeFunctionsGradientsType CalculateShapeFunctionsIntegrationPointsLocalGradients(IntegrationMethod ThisMethod, unsigned int Order) const
     {
         IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod);
@@ -866,6 +866,6 @@ inline std::ostream& operator << ( std::ostream& rOStream,
 
 }  // namespace Kratos.
 
-#endif // KRATOS_ISOGEOMETRIC_GEOMETRY_H_INCLUDED  defined 
+#endif // KRATOS_ISOGEOMETRIC_GEOMETRY_H_INCLUDED  defined
 
 

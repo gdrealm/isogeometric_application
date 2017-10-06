@@ -228,6 +228,16 @@ void NURBSTestUtils_ProbeJacobian3(
     dummy.ProbeJacobian(pElement, X, Y, Z);
 }
 
+void IsogeometricClassicalPostUtility_GenerateModelPart2WithCondition(IsogeometricClassicalPostUtility& dummy, ModelPart::Pointer pModelPartPost)
+{
+    dummy.GenerateModelPart2(pModelPartPost, true);
+}
+
+void IsogeometricClassicalPostUtility_GenerateModelPart2(IsogeometricClassicalPostUtility& dummy, ModelPart::Pointer pModelPartPost, const bool& generate_for_condition)
+{
+    dummy.GenerateModelPart2(pModelPartPost, generate_for_condition);
+}
+
 void IsogeometricApplication_AddCustomUtilitiesToPython()
 {
     using namespace boost::python;
@@ -259,7 +269,8 @@ void IsogeometricApplication_AddCustomUtilitiesToPython()
     
     class_<IsogeometricClassicalPostUtility, IsogeometricClassicalPostUtility::Pointer, boost::noncopyable>("IsogeometricClassicalPostUtility", init<ModelPart::Pointer>())
     .def("GenerateModelPart", &IsogeometricClassicalPostUtility::GenerateModelPart)
-    .def("GenerateModelPart2", &IsogeometricClassicalPostUtility::GenerateModelPart2)
+    .def("GenerateModelPart2", &IsogeometricClassicalPostUtility_GenerateModelPart2WithCondition)
+    .def("GenerateModelPart2", &IsogeometricClassicalPostUtility_GenerateModelPart2)
     .def("GenerateModelPart2AutoCollapse", &IsogeometricClassicalPostUtility::GenerateModelPart2AutoCollapse)
     .def("TransferNodalResults", &IsogeometricClassicalPostUtility::TransferNodalResults<Variable<double> >)
     .def("TransferNodalResults", &IsogeometricClassicalPostUtility::TransferNodalResults<Variable<Vector> >)

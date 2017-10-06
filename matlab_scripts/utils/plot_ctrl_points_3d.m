@@ -103,6 +103,10 @@ v = plot(0,0,v_color);
 w = plot(0,0,w_color);
 legend([u,v,w], 'u-dim', 'v-dim', 'w-dim');
 
+xlabel('x');
+ylabel('y');
+zlabel('z');
+
 if strcmp(params.axis,'on')
     Lx = line([0 1], [0 0], [0 0]);
     text(1, 0, 0, 'X');

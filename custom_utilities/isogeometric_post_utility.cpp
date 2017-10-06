@@ -1,6 +1,8 @@
 #include "includes/deprecated_variables.h"
 #include "isogeometric_post_utility.h"
 
+#define DEBUG_MULTISOLVE
+
 namespace Kratos
 {
     double IsogeometricPostUtility::CalculateOnPoint(
@@ -214,7 +216,7 @@ namespace Kratos
     {
         ElementsArrayType& ElementsArray = r_model_part.Elements();
 
-        unsigned int Dim = (*(ElementsArray.ptr_begin()))->GetGeometry().WorkingSpaceDimension();
+        const unsigned int& Dim = (*(ElementsArray.ptr_begin()))->GetGeometry().WorkingSpaceDimension();
         unsigned int VariableSize;
         bool is_allowed = (rThisVariable.Name() == std::string("STRESSES"))
                        || (rThisVariable.Name() == std::string("PLASTIC_STRAIN_VECTOR"))
@@ -258,12 +260,12 @@ namespace Kratos
         noalias(g)= ZeroMatrix(NumberOfNodes, VariableSize);
         SerialDenseSpaceType::MatrixType b(NumberOfNodes, VariableSize);
         noalias(b)= ZeroMatrix(NumberOfNodes, VariableSize);
-        
+
         //create a partition of the elements
         int number_of_threads = omp_get_max_threads();
         vector<unsigned int> element_partition;
         OpenMPUtils::CreatePartition(number_of_threads, ElementsArray.size(), element_partition);
-        
+
         KRATOS_WATCH( number_of_threads )
         KRATOS_WATCH( element_partition )
 
@@ -275,7 +277,7 @@ namespace Kratos
         #pragma omp parallel for
         for(int k = 0; k < number_of_threads; ++k)
         {
-            Matrix InvJ(3,3);
+            Matrix InvJ(Dim, Dim);
             double DetJ;
             unsigned int row, col;
 
@@ -296,7 +298,7 @@ namespace Kratos
 
                     IsogeometricGeometryType& rIsogeometricGeometry = dynamic_cast<IsogeometricGeometryType&>((*it)->GetGeometry());
                     J = rIsogeometricGeometry.Jacobian0(J, (*it)->GetIntegrationMethod());
-                    
+
                     GeometryType::ShapeFunctionsGradientsType DN_De;
                     Matrix Ncontainer;
                     rIsogeometricGeometry.CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
@@ -370,15 +372,18 @@ namespace Kratos
         start_compute = end_compute;
         #endif
 
+        #ifdef DEBUG_MULTISOLVE
+        KRATOS_WATCH(M)
+        KRATOS_WATCH(b)
+        KRATOS_WATCH(*pSolver)
+        #endif
+
         // solve the system
         // solver must support the multisove method
         pSolver->Solve(M, g, b);
 
         #ifdef DEBUG_MULTISOLVE
-        KRATOS_WATCH(M)
         KRATOS_WATCH(g)
-        KRATOS_WATCH(b)
-        KRATOS_WATCH(*pSolver)
         #endif
 
         // transfer the solution to the nodal variables

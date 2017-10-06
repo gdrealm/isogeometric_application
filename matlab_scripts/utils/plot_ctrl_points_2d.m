@@ -26,7 +26,7 @@ cnt = 1;
             point(1:3) = point(1:3) / point(4);
             scatter3(point(1), point(2), point(3), params.point_color);
             if strcmp(params.label,'on')
-                text(point(1), point(2), point(3), num2str(cnt));
+                text(point(1), point(2), point(3), num2str(cnt), 'HorizontalAlignment', 'right', 'VerticalAlignment', 'cap');
             end
             cnt = cnt + 1;
             if k > 1
@@ -66,6 +66,10 @@ legend([u,v], 'u-dim', 'v-dim');
 if ~isfield(params,'axis')
     params.axis = 'off';
 end
+
+xlabel('x');
+ylabel('y');
+zlabel('z');
 
 if strcmp(params.axis,'on')
     Lx = line([0 1], [0 0], [0 0]);

@@ -468,7 +468,7 @@ public:
     /// Generate the post model_part from reference model_part
     /// this is the improved version of GenerateModelPart
     /// which uses template function to generate post Elements for both Element and Condition
-    void GenerateModelPart2(ModelPart::Pointer pModelPartPost)
+    void GenerateModelPart2(ModelPart::Pointer pModelPartPost, const bool& generate_for_condition)
     {
         #ifdef ENABLE_PROFILING
         double start_compute = OpenMPUtils::GetCurrentTime();
@@ -552,76 +552,79 @@ public:
 
             ++show_progress;
         }
+        KRATOS_WATCH(ElementCounter)
 
         #ifdef DEBUG_LEVEL1
         std::cout << "Done generating for elements" << std::endl;
         #endif
 
         int ConditionCounter = 0;
-        boost::progress_display show_progress2( pConditions.size() );
-        for (typename ConditionsArrayType::ptr_iterator it = pConditions.ptr_begin(); it != pConditions.ptr_end(); ++it)
+        if (generate_for_condition)
         {
-            // This is wrong, we will not kill the IS_INACTIVE conditions
-            // TODO: to be deleted
-//            if((*it)->GetValue( IS_INACTIVE ))
-//            {
-////                std::cout << "Condition " << (*it)->Id() << " is inactive" << std::endl;
-//                ++show_progress2;
-//                continue;
-//            }
-            if((*it)->pGetGeometry() == 0)
-                KRATOS_THROW_ERROR(std::logic_error, "Error: geometry is NULL at condition", (*it)->Id())
-
-            int Dim = (*it)->GetGeometry().WorkingSpaceDimension(); // global dimension of the geometry that it works on
-            int ReducedDim = (*it)->GetGeometry().Dimension(); // reduced dimension of the geometry
-            int NodeCounter_old = NodeCounter;
-
-            #ifdef DEBUG_LEVEL1
-            KRATOS_WATCH(typeid((*it)->GetGeometry()).name())
-            KRATOS_WATCH(Dim)
-            KRATOS_WATCH(ReducedDim)
-            #endif
-
-            //select the correct post condition type
-            std::string condition_name;
-            if(Dim == 3 && ReducedDim == 1)
-                condition_name = std::string("LineForce3D2N");
-            else if(Dim == 3 && ReducedDim == 2)
-                condition_name = std::string("FaceForce3D4N");
-            else
+            boost::progress_display show_progress2( pConditions.size() );
+            for (typename ConditionsArrayType::ptr_iterator it = pConditions.ptr_begin(); it != pConditions.ptr_end(); ++it)
             {
-                std::stringstream ss;
-                ss << "Invalid dimension of ";
-                ss << typeid(*(*it)).name();
-                ss << ", Dim = " << Dim;
-                ss << ", ReducedDim = " << ReducedDim;
-                ss << ". Condition " << (*it)->Id() << " will be skipped.";
-//                KRATOS_THROW_ERROR(std::logic_error, ss.str(), __FUNCTION__);
-                continue;
+                // This is wrong, we will not kill the IS_INACTIVE conditions
+                // TODO: to be deleted
+    //            if((*it)->GetValue( IS_INACTIVE ))
+    //            {
+    ////                std::cout << "Condition " << (*it)->Id() << " is inactive" << std::endl;
+    //                ++show_progress2;
+    //                continue;
+    //            }
+                if((*it)->pGetGeometry() == 0)
+                    KRATOS_THROW_ERROR(std::logic_error, "Error: geometry is NULL at condition", (*it)->Id())
+
+                int Dim = (*it)->GetGeometry().WorkingSpaceDimension(); // global dimension of the geometry that it works on
+                int ReducedDim = (*it)->GetGeometry().Dimension(); // reduced dimension of the geometry
+                int NodeCounter_old = NodeCounter;
+
+                #ifdef DEBUG_LEVEL1
+                KRATOS_WATCH(typeid((*it)->GetGeometry()).name())
+                KRATOS_WATCH(Dim)
+                KRATOS_WATCH(ReducedDim)
+                #endif
+
+                //select the correct post condition type
+                std::string condition_name;
+                if(Dim == 3 && ReducedDim == 1)
+                    condition_name = std::string("LineForce3D2N");
+                else if(Dim == 3 && ReducedDim == 2)
+                    condition_name = std::string("FaceForce3D4N");
+                else
+                {
+                    std::stringstream ss;
+                    ss << "Invalid dimension of ";
+                    ss << typeid(*(*it)).name();
+                    ss << ", Dim = " << Dim;
+                    ss << ", ReducedDim = " << ReducedDim;
+                    ss << ". Condition " << (*it)->Id() << " will be skipped.";
+    //                KRATOS_THROW_ERROR(std::logic_error, ss.str(), __FUNCTION__);
+                    continue;
+                }
+
+                if(!KratosComponents<Condition>::Has(condition_name))
+                {
+                    std::stringstream buffer;
+                    buffer << "Condition " << condition_name << " is not registered in Kratos.";
+                    buffer << " Please check the spelling of the condition name and see if the application which containing it, is registered corectly.";
+                    KRATOS_THROW_ERROR(std::runtime_error, buffer.str(), "");
+                }
+
+                Condition const& rCloneCondition = KratosComponents<Condition>::Get(condition_name);
+
+                GenerateForOneEntity<Condition, 2>(*pModelPartPost,
+                                                   *(*it),
+                                                   rCloneCondition,
+                                                   NodeCounter_old,
+                                                   NodeCounter,
+                                                   ConditionCounter,
+                                                   NodeKey);
+
+                ++show_progress2;
             }
-
-            if(!KratosComponents<Condition>::Has(condition_name))
-            {
-                std::stringstream buffer;
-                buffer << "Condition " << condition_name << " is not registered in Kratos.";
-                buffer << " Please check the spelling of the condition name and see if the application which containing it, is registered corectly.";
-                KRATOS_THROW_ERROR(std::runtime_error, buffer.str(), "");
-            }
-
-            Condition const& rCloneCondition = KratosComponents<Condition>::Get(condition_name);
-
-            GenerateForOneEntity<Condition, 2>(*pModelPartPost,
-                                               *(*it),
-                                               rCloneCondition,
-                                               NodeCounter_old,
-                                               NodeCounter,
-                                               ConditionCounter,
-                                               NodeKey);
-
-            ++show_progress2;
+            KRATOS_WATCH(ConditionCounter)
         }
-        KRATOS_WATCH(ElementCounter)
-        KRATOS_WATCH(ConditionCounter)
 
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
@@ -629,7 +632,10 @@ public:
         #else
         std::cout << "GeneratePostModelPart2 completed" << std::endl;
         #endif
-        std::cout << NodeCounter << " nodes and " << ElementCounter << " elements" << ", " << ConditionCounter << " conditions are created" << std::endl;
+        std::cout << NodeCounter << " nodes and " << ElementCounter << " elements";
+        if (generate_for_condition)
+            std::cout << ", " << ConditionCounter << " conditions";
+        std::cout << " are created" << std::endl;
     }
 
     // Generate the post model_part from reference model_part
@@ -1853,7 +1859,7 @@ private:
     {
         ElementsArrayType& ElementsArray = pModelPart->Elements();
 
-        unsigned int Dim = (*(ElementsArray.ptr_begin()))->GetGeometry().WorkingSpaceDimension();
+        const unsigned int& Dim = (*(ElementsArray.ptr_begin()))->GetGeometry().WorkingSpaceDimension();
         unsigned int VariableSize;
         if(rThisVariable.Name() == std::string("STRESSES")
             || rThisVariable.Name() == std::string("PLASTIC_STRAIN_VECTOR")
@@ -1908,7 +1914,7 @@ private:
         #pragma omp parallel for
         for(int k = 0; k < number_of_threads; ++k)
         {
-            Matrix InvJ(3,3);
+            Matrix InvJ(Dim, Dim);
             double DetJ;
             unsigned int row, col;
 
@@ -2003,15 +2009,18 @@ private:
         start_compute = end_compute;
         #endif
 
+        #ifdef DEBUG_MULTISOLVE
+        KRATOS_WATCH(M)
+        KRATOS_WATCH(b)
+        KRATOS_WATCH(*pSolver)
+        #endif
+
         // solve the system
         // solver must support the multisove method
         pSolver->Solve(M, g, b);
 
         #ifdef DEBUG_MULTISOLVE
-        KRATOS_WATCH(M)
         KRATOS_WATCH(g)
-        KRATOS_WATCH(b)
-        KRATOS_WATCH(*pSolver)
         #endif
 
         // transfer the solution to the nodal variables

@@ -58,6 +58,10 @@ end
 light='off';
 cmap='summer';
 
+xlabel('x');
+ylabel('y');
+zlabel('z');
+
 % Recover Param/Value pairs from argument list
 for i=1:2:nargs-2
   Param = varargin{i};

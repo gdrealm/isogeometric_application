@@ -14,6 +14,8 @@ fprintf(fid, '\t\tself.layer_nodes_sets = {}\n');
 fprintf(fid, '\t\tself.layer_entities_sets = {}\n');
 fprintf(fid, '\t\tself.layer_entity_info_sets = {}\n');
 fprintf(fid, '\t\tself.layer_boundary_marker = {}\n');
+fprintf(fid, '\t\tself.control_points_row_u = {}\n');
+fprintf(fid, '\t\tself.control_points_row_v = {}\n');
 fprintf(fid, '\n');
 
 end
