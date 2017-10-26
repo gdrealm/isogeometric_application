@@ -296,22 +296,22 @@ public:
         return typename BaseType::BaseType::Pointer( new Geo1dNURBS( ThisPoints ) );
     }
 
-    virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const
-    {
-        Geometry< Point<3> >::PointsArrayType NewPoints;
-        //making a copy of the nodes TO POINTS (not Nodes!!!)
+//    virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const
+//    {
+//        Geometry< Point<3> >::PointsArrayType NewPoints;
+//        //making a copy of the nodes TO POINTS (not Nodes!!!)
 
-        for ( IndexType i = 0; i < this->Points().size(); ++i )
-        NewPoints.push_back( this->Points()[i] );
+//        for ( IndexType i = 0; i < this->Points().size(); ++i )
+//        NewPoints.push_back( this->Points()[i] );
 
-        //creating a geometry with the new points
-        boost::shared_ptr< Geometry< Point<3> > >
-        p_clone( new Geo1dNURBS< Point<3> >( NewPoints ) );
+//        //creating a geometry with the new points
+//        boost::shared_ptr< Geometry< Point<3> > >
+//        p_clone( new Geo1dNURBS< Point<3> >( NewPoints ) );
 
-        p_clone->ClonePoints();
+//        p_clone->ClonePoints();
 
-        return p_clone;
-    }
+//        return p_clone;
+//    }
 
     /**
      * TODO: TO BE CHECKED!!!!!!!!!!!

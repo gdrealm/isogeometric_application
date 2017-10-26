@@ -26,7 +26,7 @@
 
 namespace Kratos
 {
-///@addtogroup ApplicationNameApplication
+///@addtogroup IsogeometricApplication
 ///@{
 
 ///@name Kratos Globals

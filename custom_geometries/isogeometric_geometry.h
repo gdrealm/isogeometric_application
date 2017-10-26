@@ -359,28 +359,28 @@ public:
 //        return BaseType::Pointer( new IsogeometricGeometry( ThisPoints, BaseType::mpGeometryData ) );
 //    }
 
-    virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const
-    {
-        IsogeometricGeometry< Point<3> >::PointsArrayType NewPoints;
+//    virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const
+//    {
+//        IsogeometricGeometry< Point<3> >::PointsArrayType NewPoints;
 
-        //making a copy of the nodes TO POINTS (not Nodes!!!)
+//        //making a copy of the nodes TO POINTS (not Nodes!!!)
 
-        for ( IndexType i = 0 ; i < this->size() ; i++ )
-            #if defined(KRATOS_SD_REF_NUMBER_2)
-            NewPoints.push_back(( *this )[i] );
-            #elif defined(KRATOS_SD_REF_NUMBER_3)
-            NewPoints.push_back(boost::make_shared< Point<3> >(( *this )[i]));
-            #endif
+//        for ( IndexType i = 0 ; i < this->size() ; i++ )
+//            #if defined(KRATOS_SD_REF_NUMBER_2)
+//            NewPoints.push_back(( *this )[i] );
+//            #elif defined(KRATOS_SD_REF_NUMBER_3)
+//            NewPoints.push_back(boost::make_shared< Point<3> >(( *this )[i]));
+//            #endif
 
-        //NewPoints[i] = typename Point<3>::Pointer(new Point<3>(*mPoints[i]));
+//        //NewPoints[i] = typename Point<3>::Pointer(new Point<3>(*mPoints[i]));
 
-        //creating a geometry with the new points
-        boost::shared_ptr< IsogeometricGeometry< Point<3> > > p_clone( new IsogeometricGeometry< Point<3> >( NewPoints ) );
+//        //creating a geometry with the new points
+//        boost::shared_ptr< IsogeometricGeometry< Point<3> > > p_clone( new IsogeometricGeometry< Point<3> >( NewPoints ) );
 
-        p_clone->ClonePoints();
+//        p_clone->ClonePoints();
 
-        return p_clone;
-    }
+//        return p_clone;
+//    }
 
 //    virtual inline SizeType NURBS_Dimension() const
 //    {

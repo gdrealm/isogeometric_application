@@ -3,3 +3,4 @@ zmisc
 *.cpp.*
 *.h.*
 *.pyc
+doc

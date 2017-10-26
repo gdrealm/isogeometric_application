@@ -1,39 +1,5 @@
 /*
- ==============================================================================
- Kratos
- A General Purpose Software for Multi-Physics Finite Element Analysis
- Version 1.0 (Released on march 05, 2007).
-
- Copyright 2007
- Pooyan Dadvand, Riccardo Rossi
- pooyan@cimne.upc.edu
- rrossi@cimne.upc.edu
- CIMNE (International Center for Numerical Methods in Engineering),
- Gran Capita' s/n, 08034 Barcelona, Spain
-
- Permission is hereby granted, free  of charge, to any person obtaining
- a  copy  of this  software  and  associated  documentation files  (the
- "Software"), to  deal in  the Software without  restriction, including
- without limitation  the rights to  use, copy, modify,  merge, publish,
- distribute,  sublicense and/or  sell copies  of the  Software,  and to
- permit persons to whom the Software  is furnished to do so, subject to
- the following condition:
-
- Distribution of this code for  any  commercial purpose  is permissible
- ONLY BY DIRECT ARRANGEMENT WITH THE COPYRIGHT OWNER.
-
- The  above  copyright  notice  and  this permission  notice  shall  be
- included in all copies or substantial portions of the Software.
-
- THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
- EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- IN NO EVENT  SHALL THE AUTHORS OR COPYRIGHT HOLDERS  BE LIABLE FOR ANY
- CLAIM, DAMAGES OR  OTHER LIABILITY, WHETHER IN AN  ACTION OF CONTRACT,
- TORT  OR OTHERWISE, ARISING  FROM, OUT  OF OR  IN CONNECTION  WITH THE
- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- ==============================================================================
+see isogeometric_application/LICENSE.txt
  */
 
 //
@@ -312,24 +278,24 @@ public:
         return typename BaseType::BaseType::BaseType::Pointer( new Geo2dBezier3( ThisPoints ) );
     }
 
-    virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const
-    {
-//        Geometry< Point<3> >::PointsArrayType NewPoints;
-//        //making a copy of the nodes TO POINTS (not Nodes!!!)
+//    virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const
+//    {
+////        Geometry< Point<3> >::PointsArrayType NewPoints;
+////        //making a copy of the nodes TO POINTS (not Nodes!!!)
 
-//        for ( IndexType i = 0; i < this->Points().size(); ++i )
-//        NewPoints.push_back( this->Points()[i] );
+////        for ( IndexType i = 0; i < this->Points().size(); ++i )
+////        NewPoints.push_back( this->Points()[i] );
 
-//        //creating a geometry with the new points
-//        boost::shared_ptr< Geometry< Point<3> > >
-//        p_clone( new Geo2dBezier3< Point<3> >( NewPoints ) );
+////        //creating a geometry with the new points
+////        boost::shared_ptr< Geometry< Point<3> > >
+////        p_clone( new Geo2dBezier3< Point<3> >( NewPoints ) );
 
-//        p_clone->ClonePoints();
+////        p_clone->ClonePoints();
 
-//        return p_clone;
+////        return p_clone;
 
-        KRATOS_THROW_ERROR(std::logic_error, "NURBS geometry does not support for Clone", *this)
-    }
+//        KRATOS_THROW_ERROR(std::logic_error, "NURBS geometry does not support for Clone", *this)
+//    }
 
     /**
      * Informations
