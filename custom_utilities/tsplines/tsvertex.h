@@ -19,7 +19,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_utilities/knot.h"
+#include "custom_utilities/nurbs/knot.h"
 
 namespace Kratos
 {

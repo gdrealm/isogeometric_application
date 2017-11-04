@@ -66,14 +66,14 @@ set( KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/isogeometric_python_application.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/bezier_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/bspline_utils.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/tsplines/tsmesh_2d.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/cell_manager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/domain_manager_2d.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/domain_manager_3d.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isogeometric_post_utility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/nurbs/cell_manager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/nurbs/domain_manager_2d.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/nurbs/domain_manager_3d.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/hierarchical_nurbs/hn_basis_function.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/hierarchical_nurbs/hn_cell.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/hierarchical_nurbs/hn_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isogeometric_post_utility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/tsplines/tsmesh_2d.cpp
 )
 
 ###############################################################

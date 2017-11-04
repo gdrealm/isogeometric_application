@@ -1,4 +1,4 @@
-#include "domain_manager_3d.h"
+#include "custom_utilities/nurbs/domain_manager_3d.h"
 
 namespace Kratos
 {

@@ -5,8 +5,8 @@
 // #include "hn_cuboid.h" //unused
 #include "custom_utilities/bspline_utils.h"
 #include "custom_utilities/bezier_utils.h"
-#include "custom_utilities/cell_manager_2d.h"
-#include "custom_utilities/cell_manager_3d.h"
+#include "custom_utilities/nurbs/cell_manager_2d.h"
+#include "custom_utilities/nurbs/cell_manager_3d.h"
 #include "custom_utilities/triangulation_utils.h"
 #include "custom_utilities/isogeometric_math_utils.h"
 #include "utilities/auto_collapse_spatial_binning.h"
@@ -24,7 +24,7 @@
 namespace Kratos
 {
 
-    HnMesh::HnMesh(std::string Name) : mName(Name), mEchoLevel(0), mLastLevel(0), mMaxLevels(10)
+    HnMesh::HnMesh(const std::string& Name) : mName(Name), mEchoLevel(0), mLastLevel(0), mMaxLevels(10)
     {
     }
 
@@ -216,7 +216,7 @@ namespace Kratos
         std::cout << __FUNCTION__ << " completed" << std::endl;
     }
 
-    void HnMesh::ReadMesh(std::string fn)
+    void HnMesh::ReadMesh(const std::string& fn)
     {
         std::ifstream infile(fn.c_str());
         if(!infile)
@@ -424,7 +424,7 @@ namespace Kratos
 
                     // assign the coordinates and weight
                     int ifunc = j * num1 + i;
-                    p_bf->SetCoordinates(x_coords[ifunc], y_coords[ifunc], 0.0, weights[ifunc]);
+                    p_bf->GetControlPoint().SetCoordinates(x_coords[ifunc], y_coords[ifunc], 0.0, weights[ifunc]);
 
                     // create the cells for the basis function
                     for(std::size_t i1 = 0; i1 < mOrder1 + 1; ++i1)
@@ -480,7 +480,7 @@ namespace Kratos
 
                         // assign the coordinates and weight
                         int ifunc = (l * num2 + j) * num1 + i;
-                        p_bf->SetCoordinates(x_coords[ifunc], y_coords[ifunc], z_coords[ifunc], weights[ifunc]);
+                        p_bf->GetControlPoint().SetCoordinates(x_coords[ifunc], y_coords[ifunc], z_coords[ifunc], weights[ifunc]);
 
                         // create the cells for the basis function
                         for(std::size_t i1 = 0; i1 < mOrder1 + 1; ++i1)
@@ -518,7 +518,7 @@ namespace Kratos
 
 
 
-    void HnMesh::Refine(std::size_t Id)
+    void HnMesh::Refine(const std::size_t& Id)
     {
         #ifdef ENABLE_PROFILING
         double start = OpenMPUtils::GetCurrentTime();
@@ -626,10 +626,10 @@ namespace Kratos
             pnew_cells = cell_container_t::Pointer(new CellManager2D<HnCell>());
         else if(mDim == 3)
             pnew_cells = cell_container_t::Pointer(new CellManager3D<HnCell>());
-        double father_weight = p_bf->W();
-        double father_X = p_bf->X0();
-        double father_Y = p_bf->Y0();
-        double father_Z = p_bf->Z0();
+        double father_weight = p_bf->GetControlPoint().W();
+        double father_X = p_bf->GetControlPoint().X0();
+        double father_Y = p_bf->GetControlPoint().Y0();
+        double father_Z = p_bf->GetControlPoint().Z0();
         if(mDim == 2)
         {
             int num1 = pnew_local_knots[0].size() - mOrder1 - 1;
@@ -655,7 +655,7 @@ namespace Kratos
                     // update the coordinates
                     int ifunc = j * num1 + i;
                     double add_weight = father_weight * RefinedCoeffs[ifunc];
-                    pnew_bf->AddCoordinates(father_X, father_Y, father_Z, add_weight);
+                    pnew_bf->GetControlPoint().AddCoordinates(father_X, father_Y, father_Z, add_weight);
 
                     // create the cells for the basis function
                     for(std::size_t i1 = 0; i1 < mOrder1 + 1; ++i1)
@@ -713,7 +713,7 @@ namespace Kratos
                         // update the coordinates
                         int ifunc = (l * num2 + j) * num1 + i;
                         double add_weight = father_weight * RefinedCoeffs[ifunc];
-                        pnew_bf->AddCoordinates(father_X, father_Y, father_Z, add_weight);
+                        pnew_bf->GetControlPoint().AddCoordinates(father_X, father_Y, father_Z, add_weight);
 
                         // create the cells for the basis function
                         for(std::size_t i1 = 0; i1 < mOrder1 + 1; ++i1)
@@ -887,7 +887,8 @@ namespace Kratos
     }
 
 
-    void HnMesh::RefineWindow(double Xi_min, double Xi_max, double Eta_min, double Eta_max, double Zeta_min, double Zeta_max)
+    void HnMesh::RefineWindow(const double& Xi_min, const double& Xi_max,
+            const double& Eta_min, const double& Eta_max, const double& Zeta_min, const double& Zeta_max)
     {
         // search and mark all basis functions need to refine on all level (starting from the last level) which support is contained in the refining domain
         double bounding_box_xi_min;
@@ -922,7 +923,7 @@ namespace Kratos
     }
 
 
-    void HnMesh::LinearDependencyRefine(std::size_t refine_cycle)
+    void HnMesh::LinearDependencyRefine(const std::size_t& refine_cycle)
     {
         if(mLastLevel < 1)
             return;
@@ -1037,7 +1038,7 @@ namespace Kratos
                     (*it_bf)->ComputeExtractionOperator(*it_cell, Crow, mOrder1, mOrder2);
                 else if(mDim == 3)
                     (*it_bf)->ComputeExtractionOperator(*it_cell, Crow, mOrder1, mOrder2, mOrder3);
-                (*it_cell)->AddAnchor((*it_bf)->Id(), (*it_bf)->W(), Crow);
+                (*it_cell)->AddAnchor((*it_bf)->Id(), (*it_bf)->GetControlPoint().W(), Crow);
             }
         }
     }
@@ -1305,8 +1306,8 @@ namespace Kratos
                 outfile << "];\n";
             }
 
-            outfile << "P(" << cnt << ",:) = [" << (*it_bf)->X0() << " " << (*it_bf)->Y0() << " " << (*it_bf)->Z0() << "];\n";
-            outfile << "W(" << cnt << ") = " << (*it_bf)->W() << ";\n";
+            outfile << "P(" << cnt << ",:) = [" << (*it_bf)->GetControlPoint().X0() << " " << (*it_bf)->GetControlPoint().Y0() << " " << (*it_bf)->GetControlPoint().Z0() << "];\n";
+            outfile << "W(" << cnt << ") = " << (*it_bf)->GetControlPoint().W() << ";\n";
             outfile << "Id(" << cnt << ") = " << (*it_bf)->Id() << ";\n";
             outfile << std::endl;
         }
@@ -1374,10 +1375,10 @@ namespace Kratos
         for(typename bf_container_t::iterator it_bf = mBasisFuncs.begin(); it_bf != mBasisFuncs.end(); ++it_bf)
         {
             #ifdef MDPA_NODE_RENUMBERING
-            outfile << ++BfId << "\t" << (*it_bf)->X0() << "\t" << (*it_bf)->Y0() << "\t" << (*it_bf)->Z0() << std::endl; // assign new basis function id
+            outfile << ++BfId << "\t" << (*it_bf)->GetControlPoint().X0() << "\t" << (*it_bf)->GetControlPoint().Y0() << "\t" << (*it_bf)->GetControlPoint().Z0() << std::endl; // assign new basis function id
             OldToNewBfId[(*it_bf)->Id()] = BfId;
             #else
-            outfile << (*it_bf)->Id() << "\t" << (*it_bf)->X0() << "\t" << (*it_bf)->Y0() << "\t" << (*it_bf)->Z0() << std::endl; // assign new basis function id
+            outfile << (*it_bf)->Id() << "\t" << (*it_bf)->GetControlPoint().X0() << "\t" << (*it_bf)->GetControlPoint().Y0() << "\t" << (*it_bf)->GetControlPoint().Z0() << std::endl; // assign new basis function id
             #endif
         }
         outfile << "End Nodes\n\n";
@@ -1584,10 +1585,10 @@ namespace Kratos
         for(typename bf_container_t::iterator it_bf = mBasisFuncs.begin(); it_bf != mBasisFuncs.end(); ++it_bf)
         {
             #ifdef MDPA_NODE_RENUMBERING
-            outfile << ++BfId << "\t" << (*it_bf)->X0() << "\t" << (*it_bf)->Y0() << "\t" << (*it_bf)->Z0() << std::endl; // assign new basis function id
+            outfile << ++BfId << "\t" << (*it_bf)->GetControlPoint().X0() << "\t" << (*it_bf)->GetControlPoint().Y0() << "\t" << (*it_bf)->GetControlPoint().Z0() << std::endl; // assign new basis function id
             OldToNewBfId[(*it_bf)->Id()] = BfId;
             #else
-            outfile << (*it_bf)->Id() << "\t" << (*it_bf)->X0() << "\t" << (*it_bf)->Y0() << "\t" << (*it_bf)->Z0() << std::endl; // assign new basis function id
+            outfile << (*it_bf)->Id() << "\t" << (*it_bf)->GetControlPoint().X0() << "\t" << (*it_bf)->GetControlPoint().Y0() << "\t" << (*it_bf)->GetControlPoint().Z0() << std::endl; // assign new basis function id
             #endif
         }
         outfile << "End Nodes\n\n";
@@ -1769,9 +1770,9 @@ namespace Kratos
                             for(std::size_t k = 0; k < (*it_cell)->NumberOfAnchors(); ++k)
                             {
                                 std::size_t func_id = static_cast<std::size_t>(bfs_id[k]);
-                                X += R(k) * mBasisFuncs[func_id]->X0();
-                                Y += R(k) * mBasisFuncs[func_id]->Y0();
-                                Z += R(k) * mBasisFuncs[func_id]->Z0();
+                                X += R(k) * mBasisFuncs[func_id]->GetControlPoint().X0();
+                                Y += R(k) * mBasisFuncs[func_id]->GetControlPoint().Y0();
+                                Z += R(k) * mBasisFuncs[func_id]->GetControlPoint().Z0();
                             }
 
                             // add point to list
@@ -1878,9 +1879,9 @@ namespace Kratos
                                 for(std::size_t k = 0; k < (*it_cell)->NumberOfAnchors(); ++k)
                                 {
                                     std::size_t func_id = static_cast<std::size_t>(bfs_id[k]);
-                                    X += R(k) * mBasisFuncs[func_id]->X0();
-                                    Y += R(k) * mBasisFuncs[func_id]->Y0();
-                                    Z += R(k) * mBasisFuncs[func_id]->Z0();
+                                    X += R(k) * mBasisFuncs[func_id]->GetControlPoint().X0();
+                                    Y += R(k) * mBasisFuncs[func_id]->GetControlPoint().Y0();
+                                    Z += R(k) * mBasisFuncs[func_id]->GetControlPoint().Z0();
                                 }
 
                                 // add point to list
@@ -2252,9 +2253,9 @@ namespace Kratos
             for(std::size_t k = 0; k < p_cell->NumberOfAnchors(); ++k)
             {
                 std::size_t func_id = static_cast<std::size_t>(bfs_id[k]);
-                X += R(k) * mBasisFuncs[func_id]->X0();
-                Y += R(k) * mBasisFuncs[func_id]->Y0();
-                Z += R(k) * mBasisFuncs[func_id]->Z0();
+                X += R(k) * mBasisFuncs[func_id]->GetControlPoint().X0();
+                Y += R(k) * mBasisFuncs[func_id]->GetControlPoint().Y0();
+                Z += R(k) * mBasisFuncs[func_id]->GetControlPoint().Z0();
             }
 
             // add point to list

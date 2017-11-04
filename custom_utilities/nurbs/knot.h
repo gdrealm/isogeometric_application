@@ -15,7 +15,6 @@
 #include <iostream>
 
 // External includes 
-#include <omp.h>
 
 // Project includes
 #include "includes/define.h"
@@ -24,7 +23,7 @@ namespace Kratos
 {
 
 /**
-    Represent a knot in Tsplines mesh topology.
+    Represent a knot in isogeometric mesh topology.
     A knot is determined by its value and its index in the knot vectors. The knot value is fixed when knot is constructed, but the index can be changed if new knot are added to the knot vector
     The reason to keep the two stage definition is to control the repeated knot values. In case when the two knots have the same value, they will be differentiated by indexing
  */

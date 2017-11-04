@@ -19,7 +19,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "tsvertex.h"
+#include "custom_utilities/tsplines/tsvertex.h"
 
 
 namespace Kratos

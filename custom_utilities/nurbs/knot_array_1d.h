@@ -20,13 +20,13 @@
 
 // Project includes
 #include "includes/define.h"
-#include "knot.h"
+#include "custom_utilities/nurbs/knot.h"
 
 namespace Kratos
 {
 
 /**
-This container manage the KnotArray1D array in 1D. It allows for easy insertion, extraction of KnotArray1D from the array
+This container manages the knot array in 1D. It allows for easy insertion, extraction of knot from the array
 
 Short description:
 +   mpKnots is always sorted ascending
@@ -51,8 +51,9 @@ public:
     KnotArray1D()
     {}
 
-    /// Insert the knot to the array and return its pointer
-    knot_t pCreateKnot(TDataType k)
+    /// Insert the knot to the array and return its pointer.
+    /// This function creates the new knot regardless it is repetitive or not.
+    knot_t pCreateKnot(const TDataType& k)
     {
         // insert to the correct location
         iterator it;
@@ -73,20 +74,23 @@ public:
         return p_knot;
     }
 
-    /// Insert the knot to the array and return its pointer; in case the knot are repetitive, return the internal one
-    knot_t pCreateUniqueKnot(TDataType k, double tol)
+    /// Insert the knot to the array and return its pointer.
+    /// In the case that the knot are repetitive within the tolerance, return the internal one.
+    knot_t pCreateUniqueKnot(const TDataType& k, const double& tol)
     {
         // insert to the correct location
         for(iterator it = mpKnots.begin(); it != mpKnots.end(); ++it)
+        {
             if(fabs(k - (*it)->Value()) < tol)
             {
                 return *it;
             }
+        }
         return pCreateKnot(k);
     }
 
     /// Get the knot at index i
-    knot_t pKnotAt(int i)
+    knot_t pKnotAt(const int& i)
     {
         if(i >= 0 && i < mpKnots.size())
             return mpKnots[i];
@@ -94,13 +98,19 @@ public:
             KRATOS_THROW_ERROR(std::runtime_error, "Index access out of range", "")
     }
 
-    /// Iterators
+    /// Iterator
     iterator begin() {return mpKnots.begin();}
+
+    /// Iterator
     iterator end() {return mpKnots.end();}
+
+    /// Iterator
     const_iterator begin() const {return mpKnots.begin();}
+
+    /// Iterator
     const_iterator end() const {return mpKnots.end();}
 
-    // Get the size of the knot vector
+    /// Get the size of the knot vector
     std::size_t size() const {return mpKnots.size();}
 
     /// Information

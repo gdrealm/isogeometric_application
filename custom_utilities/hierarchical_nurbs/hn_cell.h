@@ -21,8 +21,8 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/ublas_interface.h"
-#include "custom_utilities/knot.h"
-#include "custom_utilities/cell.h"
+#include "custom_utilities/nurbs/knot.h"
+#include "custom_utilities/nurbs/cell.h"
 
 namespace Kratos
 {

@@ -6,8 +6,8 @@
 //
 //
 
-#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_CELL_MANAGER_3D_H_INCLUDED )
-#define  KRATOS_ISOGEOMETRIC_APPLICATION_CELL_MANAGER_3D_H_INCLUDED
+#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_CELL_MANAGER_2D_H_INCLUDED )
+#define  KRATOS_ISOGEOMETRIC_APPLICATION_CELL_MANAGER_2D_H_INCLUDED
 
 // System includes
 #include <string>
@@ -21,8 +21,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "knot.h"
-#include "cell_manager.h"
+#include "custom_utilities/nurbs/cell_manager.h"
 
 // #define USE_BRUTE_FORCE_TO_SEARCH_FOR_CELLS
 #define USE_R_TREE_TO_SEARCH_FOR_CELLS
@@ -38,11 +37,11 @@ namespace Kratos
   TODO
  */
 template<class TCellType>
-class CellManager3D : public CellManager<TCellType>
+class CellManager2D : public CellManager<TCellType>
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(CellManager3D);
+    KRATOS_CLASS_POINTER_DEFINITION(CellManager2D);
 
     /// Type definitions
     typedef CellManager<TCellType> BaseType;
@@ -51,15 +50,15 @@ public:
     typedef typename BaseType::iterator iterator;
 
     /// Default constructor
-    CellManager3D() : BaseType()
+    CellManager2D() : BaseType()
     {}
 
     /// Destructor
-    virtual ~CellManager3D()
+    virtual ~CellManager2D()
     {}
 
     /// Check if the cell exists in the list; ortherwise create new cell and return
-    virtual cell_t CreateCell(unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
+    virtual cell_t CreateCell(unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
     {
         // search in the list of cell if any cell has the same knot span
         // Currently I use the brute-force approach. I know it is not efficient. I will improve it in the future.
@@ -68,21 +67,19 @@ public:
             if( (*it)->Left()  == pLeft
              && (*it)->Right() == pRight
              && (*it)->Down()  == pDown
-             && (*it)->Up()    == pUp
-             && (*it)->Below() == pBelow
-             && (*it)->Above() == pAbove )
+             && (*it)->Up()    == pUp )
                 return *it;
         }
 
         // ortherwise create new cell
-        cell_t p_cell = cell_t(new TCellType(++BaseType::mLastId, Level, pLeft, pRight, pDown, pUp, pBelow, pAbove));
+        cell_t p_cell = cell_t(new TCellType(++BaseType::mLastId, Level, pLeft, pRight, pDown, pUp));
         BaseType::mpCells.insert(p_cell);
         BaseType::cell_map_is_created = false;
 
         #ifdef USE_R_TREE_TO_SEARCH_FOR_CELLS
         // update the r-tree
-        double cmin[] = {pLeft->Value(), pDown->Value(), pBelow->Value()};
-        double cmax[] = {pRight->Value(), pUp->Value(), pAbove->Value()};
+        double cmin[] = {pLeft->Value(), pDown->Value()};
+        double cmax[] = {pRight->Value(), pUp->Value()};
         rtree_cells.Insert(cmin, cmax, p_cell->Id());
         #endif
 
@@ -104,8 +101,8 @@ public:
 
         #ifdef USE_R_TREE_TO_SEARCH_FOR_CELLS
         // update the r-tree
-        double cmin[] = {p_cell->LeftValue(), p_cell->DownValue(), p_cell->BelowValue()};
-        double cmax[] = {p_cell->RightValue(), p_cell->UpValue(), p_cell->AboveValue()};
+        double cmin[] = {p_cell->LeftValue(), p_cell->DownValue()};
+        double cmax[] = {p_cell->RightValue(), p_cell->UpValue()};
         rtree_cells.Insert(cmin, cmax, p_cell->Id());
         #endif
 
@@ -142,15 +139,15 @@ public:
         // Currently I use the brute-force approach. I know it is not efficient. I will improve it in the future. TODO
         for(iterator it = BaseType::mpCells.begin(); it != BaseType::mpCells.end(); ++it)
             if(*it != p_cell)
-                if((*it)->IsCoverred(p_cell, 3))
+                if((*it)->IsCoverred(p_cell, 2))
                     p_cells.push_back(*it);
         #endif
 
         #ifdef USE_R_TREE_TO_SEARCH_FOR_CELLS
         // determine the overlapping cells; for now, this's only working in 3D
         std::vector<std::size_t> OverlappingCells;
-        double cmin[] = {p_cell->LeftValue(), p_cell->DownValue(), p_cell->BelowValue()};
-        double cmax[] = {p_cell->RightValue(), p_cell->UpValue(), p_cell->AboveValue()};
+        double cmin[] = {p_cell->LeftValue(), p_cell->DownValue()};
+        double cmax[] = {p_cell->RightValue(), p_cell->UpValue()};
         int nhits = rtree_cells.Search(cmin, cmax, CellManager_RtreeSearchCallback, (void*)(&OverlappingCells));
 //        printf("Search resulted in %d hits\n", nhits);
 
@@ -159,7 +156,7 @@ public:
         {
             cell_t pthis_cell = this->get(OverlappingCells[i]);
             if(pthis_cell != p_cell)
-                if(pthis_cell->IsCoverred(p_cell, 3))
+                if(pthis_cell->IsCoverred(p_cell, 2))
                     p_cells.push_back(pthis_cell);
         }
         #endif
@@ -178,13 +175,13 @@ public:
 
 private:
     #ifdef USE_R_TREE_TO_SEARCH_FOR_CELLS
-    RTree<std::size_t, double, 3, double> rtree_cells;
+    RTree<std::size_t, double, 2, double> rtree_cells;
     #endif
 };
 
 /// output stream function
 template<class TCellType>
-inline std::ostream& operator <<(std::ostream& rOStream, const CellManager3D<TCellType>& rThis)
+inline std::ostream& operator <<(std::ostream& rOStream, const CellManager2D<TCellType>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rThis.PrintData(rOStream);
@@ -196,5 +193,5 @@ inline std::ostream& operator <<(std::ostream& rOStream, const CellManager3D<TCe
 #undef USE_BRUTE_FORCE_TO_SEARCH_FOR_CELLS
 #undef USE_R_TREE_TO_SEARCH_FOR_CELLS
 
-#endif // KRATOS_ISOGEOMETRIC_APPLICATION_CELL_MANAGER_3D_H_INCLUDED
+#endif // KRATOS_ISOGEOMETRIC_APPLICATION_CELL_MANAGER_2D_H_INCLUDED
 

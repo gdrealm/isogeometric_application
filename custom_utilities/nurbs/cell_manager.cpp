@@ -1,4 +1,4 @@
-#include "cell_manager.h"
+#include "custom_utilities/nurbs/cell_manager.h"
 
 namespace Kratos
 {

@@ -27,9 +27,9 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/ublas_interface.h"
-#include "custom_utilities/cell.h"
-#include "tsedges.h"
-#include "tsanchor.h"
+#include "custom_utilities/nurbs/cell.h"
+#include "custom_utilities/tsplines/tsedges.h"
+#include "custom_utilities/tsplines/tsanchor.h"
 
 namespace Kratos
 {

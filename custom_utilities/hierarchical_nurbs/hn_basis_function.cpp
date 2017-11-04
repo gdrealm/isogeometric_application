@@ -1,4 +1,4 @@
-#include "hn_basis_function.h"
+#include "custom_utilities/hierarchical_nurbs/hn_basis_function.h"
 
 // #define DEBUG_BEZIER_EXTRACTION
 

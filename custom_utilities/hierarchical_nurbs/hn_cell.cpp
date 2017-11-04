@@ -1,5 +1,5 @@
-#include "hn_cell.h"
-#include "hn_basis_function.h"
+#include "custom_utilities/hierarchical_nurbs/hn_cell.h"
+#include "custom_utilities/hierarchical_nurbs/hn_basis_function.h"
 
 namespace Kratos
 {

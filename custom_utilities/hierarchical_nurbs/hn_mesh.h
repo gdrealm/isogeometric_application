@@ -32,13 +32,13 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/ublas_interface.h"
-#include "custom_utilities/knot.h"
-#include "custom_utilities/knot_array_1d.h"
-#include "custom_utilities/cell_manager.h"
-#include "custom_utilities/basis_function_manager.h"
-#include "custom_utilities/domain_manager_2d.h"
-#include "custom_utilities/domain_manager_3d.h"
-#include "hn_basis_function.h"
+#include "custom_utilities/nurbs/knot.h"
+#include "custom_utilities/nurbs/knot_array_1d.h"
+#include "custom_utilities/nurbs/cell_manager.h"
+#include "custom_utilities/nurbs/domain_manager_2d.h"
+#include "custom_utilities/nurbs/domain_manager_3d.h"
+#include "custom_utilities/hierarchical_nurbs/basis_function_manager.h"
+#include "custom_utilities/hierarchical_nurbs/hn_basis_function.h"
 
 namespace Kratos
 {
@@ -142,7 +142,7 @@ public:
     typedef std::map<std::size_t, domain_t> domain_container_t;
 
     /// Default constructor
-    HnMesh(std::string Name);
+    HnMesh(const std::string& Name);
 
     /// Destructor
     ~HnMesh() {}
@@ -152,40 +152,42 @@ public:
     **************************************************************************/
 
     /// Get the name of this hierarchical mesh
-    std::string Name() const {return mName;}
+    const std::string& Name() const {return mName;}
 
     /// Set the echo level for this mesh
-    void SetEchoLevel(int Level) {mEchoLevel = Level;}
+    void SetEchoLevel(const int& Level) {mEchoLevel = Level;}
 
     /// Get the echo level
-    int GetEchoLevel() const {return mEchoLevel;}
+    const int& GetEchoLevel() const {return mEchoLevel;}
 
     /// Set the maximum level allowed in the hierarchical mesh
-    void SetMaxLevels(std::size_t n) {mMaxLevels = n;}
+    void SetMaxLevels(const std::size_t& MaxLevels) {mMaxLevels = MaxLevels;}
 
     /**************************************************************************
                             INPUT SUBROUTINES
     **************************************************************************/
 
     /// Read and construct the first level from file
-    void ReadMesh(std::string fn);
+    void ReadMesh(const std::string& fn);
 
     /**************************************************************************
                             REFINEMENT SUBROUTINES
     **************************************************************************/
 
     /// Refine a basis function specified by the Id
-    void Refine(std::size_t Id);
+    void Refine(const std::size_t& Id);
 
     /// Refine a list of bfs provided by python list. The list will be automatically sorted by the level.
     void RefineNodes(boost::python::list& pyList);
 
     /// Refine on a cuboid domain
-    void RefineWindow(double Xi_min, double Xi_max, double Eta_min, double Eta_max, double Zeta_min, double Zeta_max);
+    void RefineWindow(const double& Xi_min, const double& Xi_max,
+            const double& Eta_min, const double& Eta_max,
+            const double& Zeta_min, const double& Zeta_max);
 
     /// Perform additional refinement to ensure linear independence
     /// In this algorithm, every bf in each level will be checked. If the support domain of a bf contained in the domain_manager of that level, this bf will be refined. According to the paper of Vuong et al, this will produce a linear independent bases.
-    void LinearDependencyRefine(std::size_t refine_cycle);
+    void LinearDependencyRefine(const std::size_t& refine_cycle);
 
     /// Finalize the hierarchical mesh construction and compute the Bezier decomposition at each cell
     void BuildMesh();

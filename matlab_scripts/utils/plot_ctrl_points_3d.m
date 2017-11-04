@@ -50,6 +50,7 @@ for i = 1:w_dim
                 if k == 2
                     L = quiver3(old_point_u(1),old_point_u(2),old_point_u(3),point(1)-old_point_u(1),point(2)-old_point_u(2),point(3)-old_point_u(3));
 %                    set(L, 'markersize', 10.0);
+                    u_plot_for_legend = L;
                 else
                     L = line([old_point_u(1) point(1)], [old_point_u(2) point(2)], [old_point_u(3) point(3)]);
                 end
@@ -69,6 +70,7 @@ for i = 1:w_dim
             if j > 1
                 if j == 2
                     L = quiver3(old_point_v(1),old_point_v(2),old_point_v(3),point(1)-old_point_v(1),point(2)-old_point_v(2),point(3)-old_point_v(3));
+                    v_plot_for_legend = L;
                 else
                     L = line([old_point_v(1) point(1)], [old_point_v(2) point(2)], [old_point_v(3) point(3)]);
                 end
@@ -88,6 +90,7 @@ for j = 1:v_dim
             if i > 1
                 if i == 2
                     L = quiver3(old_point_w(1),old_point_w(2),old_point_w(3),point(1)-old_point_w(1),point(2)-old_point_w(2),point(3)-old_point_w(3));
+                    w_plot_for_legend = L;
                 else
                     L = line([old_point_w(1) point(1)], [old_point_w(2) point(2)], [old_point_w(3) point(3)]);
                 end
@@ -98,10 +101,7 @@ for j = 1:v_dim
     end
 end
 
-u = plot(0,0,u_color);
-v = plot(0,0,v_color);
-w = plot(0,0,w_color);
-legend([u,v,w], 'u-dim', 'v-dim', 'w-dim');
+legend([u_plot_for_legend,v_plot_for_legend,w_plot_for_legend], 'u-dim', 'v-dim', 'w-dim');
 
 xlabel('x');
 ylabel('y');

@@ -61,10 +61,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "custom_utilities/nurbs_test_utils.h"
 #include "custom_utilities/bezier_test_utils.h"
 #include "custom_utilities/isogeometric_merge_utility.h"
+#include "custom_utilities/nurbs/domain_manager.h"
+#include "custom_utilities/nurbs/domain_manager_2d.h"
 #include "custom_utilities/tsplines/tsmesh_2d.h"
 #include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
-#include "custom_utilities/domain_manager.h"
-#include "custom_utilities/domain_manager_2d.h"
 
 #ifdef ISOGEOMETRIC_USE_HDF5
 #include "custom_utilities/hdf5_post_utility.h"

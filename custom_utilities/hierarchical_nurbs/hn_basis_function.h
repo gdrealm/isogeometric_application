@@ -29,8 +29,9 @@
 #include "includes/define.h"
 #include "includes/ublas_interface.h"
 #include "custom_utilities/bezier_utils.h"
-#include "custom_utilities/knot.h"
-#include "hn_cell.h"
+#include "custom_utilities/nurbs/knot.h"
+#include "custom_utilities/nurbs/control_point.h"
+#include "custom_utilities/hierarchical_nurbs/hn_cell.h"
 
 namespace Kratos
 {
@@ -46,6 +47,7 @@ public:
 
     /// Type definition
     typedef Knot<double> KnotType;
+    typedef ControlPoint<double> ControlPointType;
     typedef KnotType::Pointer knot_t;
 
     typedef HnBasisFunction::Pointer bf_t;
@@ -59,7 +61,7 @@ public:
     typedef cell_container_t::const_iterator cell_const_iterator;
 
     /// Default constructor
-    HnBasisFunction(std::size_t Id, unsigned int Level) : mId(Id), mLevel(Level), mX(0.0), mY(0.0), mZ(0.0), mW(0.0)
+    HnBasisFunction(std::size_t Id, unsigned int Level) : mId(Id), mLevel(Level)
     {}
 
     /// Destructor
@@ -159,13 +161,10 @@ public:
     /// Get the level id of this basis function
     unsigned int Level() const {return mLevel;}
 
-    /// Get and Set the coordinates
-    double X0() const {return mX/mW;}
-    double Y0() const {return mY/mW;}
-    double Z0() const {return mZ/mW;}
-    double W() const {return mW;}
-    void SetCoordinates(double X, double Y, double Z, double W) {mX = W*X; mY = W*Y; mZ = W*Z; mW = W;}
-    void AddCoordinates(double X, double Y, double Z, double W) {mX += W*X; mY += W*Y; mZ += W*Z; mW += W;}
+    /// Get the underlying control point
+    /// TODO move control point to the grid
+    ControlPointType& GetControlPoint() {return mControlPoint;}
+    const ControlPointType& GetControlPoint() const {return mControlPoint;}
 
     /// Get the local knot vectors
     template<class ValuesContainerType>
@@ -305,10 +304,10 @@ public:
     void PrintInfo(std::ostream& rOStream) const
     {
         rOStream << "Bf(id:" << Id()
-                 << ",(x:" << X0()
-                 << ",y:"  << Y0()
-                 << ",z:"  << Z0()
-                 << ",w:"  << W()
+                 << ",(x:" << GetControlPoint().X0()
+                 << ",y:"  << GetControlPoint().Y0()
+                 << ",z:"  << GetControlPoint().Z0()
+                 << ",w:"  << GetControlPoint().W()
                  << "))";
     }
 
@@ -353,7 +352,7 @@ public:
 private:
     std::size_t mId;
     unsigned int mLevel;
-    double mX, mY, mZ, mW; // homogeneous coordinates
+    ControlPointType mControlPoint;
     bf_container_t mpChilds; // list of refined basis functions that constitute this basis function
     std::map<int, double> mRefinedCoefficients; // coefficient of refined basis functions
     cell_container_t mpCells; // list of cells support this basis function at the level of this basis function

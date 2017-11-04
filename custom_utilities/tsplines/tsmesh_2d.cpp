@@ -1,4 +1,4 @@
-#include "tsmesh_2d.h"
+#include "custom_utilities/tsplines/tsmesh_2d.h"
 #include "custom_utilities/bezier_utils.h"
 
 namespace Kratos
