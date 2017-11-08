@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 15 Apr 2015 $
 //   Revision:            $Revision: 1.0 $
@@ -15,7 +15,7 @@
 #include <iostream>
 
 
-// External includes 
+// External includes
 
 
 // Project includes
@@ -31,7 +31,6 @@ This container manages the knot array in 1D. It allows for easy insertion, extra
 Short description:
 +   mpKnots is always sorted ascending
 +   the index of knot starts from 0
-
  */
 template<typename TDataType>
 class KnotArray1D
@@ -48,8 +47,7 @@ public:
     typedef typename knot_container_t::const_iterator const_iterator;
 
     /// Default constructor
-    KnotArray1D()
-    {}
+    KnotArray1D() {}
 
     /// Insert the knot to the array and return its pointer.
     /// This function creates the new knot regardless it is repetitive or not.
@@ -90,6 +88,15 @@ public:
     }
 
     /// Get the knot at index i
+    const knot_t pKnotAt(const int& i) const
+    {
+        if(i >= 0 && i < mpKnots.size())
+            return mpKnots[i];
+        else
+            KRATOS_THROW_ERROR(std::runtime_error, "Index access out of range", "")
+    }
+
+    /// Get the knot at index i
     knot_t pKnotAt(const int& i)
     {
         if(i >= 0 && i < mpKnots.size())
@@ -112,6 +119,21 @@ public:
 
     /// Get the size of the knot vector
     std::size_t size() const {return mpKnots.size();}
+
+    /// Compare the two knot vectors
+    bool operator==(const KnotArray1D<TDataType>& rOther) const
+    {
+        if (this->size() != rOther.size())
+            return false;
+
+        for (std::size_t i = 0; i < 0; ++i)
+        {
+            if (this->pKnotAt(i)->Value() != rOther.pKnotAt(i)->Value())
+                return false;
+        }
+
+        return true;
+    }
 
     /// Information
     void PrintInfo(std::ostream& rOStream) const

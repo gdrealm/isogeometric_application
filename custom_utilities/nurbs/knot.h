@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 15 Apr 2015 $
 //   Revision:            $Revision: 1.0 $
@@ -14,7 +14,7 @@
 #include <vector>
 #include <iostream>
 
-// External includes 
+// External includes
 
 // Project includes
 #include "includes/define.h"
@@ -35,24 +35,25 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(Knot);
 
     /// Default constructor
-    Knot(TDataType Value) : mValue(Value), mIndex(-1), mIsActive(true)
+    Knot(const TDataType& Value) : mValue(Value), mIndex(-1), mIsActive(true)
     {}
 
     /// Get and Set for knot index
-    int Index() const {return mIndex;}
-    void UpdateIndex(int Index) {mIndex = Index;}
-    
+    const int& Index() const {return mIndex;}
+    void UpdateIndex(const int& Index) {mIndex = Index;}
+
     /// Get the knot value
-    TDataType Value() const {return mValue;}
+    TDataType& Value() {return mValue;}
+    const TDataType& Value() const {return mValue;}
 
     /// Get and Set for mIsActive
-    bool IsActive() const {return mIsActive;}
-    void SetActive(bool IsActive) {mIsActive = IsActive;}
-    
+    const bool& IsActive() const {return mIsActive;}
+    void SetActive(const bool& IsActive) {mIsActive = IsActive;}
+
     /// Information
     void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "(" << mIndex << ", " << mValue << ")";
+        rOStream << "(" << Index() << ", " << Value() << ")";
     }
 
 private:
