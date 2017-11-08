@@ -63,6 +63,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "custom_utilities/isogeometric_merge_utility.h"
 #include "custom_utilities/nurbs/domain_manager.h"
 #include "custom_utilities/nurbs/domain_manager_2d.h"
+#include "custom_utilities/nurbs/patch.h"
+#include "custom_utilities/nurbs/nurbs_patch.h"
+#include "custom_utilities/nurbs/nurbs_patch_library.h"
+#include "custom_utilities/nurbs/grid_function_utility.h"
 #include "custom_utilities/tsplines/tsmesh_2d.h"
 #include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
 
@@ -80,6 +84,7 @@ namespace Kratos
 namespace Python
 {
 
+using namespace boost::python;
 
 int BSplineUtils_FindSpan(
     BSplineUtils& dummy,
@@ -238,23 +243,95 @@ void IsogeometricClassicalPostUtility_GenerateModelPart2(IsogeometricClassicalPo
     dummy.GenerateModelPart2(pModelPartPost, generate_for_condition);
 }
 
+template<std::size_t TDim>
+void IsogeometricApplication_AddHnMeshToPython()
+{
+    std::stringstream ss;
+    ss << "HnMesh" << TDim << "D";
+
+    class_<HnMesh<TDim>, typename HnMesh<TDim>::Pointer, boost::noncopyable>
+    (ss.str().c_str(), init<const std::size_t&, const std::string&>())
+    .def("SetEchoLevel", &HnMesh<TDim>::SetEchoLevel)
+    .def("ReadMesh", &HnMesh<TDim>::ReadMesh)
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    .def("Refine", &HnMesh<TDim>::Refine) // use this for debugging only, use RefineNodes and LinearDependencyRefine instead
+    .def("RefineNodes", &HnMesh<TDim>::RefineNodes)
+    .def("LinearDependencyRefine", &HnMesh<TDim>::LinearDependencyRefine)
+    .def("BuildMesh", &HnMesh<TDim>::BuildMesh)
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    .def("ExportCellTopology", &HnMesh<TDim>::ExportCellTopology)
+    .def("ExportCellGeology", &HnMesh<TDim>::ExportCellGeology)
+//    .def("ExportRefinedDomain", &HnMesh<TDim>::ExportRefinedDomain)
+    .def("ExportSupportDomain", &HnMesh<TDim>::ExportSupportDomain)
+    .def("ExportMatlab", &HnMesh<TDim>::ExportMatlab)
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    .def("ExportMDPA", &HnMesh<TDim>::ExportMDPA)
+    .def("ExportMDPA2", &HnMesh<TDim>::ExportMDPA2)
+    .def("ExportPostMDPA", &HnMesh<TDim>::ExportPostMDPA)
+    .def("ExportCellGeologyAsPostMDPA", &HnMesh<TDim>::ExportCellGeologyAsPostMDPA)
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    .def("PrintKnotVectors", &HnMesh<TDim>::PrintKnotVectors)
+    .def("PrintCells", &HnMesh<TDim>::PrintCells)
+    .def("PrintBasisFuncs", &HnMesh<TDim>::PrintBasisFuncs)
+    .def("PrintRefinementHistory", &HnMesh<TDim>::PrintRefinementHistory)
+    .def("CheckNestedSpace", &HnMesh<TDim>::CheckNestedSpace)
+    .def(self_ns::str(self))
+    ;
+}
+
+Patch<2>::Pointer NURBSPatchLibrary_CreateRectanglePatch(NURBSPatchLibrary& rDummy, const std::size_t& order_u, const std::size_t& order_v)
+{
+    std::vector<std::size_t> orders(2);
+    orders[0] = order_u;
+    orders[1] = order_v;
+    return rDummy.CreateRegularPatch<2>(orders);
+}
+
+Patch<3>::Pointer NURBSPatchLibrary_CreateCubePatch(NURBSPatchLibrary& rDummy, const std::size_t& order_u, const std::size_t& order_v, const std::size_t& order_w)
+{
+    std::vector<std::size_t> orders(3);
+    orders[0] = order_u;
+    orders[1] = order_v;
+    orders[2] = order_w;
+    return rDummy.CreateRegularPatch<3>(orders);
+}
+
+GridFunction<2, ControlPoint<double> >::Pointer GridFunctionUtility_CreateRectangleControlPointGrid(
+        GridFunctionUtility& rDummy,
+        const double& startx, const double& starty,
+        const std::size_t& m_segments, const std::size_t& n_segments,
+        const double& space_x, const double& space_y)
+{
+    std::vector<double> start(2);
+    start[0] = startx;
+    start[1] = starty;
+
+    std::vector<std::size_t> ngrid(2);
+    ngrid[0] = m_segments;
+    ngrid[1] = n_segments;
+
+    std::vector<double> spacing(2);
+    spacing[0] = spacex;
+    spacing[1] = spacey;
+
+    rDummy.CreateRegularControlPointGrid<2>(start, ngrid, spacing);
+}
+
 void IsogeometricApplication_AddCustomUtilitiesToPython()
 {
-    using namespace boost::python;
-    
     enum_<PostElementType>("PostElementType")
     .value("Triangle", _TRIANGLE_)
     .value("Quadrilateral", _QUADRILATERAL_)
     .value("Tetrahedra", _TETRAHEDRA_)
     .value("Hexahedra", _HEXAHEDRA_)
     ;
-    
+
     class_<BSplineUtils, BSplineUtils::Pointer, boost::noncopyable>("BSplineUtils", init<>())
     .def("FindSpan", BSplineUtils_FindSpan)
     .def("BasisFuns", BSplineUtils_BasisFuns)
     .def("test_ComputeBsplinesKnotInsertionCoefficients1DLocal", &BSplineUtils::test_ComputeBsplinesKnotInsertionCoefficients1DLocal)
     ;
-    
+
     class_<BezierUtils, BezierUtils::Pointer, boost::noncopyable>("BezierUtils", init<>())
     .def("Bernstein", BezierUtils_Bernstein)
     .def("BernsteinDerivative", BezierUtils_Bernstein_der)
@@ -266,7 +343,7 @@ void IsogeometricApplication_AddCustomUtilitiesToPython()
     .def("test_tsplines_1", &BezierUtils::test_tsplines_1)
     .def("test_bezier_extraction_local_1d", &BezierUtils::test_bezier_extraction_local_1d)
     ;
-    
+
     class_<IsogeometricClassicalPostUtility, IsogeometricClassicalPostUtility::Pointer, boost::noncopyable>("IsogeometricClassicalPostUtility", init<ModelPart::Pointer>())
     .def("GenerateModelPart", &IsogeometricClassicalPostUtility::GenerateModelPart)
     .def("GenerateModelPart2", &IsogeometricClassicalPostUtility_GenerateModelPart2WithCondition)
@@ -309,7 +386,7 @@ void IsogeometricApplication_AddCustomUtilitiesToPython()
     .def("ReadElementalData", &HDF5PostUtility::ReadElementalData<bool>)
     ;
     #endif
-    
+
     class_<NURBSTestUtils, NURBSTestUtils::Pointer, boost::noncopyable>("NURBSTestUtils", init<>())
     .def("Test1", &NURBSTestUtils::Test1)
     .def("Test2", &NURBSTestUtils::Test2)
@@ -324,14 +401,57 @@ void IsogeometricApplication_AddCustomUtilitiesToPython()
     .def("DumpNodalValues", &NURBSTestUtils::DumpNodalValues<double>)
     .def("DumpNodalValues", &NURBSTestUtils::DumpNodalValues<array_1d<double, 3> >)
     ;
-    
+
     class_<IsogeometricMergeUtility, IsogeometricMergeUtility::Pointer, boost::noncopyable>(
         "IsogeometricMergeUtility", init<>())
     .def("Add", &IsogeometricMergeUtility::Add)
     .def("Export", &IsogeometricMergeUtility::Export)
     .def("DumpNodalVariablesList", &IsogeometricMergeUtility::DumpNodalVariablesList)
     ;
-    
+
+    /////////////////////////////////////////////////////////////////
+    ///////////////////////NURBS/////////////////////////////////////
+    /////////////////////////////////////////////////////////////////
+
+    class_<DomainManager, DomainManager::Pointer, boost::noncopyable>
+    ("DomainManager", init<std::size_t>())
+    ;
+
+    class_<DomainManager2D, DomainManager2D::Pointer, boost::noncopyable>
+    ("DomainManager2D", init<std::size_t>())
+    .def("AddXcoord", &DomainManager2D::AddXcoord)
+    .def("AddYcoord", &DomainManager2D::AddYcoord)
+    .def("AddCell", &DomainManager2D::AddCell)
+    .def("IsInside", &DomainManager2D::IsInside)
+    .def(self_ns::str(self))
+    ;
+
+    class_<Patch<2>, Patch<2>::Pointer, boost::noncopyable>
+    ("Patch2D", init<const std::size_t&>())
+    ;
+
+    class_<Patch<3>, Patch<3>::Pointer, boost::noncopyable>
+    ("Patch3D", init<const std::size_t&>())
+    ;
+
+    class_<NURBSPatch<2>, NURBSPatch<2>::Pointer, boost::noncopyable>
+    ("NURBSPatch2D", init<const std::size_t&>())
+    ;
+
+    class_<NURBSPatch<3>, NURBSPatch<3>::Pointer, boost::noncopyable>
+    ("NURBSPatch3D", init<const std::size_t&>())
+    ;
+
+    class_<NURBSPatchLibrary, NURBSPatchLibrary::Pointer, boost::noncopyable>
+    ("NURBSPatchLibrary", init<>())
+    .def("CreateRectanglePatch", &NURBSPatchLibrary_CreateRectanglePatch)
+    .def("CreateCubePatch", &NURBSPatchLibrary_CreateCubePatch)
+    ;
+
+    /////////////////////////////////////////////////////////////////
+    ///////////////////////TSPLINES//////////////////////////////////
+    /////////////////////////////////////////////////////////////////
+
     class_<TsMesh2D, TsMesh2D::Pointer, boost::noncopyable>
     ("TsMesh2D", init<>())
     .def("BeginConstruct", &TsMesh2D::BeginConstruct)
@@ -347,51 +467,16 @@ void IsogeometricApplication_AddCustomUtilitiesToPython()
     .def(self_ns::str(self))
     ;
 
+    /////////////////////////////////////////////////////////////////
+    ///////////////////////HIERARCHICAL NURBS////////////////////////
+    /////////////////////////////////////////////////////////////////
+
     enum_<HN_ECHO_FLAGS>("HN_ECHO_FLAGS")
     .value("ECHO_REFIMENT", ECHO_REFIMENT)
     ;
 
-    class_<HnMesh, HnMesh::Pointer, boost::noncopyable>
-    ("HnMesh", init<std::string>())
-    .def("SetEchoLevel", &HnMesh::SetEchoLevel)
-    .def("ReadMesh", &HnMesh::ReadMesh)
-    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-    .def("Refine", &HnMesh::Refine) // use this for debugging only, use RefineNodes and LinearDependencyRefine instead
-    .def("RefineNodes", &HnMesh::RefineNodes)
-    .def("LinearDependencyRefine", &HnMesh::LinearDependencyRefine)
-    .def("BuildMesh", &HnMesh::BuildMesh)
-    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-    .def("ExportCellTopology", &HnMesh::ExportCellTopology)
-    .def("ExportCellGeology", &HnMesh::ExportCellGeology)
-//    .def("ExportRefinedDomain", &HnMesh::ExportRefinedDomain)
-    .def("ExportSupportDomain", &HnMesh::ExportSupportDomain)
-    .def("ExportMatlab", &HnMesh::ExportMatlab)
-    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-    .def("ExportMDPA", &HnMesh::ExportMDPA)
-    .def("ExportMDPA2", &HnMesh::ExportMDPA2)
-    .def("ExportPostMDPA", &HnMesh::ExportPostMDPA)
-    .def("ExportCellGeologyAsPostMDPA", &HnMesh::ExportCellGeologyAsPostMDPA)
-    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-    .def("PrintKnotVectors", &HnMesh::PrintKnotVectors)
-    .def("PrintCells", &HnMesh::PrintCells)
-    .def("PrintBasisFuncs", &HnMesh::PrintBasisFuncs)
-    .def("PrintRefinementHistory", &HnMesh::PrintRefinementHistory)
-    .def("CheckNestedSpace", &HnMesh::CheckNestedSpace)
-    .def(self_ns::str(self))
-    ;
-
-    class_<DomainManager, DomainManager::Pointer, boost::noncopyable>
-    ("DomainManager", init<std::size_t>())
-    ;
-
-    class_<DomainManager2D, DomainManager2D::Pointer, boost::noncopyable>
-    ("DomainManager2D", init<std::size_t>())
-    .def("AddXcoord", &DomainManager2D::AddXcoord)
-    .def("AddYcoord", &DomainManager2D::AddYcoord)
-    .def("AddCell", &DomainManager2D::AddCell)
-    .def("IsInside", &DomainManager2D::IsInside)
-    .def(self_ns::str(self))
-    ;
+    IsogeometricApplication_AddHnMeshToPython<2>();
+    IsogeometricApplication_AddHnMeshToPython<3>();
 
     #ifdef ISOGEOMETRIC_USE_GISMO
     class_<GismoMesh, GismoMesh::Pointer, boost::noncopyable>

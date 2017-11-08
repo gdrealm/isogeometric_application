@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 18 May 2015 $
 //   Revision:            $Revision: 1.1 $
@@ -20,7 +20,7 @@
 #include <set>
 #include <list>
 
-// External includes 
+// External includes
 #include <omp.h>
 #include "boost/progress.hpp"
 #include "boost/algorithm/string.hpp"
@@ -37,6 +37,7 @@
 #include "custom_utilities/nurbs/cell_manager.h"
 #include "custom_utilities/nurbs/domain_manager_2d.h"
 #include "custom_utilities/nurbs/domain_manager_3d.h"
+#include "custom_utilities/nurbs/patch.h"
 #include "custom_utilities/hierarchical_nurbs/basis_function_manager.h"
 #include "custom_utilities/hierarchical_nurbs/hn_basis_function.h"
 
@@ -49,10 +50,10 @@ enum HN_ECHO_FLAGS
 };
 
 /**
-    Class represents a Hierarchical NURBS mesh in 2D
-
+Hierarchical NURBS mesh and refinement
 */
-class HnMesh
+template<std::size_t TDim>
+class HnMesh : public Patch<TDim>
 {
 private:
     template<class data_type>
@@ -72,9 +73,9 @@ private:
                     mj = i;
                 }
             }
-            
+
             ~unordered_pair() {}
-            
+
             bool operator<(const unordered_pair& rOther) const
             {
                 if(mi == rOther.mi)
@@ -82,7 +83,7 @@ private:
                 else
                     return mi < rOther.mi;
             }
-            
+
             data_type first() const {return mi;}
             data_type second() const {return mj;}
 
@@ -98,14 +99,14 @@ private:
             {
                 // TODO
             }
-            
+
             ~unordered_tuple() {}
-            
+
             bool operator<(const unordered_tuple& rOther) const
             {
                 // TODO
             }
-            
+
         private:
             data_type mi, mj, mk, ml;
     };
@@ -129,6 +130,8 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(HnMesh);
 
     /// Type definition
+    typedef Patch<TDim> BaseType;
+
     typedef KnotArray1D<double> knot_container_t;
     typedef typename knot_container_t::knot_t knot_t;
 
@@ -141,14 +144,18 @@ public:
     typedef DomainManager::Pointer domain_t;
     typedef std::map<std::size_t, domain_t> domain_container_t;
 
+    /**************************************************************************
+                           CONSTRUCTOR
+    **************************************************************************/
+
     /// Default constructor
-    HnMesh(const std::string& Name);
+    HnMesh(const std::size_t& Id, const std::string& Name);
 
     /// Destructor
     ~HnMesh() {}
 
     /**************************************************************************
-                           MODIFICATION SUBROUTINES
+                           FUNDAMENTAL SUBROUTINES
     **************************************************************************/
 
     /// Get the name of this hierarchical mesh
@@ -159,6 +166,9 @@ public:
 
     /// Get the echo level
     const int& GetEchoLevel() const {return mEchoLevel;}
+
+    /// Get the number of basis functions defined over the patch
+    virtual const std::size_t& Number() const {return mBasisFuncs.size();}
 
     /// Set the maximum level allowed in the hierarchical mesh
     void SetMaxLevels(const std::size_t& MaxLevels) {mMaxLevels = MaxLevels;}
@@ -196,6 +206,9 @@ public:
                             INFORMATION SUBROUTINES
     **************************************************************************/
 
+    /// Get the string describing the type of the patch
+    virtual const std::string Type() const {return "Hierarchical NURB Patch";}
+
     /// Print information of this hierarchical mesh
     void PrintInfo(std::ostream& rOStream) const;
 
@@ -226,6 +239,9 @@ public:
     /**************************************************************************
                             AUXILIARY SUBROUTINES
     **************************************************************************/
+
+    /// Validate the patch
+    virtual bool Validate() const;
 
     /// Build the hierarchical boundary mesh
     void BuildBoundaryMesh(HnMesh& rMesh, std::string boundary_mesh_type) const;
@@ -268,7 +284,6 @@ private:
     std::string mName;
     unsigned int mEchoLevel;
 
-    unsigned int mDim;
     unsigned int mOrder1;
     unsigned int mOrder2;
     unsigned int mOrder3;
@@ -297,9 +312,9 @@ private:
         else
         {
             domain_t p_domain;
-            if(mDim == 2)
+            if(TDim == 2)
                 p_domain = domain_t(new DomainManager2D(Level));
-            else if(mDim == 3)
+            else if(TDim == 3)
                 p_domain = domain_t(new DomainManager3D(Level));
             mSupportDomains[Level] = p_domain;
             return p_domain;
@@ -320,8 +335,31 @@ private:
 
 };
 
+/**
+ * Template specific instantiation for null-D hierarchical NURBS patch to terminate the compilation
+ */
+template<>
+class HnMesh<0> : public Patch<0>
+{
+    /// Pointer definition
+    KRATOS_CLASS_POINTER_DEFINITION(HnMesh);
+
+    /// Default constructor
+    HnMesh(const std::size_t& Id, const std::string& Name) : Patch<0>(Id), mName(Name) {}
+
+    /// Destructor
+    ~HnMesh() {}
+
+    /// Get the name of this hierarchical mesh
+    const std::string& Name() const {return mName;}
+
+private:
+    std::string mName;
+};
+
 /// output stream function
-inline std::ostream& operator<<(std::ostream& rOStream, const HnMesh& rThis)
+template<std::size_t TDim>
+inline std::ostream& operator<<(std::ostream& rOStream, const HnMesh<TDim>& rThis)
 {
     rThis.PrintInfo(rOStream);
     return rOStream;

@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 4 Nov 2017 $
 //   Revision:            $Revision: 1.0 $
@@ -14,7 +14,7 @@
 #include <vector>
 #include <iostream>
 
-// External includes 
+// External includes
 
 // Project includes
 #include "includes/define.h"
@@ -66,6 +66,33 @@ public:
         mY += W*Y;
         mZ += W*Z;
         mW += W;
+    }
+
+    /// Assignment operator
+    ControlPoint& operator=(const ControlPoint& rOther)
+    {
+        this->mX = rOther.mX;
+        this->mY = rOther.mY;
+        this->mZ = rOther.mZ;
+        this->mW = rOther.mW;
+        return *this;
+    }
+
+    /// Addition operator
+    ControlPoint& operator+=(const ControlPoint& rOther)
+    {
+        this->mX += rOther.mX;
+        this->mY += rOther.mY;
+        this->mZ += rOther.mZ;
+        this->mW += rOther.mW;
+        return *this;
+    }
+
+    /// Addition operator
+    friend ControlPoint operator+(ControlPoint lhs, const ControlPoint& rhs)
+    {
+        lhs += rhs;
+        return lhs;
     }
 
     /// Information

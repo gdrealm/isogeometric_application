@@ -1,12 +1,12 @@
 #include <fstream>
 #include <algorithm>
 #include "utilities/openmp_utils.h"
-#include "hn_mesh.h"
 // #include "hn_cuboid.h" //unused
 #include "custom_utilities/bspline_utils.h"
 #include "custom_utilities/bezier_utils.h"
 #include "custom_utilities/nurbs/cell_manager_2d.h"
 #include "custom_utilities/nurbs/cell_manager_3d.h"
+#include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
 #include "custom_utilities/triangulation_utils.h"
 #include "custom_utilities/isogeometric_math_utils.h"
 #include "utilities/auto_collapse_spatial_binning.h"
@@ -24,20 +24,25 @@
 namespace Kratos
 {
 
-    HnMesh::HnMesh(const std::string& Name) : mName(Name), mEchoLevel(0), mLastLevel(0), mMaxLevels(10)
+    template<std::size_t TDim>
+    HnMesh<TDim>::HnMesh(const std::size_t& Id, const std::string& Name)
+    : Patch<TDim>(Id), mName(Name), mEchoLevel(0), mLastLevel(0), mMaxLevels(10)
     {
     }
 
-    void HnMesh::PrintInfo(std::ostream& rOStream) const
+    template<std::size_t TDim>
+    void HnMesh<TDim>::PrintInfo(std::ostream& rOStream) const
     {
         rOStream << "Hierarchical NURBS mesh " << mName << ", number of levels = " << mLastLevel;
     }
 
-    void HnMesh::PrintData(std::ostream& rOStream) const
+    template<std::size_t TDim>
+    void HnMesh<TDim>::PrintData(std::ostream& rOStream) const
     {
     }
 
-    void HnMesh::PrintKnotVectors() const
+    template<std::size_t TDim>
+    void HnMesh<TDim>::PrintKnotVectors() const
     {
         std::cout << "###############Begin knot vectors################" << std::endl;
         std::cout << "knot vector 1:" << mKnots1 << std::endl;
@@ -46,7 +51,8 @@ namespace Kratos
         std::cout << "###############End knot vectors##################" << std::endl;
     }
 
-    void HnMesh::PrintCells(int level) const
+    template<std::size_t TDim>
+    void HnMesh<TDim>::PrintCells(int level) const
     {
         if(level > 0)
         {
@@ -67,7 +73,8 @@ namespace Kratos
         }
     }
 
-    void HnMesh::PrintBasisFuncs(int level) const
+    template<std::size_t TDim>
+    void HnMesh<TDim>::PrintBasisFuncs(int level) const
     {
         if(level > 0)
         {
@@ -88,7 +95,8 @@ namespace Kratos
         }
     }
 
-    void HnMesh::PrintRefinementHistory() const
+    template<std::size_t TDim>
+    void HnMesh<TDim>::PrintRefinementHistory() const
     {
         std::cout << "Refinement history:";
         for(std::size_t i = 0; i < mRefinementHistory.size(); ++i)
@@ -96,7 +104,8 @@ namespace Kratos
         std::cout << std::endl;
     }
 
-//    void HnMesh::CheckNestedSpace()
+    // template<std::size_t TDim>
+//    void HnMesh<TDim>::CheckNestedSpace()
 //    {
 //        std::cout << __FUNCTION__ << " starts" << std::endl;
 //        double Xmin, Xmax, Ymin, Ymax, Zmin, Zmax;
@@ -105,10 +114,10 @@ namespace Kratos
 //            // extract the support domain of the next level
 //            std::size_t level = (*it_bf)->Level();
 //            domain_t p_domain = GetSupportDomain(level + 1);
-// 
+//
 //            // get the support domain of the bf
 //            (*it_bf)->GetBoundingBox(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
-// 
+//
 //            // check if the bf support domain contained in the refined domain managed by the domain manager
 //            std::size_t subdomain_id = p_domain->IsInside(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
 //            if(subdomain_id != 0)
@@ -117,7 +126,8 @@ namespace Kratos
 //        std::cout << __FUNCTION__ << " completed" << std::endl;
 //    }
 
-    void HnMesh::BuildNestedSpace(std::size_t level, std::map<std::size_t, std::set<std::size_t> >& rK)
+    template<std::size_t TDim>
+    void HnMesh<TDim>::BuildNestedSpace(std::size_t level, std::map<std::size_t, std::set<std::size_t> >& rK)
     {
         // check the first criteria
         if(level == 1)
@@ -136,9 +146,9 @@ namespace Kratos
                 mBasisFuncs[*it]->GetBoundingBox(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
 
                 bool is_inside;
-                if(mDim == 2)
+                if(TDim == 2)
                     is_inside = GetSupportDomain(level)->IsInside(Xmin, Xmax, Ymin, Ymax);
-                else if(mDim == 3)
+                else if(TDim == 3)
                     is_inside = GetSupportDomain(level)->IsInside(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
 
                 if(is_inside)
@@ -156,7 +166,8 @@ namespace Kratos
             }
     }
 
-    void HnMesh::CheckNestedSpace()
+    template<std::size_t TDim>
+    void HnMesh<TDim>::CheckNestedSpace()
     {
         std::cout << __FUNCTION__ << " starts" << std::endl;
 
@@ -192,9 +203,9 @@ namespace Kratos
                 (*it_bf)->GetBoundingBox(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
 
                 bool is_inside;
-                if(mDim == 2)
+                if(TDim == 2)
                     is_inside = p_domain->IsInside(Xmin, Xmax, Ymin, Ymax);
-                else if(mDim == 3)
+                else if(TDim == 3)
                     is_inside = p_domain->IsInside(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
 
                 if(is_inside)
@@ -216,7 +227,8 @@ namespace Kratos
         std::cout << __FUNCTION__ << " completed" << std::endl;
     }
 
-    void HnMesh::ReadMesh(const std::string& fn)
+    template<std::size_t TDim>
+    void HnMesh<TDim>::ReadMesh(const std::string& fn)
     {
         std::ifstream infile(fn.c_str());
         if(!infile)
@@ -253,7 +265,9 @@ namespace Kratos
                     }
 
                     // read info
-                    mDim = atoi(words[0].c_str());
+                    int Dim = atoi(words[0].c_str());
+                    if (Dim != TDim)
+                        KRATOS_THROW_ERROR(std::logic_error, "The input dimension is invalid", "")
                     npatches = atoi(words[1].c_str());
                     if(npatches > 1)
                     {
@@ -269,11 +283,11 @@ namespace Kratos
                 if(read_mode == READ_ORDER)
                 {
                     // bound check
-                    if(words.size() != mDim)
+                    if(words.size() != TDim)
                         KRATOS_THROW_ERROR(std::logic_error, "The Order section must contained number of information equal to dimension, current number of information =", words.size())
 
                     // read info
-                    for(std::size_t i = 0; i < mDim; ++i)
+                    for(std::size_t i = 0; i < TDim; ++i)
                         orders.push_back(atoi(words[i].c_str()));
                     read_mode = READ_NUMBER;
                     continue;
@@ -282,10 +296,10 @@ namespace Kratos
                 if(read_mode == READ_NUMBER)
                 {
                     // bound check
-                    if(words.size() != mDim)
+                    if(words.size() != TDim)
                         KRATOS_THROW_ERROR(std::logic_error, "The Number section must contained number of information equal to dimension, current number of information =", words.size())
 
-                    for(std::size_t i = 0; i < mDim; ++i)
+                    for(std::size_t i = 0; i < TDim; ++i)
                         numbers.push_back(atoi(words[i].c_str()));
                     read_mode = READ_KNOTS;
                     continue;
@@ -312,7 +326,7 @@ namespace Kratos
                     }
 
                     ++dim_index;
-                    if(dim_index == mDim)
+                    if(dim_index == TDim)
                     {
                         dim_index = 0;
                         read_mode = READ_COORDINATES;
@@ -324,7 +338,7 @@ namespace Kratos
                 {
                     // bound check
                     int num_basis = 1;
-                    for(std::size_t i = 0; i < mDim; ++i)
+                    for(std::size_t i = 0; i < TDim; ++i)
                         num_basis *= numbers[i];
                     if(words.size() != num_basis)
                         KRATOS_THROW_ERROR(std::logic_error, "The Coordinates section must contained number of information equal to prod(ni), current number of information =", words.size())
@@ -340,7 +354,7 @@ namespace Kratos
                             z_coords.push_back(atof(words[i].c_str()));
 
                     ++dim_index;
-                    if(dim_index == mDim)
+                    if(dim_index == TDim)
                     {
                         dim_index = 0;
                         read_mode = READ_WEIGHTS;
@@ -352,7 +366,7 @@ namespace Kratos
                 {
                     // bound check
                     int num_basis = 1;
-                    for(std::size_t i = 0; i < mDim; ++i)
+                    for(std::size_t i = 0; i < TDim; ++i)
                         num_basis *= numbers[i];
                     if(words.size() != num_basis)
                         KRATOS_THROW_ERROR(std::logic_error, "The Weights section must contained number of information equal to prod(ni), current number of information =", words.size())
@@ -385,14 +399,14 @@ namespace Kratos
         {
             x_coords[i] /= weights[i];
             y_coords[i] /= weights[i];
-            if(mDim > 2)
+            if(TDim > 2)
                 z_coords[i] /= weights[i];
         }
 
         // initialize the cell container
-        if(mDim == 2)
+        if(TDim == 2)
             mpCellManager = cell_container_t::Pointer(new CellManager2D<HnCell>());
-        else if(mDim == 3)
+        else if(TDim == 3)
             mpCellManager = cell_container_t::Pointer(new CellManager3D<HnCell>());
 
         // create bfs for the first level
@@ -400,7 +414,7 @@ namespace Kratos
         unsigned int level = 1;
         mLastLevel = 1;
         double area_tol = 1.0e-6; // tolerance to accept the nonzero-area cell. We should parameterize it. TODO
-        if(mDim == 2)
+        if(TDim == 2)
         {
             int num1 = mKnots1.size() - mOrder1 - 1;
             int num2 = mKnots2.size() - mOrder2 - 1;
@@ -449,7 +463,7 @@ namespace Kratos
                 }
             }
         }
-        else if(mDim == 3)
+        else if(TDim == 3)
         {
             int num1 = mKnots1.size() - mOrder1 - 1;
             int num2 = mKnots2.size() - mOrder2 - 1;
@@ -516,9 +530,8 @@ namespace Kratos
             std::cout << "ReadMesh and build level 1 completed" << std::endl;
     }
 
-
-
-    void HnMesh::Refine(const std::size_t& Id)
+    template<std::size_t TDim>
+    void HnMesh<TDim>::Refine(const std::size_t& Id)
     {
         #ifdef ENABLE_PROFILING
         double start = OpenMPUtils::GetCurrentTime();
@@ -585,8 +598,8 @@ namespace Kratos
         for(unsigned int i = 0; i < 3; ++i)
             p_bf->GetLocalKnots(i + 1, local_knots[i]);
 
-        std::vector<std::vector<double> > new_knots(mDim);
-        if(mDim == 2)
+        std::vector<std::vector<double> > new_knots(TDim);
+        if(TDim == 2)
             BSplineUtils::ComputeBsplinesKnotInsertionCoefficients2DLocal(RefinedCoeffs,
                                                                           new_knots[0],
                                                                           new_knots[1],
@@ -596,7 +609,7 @@ namespace Kratos
                                                                           local_knots[1],
                                                                           ins_knots[0],
                                                                           ins_knots[1]);
-        else if(mDim == 3)
+        else if(TDim == 3)
             BSplineUtils::ComputeBsplinesKnotInsertionCoefficients3DLocal(RefinedCoeffs,
                                                                           new_knots[0],
                                                                           new_knots[1],
@@ -622,15 +635,15 @@ namespace Kratos
             mLastLevel = next_level;
         double area_tol = 1.0e-6; // tolerance to accept the nonzero-area cell. We should parameterize it.
         typename cell_container_t::Pointer pnew_cells;
-        if(mDim == 2)
+        if(TDim == 2)
             pnew_cells = cell_container_t::Pointer(new CellManager2D<HnCell>());
-        else if(mDim == 3)
+        else if(TDim == 3)
             pnew_cells = cell_container_t::Pointer(new CellManager3D<HnCell>());
         double father_weight = p_bf->GetControlPoint().W();
         double father_X = p_bf->GetControlPoint().X0();
         double father_Y = p_bf->GetControlPoint().Y0();
         double father_Z = p_bf->GetControlPoint().Z0();
-        if(mDim == 2)
+        if(TDim == 2)
         {
             int num1 = pnew_local_knots[0].size() - mOrder1 - 1;
             int num2 = pnew_local_knots[1].size() - mOrder2 - 1;
@@ -681,7 +694,7 @@ namespace Kratos
                 }
             }
         }
-        else if(mDim == 3)
+        else if(TDim == 3)
         {
             int num1 = pnew_local_knots[0].size() - mOrder1 - 1;
             int num2 = pnew_local_knots[1].size() - mOrder2 - 1;
@@ -753,9 +766,9 @@ namespace Kratos
 
         /* remove the cells of the old basis function (remove only the cell in the current level) */
         typename cell_container_t::Pointer pcells_to_remove;
-        if(mDim == 2)
+        if(TDim == 2)
             pcells_to_remove = cell_container_t::Pointer(new CellManager2D<HnCell>());
-        else if(mDim == 3)
+        else if(TDim == 3)
             pcells_to_remove = cell_container_t::Pointer(new CellManager3D<HnCell>());
 
         // firstly we check if the cell c of the current bf in the current level cover any sub-cells. Then the sub-cell includes all bfs of the cell c.
@@ -765,7 +778,7 @@ namespace Kratos
             {
                 for(cell_container_t::iterator it_subcell = pnew_cells->begin(); it_subcell != pnew_cells->end(); ++it_subcell)
                 {
-                    if((*it_subcell)->IsCoverred(*it_cell, mDim))
+                    if((*it_subcell)->IsCoverred(*it_cell, TDim))
                     {
                         for(HnCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
                         {
@@ -858,13 +871,13 @@ namespace Kratos
         }
     }
 
-
-    void HnMesh::RefineNodes(boost::python::list& pyList)
+    template<std::size_t TDim>
+    void HnMesh<TDim>::RefineNodes(boost::python::list& pyList)
     {
         // extract the python list to std::set
         std::set<std::size_t> NodeIds;
         typedef boost::python::stl_input_iterator<int> iterator_value_type;
-        BOOST_FOREACH(const iterator_value_type::value_type& node_id, 
+        BOOST_FOREACH(const iterator_value_type::value_type& node_id,
                       std::make_pair(iterator_value_type(pyList), // begin
                       iterator_value_type() ) ) // end
             NodeIds.insert(node_id);
@@ -886,8 +899,8 @@ namespace Kratos
         }
     }
 
-
-    void HnMesh::RefineWindow(const double& Xi_min, const double& Xi_max,
+    template<std::size_t TDim>
+    void HnMesh<TDim>::RefineWindow(const double& Xi_min, const double& Xi_max,
             const double& Eta_min, const double& Eta_max, const double& Zeta_min, const double& Zeta_max)
     {
         // search and mark all basis functions need to refine on all level (starting from the last level) which support is contained in the refining domain
@@ -922,8 +935,8 @@ namespace Kratos
         }
     }
 
-
-    void HnMesh::LinearDependencyRefine(const std::size_t& refine_cycle)
+    template<std::size_t TDim>
+    void HnMesh<TDim>::LinearDependencyRefine(const std::size_t& refine_cycle)
     {
         if(mLastLevel < 1)
             return;
@@ -943,14 +956,14 @@ namespace Kratos
                 for(bf_container_t::iterator it_bf = mBasisFuncs.begin(); it_bf != mBasisFuncs.end(); ++it_bf)
                     if((*it_bf)->Level() == next_level)
                         for(HnBasisFunction::cell_iterator it_cell = (*it_bf)->cell_begin(); it_cell != (*it_bf)->cell_end(); ++it_cell)
-                            if(mDim == 2)
+                            if(TDim == 2)
                             {
                                 p_domain->AddXcoord((*it_cell)->LeftValue());
                                 p_domain->AddXcoord((*it_cell)->RightValue());
                                 p_domain->AddYcoord((*it_cell)->DownValue());
                                 p_domain->AddYcoord((*it_cell)->UpValue());
                             }
-                            else if(mDim == 3)
+                            else if(TDim == 3)
                             {
                                 p_domain->AddXcoord((*it_cell)->LeftValue());
                                 p_domain->AddXcoord((*it_cell)->RightValue());
@@ -965,9 +978,9 @@ namespace Kratos
                 for(bf_container_t::iterator it_bf = mBasisFuncs.begin(); it_bf != mBasisFuncs.end(); ++it_bf)
                     if((*it_bf)->Level() == next_level)
                         for(HnBasisFunction::cell_iterator it_cell = (*it_bf)->cell_begin(); it_cell != (*it_bf)->cell_end(); ++it_cell)
-                            if(mDim == 2)
+                            if(TDim == 2)
                                 p_domain->AddCell((*it_cell)->LeftValue(), (*it_cell)->RightValue(), (*it_cell)->DownValue(), (*it_cell)->UpValue());
-                            else if(mDim == 3)
+                            else if(TDim == 3)
                                 p_domain->AddCell((*it_cell)->LeftValue(), (*it_cell)->RightValue(), (*it_cell)->DownValue(), (*it_cell)->UpValue(), (*it_cell)->BelowValue(), (*it_cell)->AboveValue());
 
 //            std::cout << "support domain level " << level << *p_domain << std::endl;
@@ -985,14 +998,14 @@ namespace Kratos
                 domain_t p_domain = GetSupportDomain(level + 1);
 
                 // get the support domain of the bf
-                double Xmin, Xmax, Ymin, Ymax, Zmin, Zmax;            
+                double Xmin, Xmax, Ymin, Ymax, Zmin, Zmax;
                 (*it_bf)->GetBoundingBox(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
 
                 // check if the bf support domain contained in the refined domain managed by the domain manager
                 bool is_inside;
-                if(mDim == 2)
+                if(TDim == 2)
                     is_inside = p_domain->IsInside(Xmin, Xmax, Ymin, Ymax);
-                else if(mDim == 3)
+                else if(TDim == 3)
                     is_inside = p_domain->IsInside(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
 
                 if(is_inside)
@@ -1024,9 +1037,8 @@ namespace Kratos
         #endif
     }
 
-
-
-    void HnMesh::BuildMesh()
+    template<std::size_t TDim>
+    void HnMesh<TDim>::BuildMesh()
     {
         Vector Crow;
         for(cell_container_t::iterator it_cell = mpCellManager->begin(); it_cell != mpCellManager->end(); ++it_cell)
@@ -1034,23 +1046,30 @@ namespace Kratos
             (*it_cell)->Reset();
             for(typename HnCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
             {
-                if(mDim == 2)
+                if(TDim == 2)
                     (*it_bf)->ComputeExtractionOperator(*it_cell, Crow, mOrder1, mOrder2);
-                else if(mDim == 3)
+                else if(TDim == 3)
                     (*it_bf)->ComputeExtractionOperator(*it_cell, Crow, mOrder1, mOrder2, mOrder3);
                 (*it_cell)->AddAnchor((*it_bf)->Id(), (*it_bf)->GetControlPoint().W(), Crow);
             }
         }
     }
 
-
-    void HnMesh::BuildBoundaryMesh(HnMesh& rMesh, std::string boundary_mesh_type) const
+    /// Validate the patch
+    template<std::size_t TDim>
+    bool HnMesh<TDim>::Validate() const
     {
-       // TODO 
+        // TODO
     }
 
+    template<std::size_t TDim>
+    void HnMesh<TDim>::BuildBoundaryMesh(HnMesh<TDim>& rMesh, std::string boundary_mesh_type) const
+    {
+       // TODO
+    }
 
-    void HnMesh::ExportCellTopology(std::string fn, bool cell_numbering) const
+    template<std::size_t TDim>
+    void HnMesh<TDim>::ExportCellTopology(std::string fn, bool cell_numbering) const
     {
         std::ofstream outfile(fn.c_str());
         outfile << "%% Cell topology generated from hierarchical NURBS mesh, (c) Hoang Giang Bui, 2015\n";
@@ -1062,7 +1081,7 @@ namespace Kratos
         for(typename cell_container_t::iterator it = mpCellManager->begin(); it != mpCellManager->end(); ++it)
         {
             cell_t p_cell = (*it);
-            if(mDim == 2)
+            if(TDim == 2)
             {
 //                outfile << "line([" << p_cell->LeftValue() << " " << p_cell->RightValue() << "],[" << p_cell->DownValue() << " " << p_cell->DownValue() << "]);\n";
 //                outfile << "line([" << p_cell->LeftValue() << " " << p_cell->RightValue() << "],[" << p_cell->UpValue() << " " << p_cell->UpValue() << "]);\n";
@@ -1085,7 +1104,7 @@ namespace Kratos
                                        << 0.5*(p_cell->DownValue() + p_cell->UpValue()) << ",'"
                                        << p_cell->Id() << "');\n";
             }
-            else if(mDim == 3)
+            else if(TDim == 3)
             {
                 outfile << "verts = [" << p_cell->LeftValue() << " " << p_cell->DownValue() << " " << p_cell->BelowValue() << ";"
                                        << p_cell->RightValue() << " " << p_cell->DownValue() << " " << p_cell->BelowValue() << ";"
@@ -1111,8 +1130,8 @@ namespace Kratos
         std::cout << "Export cell topology to " << fn << " completed" << std::endl;
     }
 
-
-    void HnMesh::ExportCellGeology(std::string fn)
+    template<std::size_t TDim>
+    void HnMesh<TDim>::ExportCellGeology(std::string fn)
     {
         // generate cell geology
         std::vector<unsigned int> point_list;
@@ -1133,7 +1152,7 @@ namespace Kratos
         outfile << "close all\n";
         outfile << "hold on\n";
         outfile << "axis equal\n";
-        if(mDim == 2)
+        if(TDim == 2)
         {
 //            for(std::set<unordered_pair<unsigned int> >::iterator it = Lines.begin(); it != Lines.end(); ++it)
 //                outfile << "line([" << X_list[it->first()] << " " << X_list[it->second()] << "],[" << Y_list[it->first()] << " " << Y_list[it->second()] << "]);\n";
@@ -1167,7 +1186,7 @@ namespace Kratos
             outfile << "];\n";
             outfile << "patch('Faces',faces4,'Vertices',verts,'FaceColor','white');\n";
         }
-        else if(mDim == 3)
+        else if(TDim == 3)
         {
             outfile << "verts = [";
             for(std::size_t i = 0; i < point_list.size(); ++i)
@@ -1208,8 +1227,8 @@ namespace Kratos
         std::cout << "Export cell geology to " << fn << " completed" << std::endl;
     }
 
-
-    void HnMesh::ExportSupportDomain(std::string fn, double distance)
+    template<std::size_t TDim>
+    void HnMesh<TDim>::ExportSupportDomain(std::string fn, double distance)
     {
         std::ofstream outfile(fn.c_str());
         outfile << "%% Support domain topology generated from hierarchical NURBS mesh, (c) Hoang Giang Bui, 2015\n";
@@ -1233,8 +1252,8 @@ namespace Kratos
         std::cout << "Export support domain to " << fn << " completed" << std::endl;
     }
 
-
-    void HnMesh::ExportMatlab(std::string fn) const
+    template<std::size_t TDim>
+    void HnMesh<TDim>::ExportMatlab(std::string fn) const
     {
         std::ofstream outfile(fn.c_str());
         outfile << "%% Hierarchical NURBS mesh information, (c) Hoang Giang Bui, 2015\n";
@@ -1258,7 +1277,7 @@ namespace Kratos
         {
             (*it_bf)->GetLocalKnots(1, LocalKnots1);
             (*it_bf)->GetLocalKnots(2, LocalKnots2);
-            if(mDim == 3)
+            if(TDim == 3)
                 (*it_bf)->GetLocalKnots(3, LocalKnots3);
 
             double min_xi_bf = *std::min_element(LocalKnots1.begin(), LocalKnots1.end());
@@ -1275,7 +1294,7 @@ namespace Kratos
             if(max_eta_bf > max_eta)
                 max_eta = max_eta_bf;
 
-            if(mDim == 3)
+            if(TDim == 3)
             {
                 double min_zeta_bf = *std::min_element(LocalKnots3.begin(), LocalKnots3.end());
                 double max_zeta_bf = *std::max_element(LocalKnots3.begin(), LocalKnots3.end());
@@ -1298,7 +1317,7 @@ namespace Kratos
                 outfile << " " << LocalKnots2[i];
             outfile << "];\n";
 
-            if(mDim == 3)
+            if(TDim == 3)
             {
                 outfile << "Zeta{" << cnt << "} = [";
                 for(std::size_t i = 0; i < LocalKnots3.size(); ++i)
@@ -1332,7 +1351,7 @@ namespace Kratos
                 outfile << ";";
             }
             outfile << "];\n";
-            
+
             // write the supported basis functions
             const std::vector<unsigned int>& bfs = (*it_cell)->GetSupportedAnchors();
             outfile << "N{" << cnt << "} = [";
@@ -1347,8 +1366,8 @@ namespace Kratos
         std::cout << "Export mesh information to " << fn << " completed" << std::endl;
     }
 
-
-    void HnMesh::ExportMDPA(std::string fn) const
+    template<std::size_t TDim>
+    void HnMesh<TDim>::ExportMDPA(std::string fn) const
     {
         std::ofstream outfile(fn.c_str());
 
@@ -1384,9 +1403,9 @@ namespace Kratos
         outfile << "End Nodes\n\n";
 
         // write elements
-        if(mDim == 2)
+        if(TDim == 2)
             outfile << "Begin Elements KinematicLinearGeo2dBezier\n";
-        else if(mDim == 3)
+        else if(TDim == 3)
             outfile << "Begin Elements KinematicLinearGeo3dBezier\n";
         else
             KRATOS_THROW_ERROR(std::logic_error, "Invalid Dimension", "")
@@ -1510,7 +1529,7 @@ namespace Kratos
             #endif
         outfile << "End ElementalData\n\n";
 
-        if(mDim == 3)
+        if(TDim == 3)
         {
             outfile << "Begin ElementalData NURBS_DEGREE_3\n";
             for(typename cell_container_t::iterator it = mpCellManager->begin(); it != mpCellManager->end(); ++it)
@@ -1541,7 +1560,7 @@ namespace Kratos
             #endif
         outfile << "End ElementalData\n\n";
 
-        if(mDim == 3)
+        if(TDim == 3)
         {
             outfile << "Begin ElementalData NUM_DIVISION_3\n";
             for(typename cell_container_t::iterator it = mpCellManager->begin(); it != mpCellManager->end(); ++it)
@@ -1557,8 +1576,8 @@ namespace Kratos
         std::cout << "Export MDPA to " << fn << " completed" << std::endl;
     }
 
-
-    void HnMesh::ExportMDPA2(std::string fn) const
+    template<std::size_t TDim>
+    void HnMesh<TDim>::ExportMDPA2(std::string fn) const
     {
         std::ofstream outfile(fn.c_str());
 
@@ -1606,13 +1625,13 @@ namespace Kratos
             outfile << "        "
                     << (*it)->Id() << " " << (*it)->NumberOfAnchors() << " ";
 
-            if(mDim == 2)
+            if(TDim == 2)
                 outfile << "2 2 ";
-            else if(mDim == 3)
+            else if(TDim == 3)
                 outfile << "3 3 ";
 
             outfile << mOrder1 << " " << mOrder2;
-            if(mDim == 3)
+            if(TDim == 3)
                 outfile << " " << mOrder3 << std::endl;
             else
                 outfile << " 0" << std::endl;
@@ -1650,9 +1669,9 @@ namespace Kratos
         outfile << "    End IsogeometricBezierData\n\n";
 
         outfile << "    Begin ElementsWithGeometry";
-        if(mDim == 2)
+        if(TDim == 2)
             outfile << " KinematicLinearBezier2D\n";
-        else if(mDim == 3)
+        else if(TDim == 3)
             outfile << " KinematicLinearBezier3D\n";
         for(typename cell_container_t::iterator it = mpCellManager->begin(); it != mpCellManager->end(); ++it)
         {
@@ -1680,7 +1699,8 @@ namespace Kratos
         std::cout << "Export MDPA to " << fn << " completed" << std::endl;
     }
 
-    void HnMesh::ExportPostMDPA(std::string fn, int NumDivision1, int NumDivision2, int NumDivision3)
+    template<std::size_t TDim>
+    void HnMesh<TDim>::ExportPostMDPA(std::string fn, int NumDivision1, int NumDivision2, int NumDivision3)
     {
         // create a vector of sampling knots in each direction
         std::vector<double> SamplingKnots1;
@@ -1697,7 +1717,7 @@ namespace Kratos
         for(std::size_t i = 0; i < NumDivision2 + 1; ++i)
             SamplingKnots2.push_back(min_eta + (double) i / NumDivision2 * (max_eta - min_eta));
 
-        if(mDim == 3)
+        if(TDim == 3)
         {
             int min_zeta = (*(mKnots3.begin()))->Value();
             int max_zeta = (*(mKnots3.end() - 1))->Value();
@@ -1715,7 +1735,7 @@ namespace Kratos
         std::map<int, double> zeta_list;
         std::map<int, int> parent_element_list;
         std::vector<std::vector<unsigned int> > connectivities_list;
-        if(mDim == 2)
+        if(TDim == 2)
         {
             int cnt = 0;
             Vector W;
@@ -1818,7 +1838,7 @@ namespace Kratos
                 }
             }
         }
-        else if(mDim == 3)
+        else if(TDim == 3)
         {
             int cnt = 0;
             Vector W;
@@ -1935,7 +1955,7 @@ namespace Kratos
                 }
             }
         }
-        
+
         // export to post MDPA
         std::ofstream outfile(fn.c_str());
 
@@ -1963,9 +1983,9 @@ namespace Kratos
         outfile << "End Nodes\n\n";
 
         // write elements
-        if(mDim == 2)
+        if(TDim == 2)
             outfile << "Begin Elements KinematicLinear2D4N\n";
-        else if(mDim == 3)
+        else if(TDim == 3)
             outfile << "Begin Elements KinematicLinear3D8N\n";
         else
             KRATOS_THROW_ERROR(std::logic_error, "Invalid Dimension", "")
@@ -1977,7 +1997,7 @@ namespace Kratos
             outfile << std::endl;
         }
         outfile << "End Elements\n\n";
-        
+
         // write nodal data
         outfile << "Begin NodalData LOCAL_COORDINATES\n";
         for(std::size_t i = 0; i < point_list.size(); ++i)
@@ -1990,12 +2010,12 @@ namespace Kratos
         for(std::size_t i = 0; i < point_list.size(); ++i)
             outfile << point_list[i] << " 0 " << parent_element_list[point_list[i]] << "\n";
         outfile << "End NodalData\n\n";
-        
+
         std::cout << "Export post MDPA to " << fn << " completed" << std::endl;
     }
 
-
-    void HnMesh::ExportCellGeologyAsPostMDPA(std::string fn)
+    template<std::size_t TDim>
+    void HnMesh<TDim>::ExportCellGeologyAsPostMDPA(std::string fn)
     {
         // generate cell geology
         std::vector<unsigned int> point_list;
@@ -2036,7 +2056,7 @@ namespace Kratos
         outfile << "End Nodes\n\n";
 
         // write elements
-        if(mDim == 2)
+        if(TDim == 2)
         {
             unsigned int ElementId = 0;
 
@@ -2066,7 +2086,7 @@ namespace Kratos
                     }
             outfile << "End Elements\n\n";
         }
-        else if(mDim == 3)
+        else if(TDim == 3)
         {
             unsigned int ElementId = 0;
 
@@ -2115,9 +2135,8 @@ namespace Kratos
         std::cout << "Export post MDPA to " << fn << " completed" << std::endl;
     }
 
-
-
-    void HnMesh::GenerateCellGeology(std::vector<unsigned int>& point_list,
+    template<std::size_t TDim>
+    void HnMesh<TDim>::GenerateCellGeology(std::vector<unsigned int>& point_list,
                                      std::map<unsigned int, double>& X_list,
                                      std::map<unsigned int, double>& Y_list,
                                      std::map<unsigned int, double>& Z_list,
@@ -2133,7 +2152,7 @@ namespace Kratos
         std::map<unsigned int, std::vector<unsigned int> > MapCellToNodes; // this container contains the vertex Ids in each cell
         for(cell_container_t::iterator it = mpCellManager->begin(); it != mpCellManager->end(); ++it)
         {
-            if(mDim == 2)
+            if(TDim == 2)
             {
                 unsigned int V1 = Binning.AddNode((*it)->LeftValue(), (*it)->DownValue(), 0.0);
                 unsigned int V2 = Binning.AddNode((*it)->RightValue(), (*it)->DownValue(), 0.0);
@@ -2149,7 +2168,7 @@ namespace Kratos
                 MapCellToNodes[(*it)->Id()].push_back(V4);
                 MapCellToNodes[(*it)->Id()].push_back(V3);
             }
-            else if(mDim == 3)
+            else if(TDim == 3)
             {
                 unsigned int V1 = Binning.AddNode((*it)->LeftValue(), (*it)->DownValue(), (*it)->BelowValue());
                 unsigned int V2 = Binning.AddNode((*it)->RightValue(), (*it)->DownValue(), (*it)->BelowValue());
@@ -2189,21 +2208,21 @@ namespace Kratos
             double xi, eta, zeta, local_xi, local_eta, local_zeta;
             xi = Binning.GetX(Id);
             eta = Binning.GetY(Id);
-            if(mDim == 2)
+            if(TDim == 2)
                 zeta = 0.0;
-            else if(mDim == 3)
+            else if(TDim == 3)
                 zeta = Binning.GetZ(Id);
 
             local_xi = (xi - p_cell->LeftValue()) / (p_cell->RightValue() - p_cell->LeftValue());
             local_eta = (eta - p_cell->DownValue()) / (p_cell->UpValue() - p_cell->DownValue());
-            if(mDim == 2)
+            if(TDim == 2)
                 local_zeta = 0.0;
-            else if(mDim == 3)
+            else if(TDim == 3)
                 local_zeta = (zeta - p_cell->BelowValue()) / (p_cell->AboveValue() - p_cell->BelowValue());
 
             // compute the Bernstein basis function on the local coordinates
             Vector B;
-            if(mDim == 2)
+            if(TDim == 2)
             {
                 B.resize((mOrder1 + 1) * (mOrder2 + 1));
                 for(unsigned int k = 0; k < mOrder1 + 1; ++k)
@@ -2215,7 +2234,7 @@ namespace Kratos
                         B(num) = B1 * B2;
                     }
             }
-            else if(mDim == 3)
+            else if(TDim == 3)
             {
                 B.resize((mOrder1 + 1) * (mOrder2 + 1) * (mOrder3 + 1));
                 for(unsigned int k = 0; k < mOrder1 + 1; ++k)
@@ -2279,7 +2298,7 @@ namespace Kratos
 
             // detect middle nodes
             std::set<unsigned int> MiddleNodes;
-            if(mDim == 2)
+            if(TDim == 2)
             {
                 // extract edges
                 typedef std::pair<unsigned int, unsigned int> edge_t;
@@ -2314,7 +2333,7 @@ namespace Kratos
                     }
                 }
             }
-            else if(mDim == 3)
+            else if(TDim == 3)
             {
                 // extract faces
                 typedef std::pair<unsigned int, unsigned int> edge_t;
@@ -2392,7 +2411,7 @@ namespace Kratos
                 CellNodes.insert(CellNodes.end(), MiddleNodes.begin(), MiddleNodes.end());
 
                 // generate triangles in case of 2D
-                if(mDim == 2)
+                if(TDim == 2)
                 {
                     // prepare the list of points
                     std::vector<double> XYlist;
@@ -2416,7 +2435,7 @@ namespace Kratos
                     Connectivities[(*it)->Id()] = Conns;
                 }
                 // generate tetrahedrons in case of 3D
-                else if(mDim == 3)
+                else if(TDim == 3)
                 {
                     #if !defined(ISOGEOMETRIC_USE_TETGEN)
                     KRATOS_THROW_ERROR(std::runtime_error, __FUNCTION__, "requires Tetgen to generate tetrahedrons for cells")
@@ -2457,6 +2476,14 @@ namespace Kratos
             }
         }
     }
+
+    /**
+     * template instantiation
+     */
+    template class HnMesh<0>;
+    template class HnMesh<1>;
+    template class HnMesh<2>;
+    template class HnMesh<3>;
 
 } // end namespace Kratos
 
