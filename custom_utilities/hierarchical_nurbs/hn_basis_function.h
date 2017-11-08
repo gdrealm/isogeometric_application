@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 18 May 2015 $
 //   Revision:            $Revision: 1.1 $
@@ -20,7 +20,7 @@
 #include <set>
 #include <list>
 
-// External includes 
+// External includes
 #include <omp.h>
 #include "boost/progress.hpp"
 #include "boost/algorithm/string.hpp"
@@ -244,7 +244,7 @@ public:
          || mpLocalKnots2.size() != rpKnots2.size()
          || mpLocalKnots3.size() != rpKnots3.size() )
             return false;
-        
+
         for(std::size_t i = 0; i < mpLocalKnots1.size(); ++i)
             if(mpLocalKnots1[i] != rpKnots1[i])
                 return false;
@@ -373,12 +373,12 @@ private:
 
             if(Xi > U[U.size()-1])
                 return U.size();
-            
+
             for(std::size_t i = 0; i < U.size()-1; ++i)
                 if(Xi >= U[i] && Xi < U[i + 1])
                     return i + 1;
         }
-        
+
         return 0;
     }
 };

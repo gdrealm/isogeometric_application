@@ -15,7 +15,6 @@
 #include <iostream>
 
 // External includes 
-#include <omp.h>
 
 // Project includes
 #include "includes/define.h"

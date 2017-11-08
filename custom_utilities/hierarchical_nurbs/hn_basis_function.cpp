@@ -101,7 +101,7 @@ namespace Kratos
 //        std::cout << std::endl;
         #endif
 
-        // compute the Bezier extraction operator        
+        // compute the Bezier extraction operator
         std::vector<Vector> Crows;
         int nb_xi, nb_eta;
         Vector Ubar_xi, Ubar_eta;
@@ -174,7 +174,7 @@ namespace Kratos
         std::cout << "----------------------" << std::endl;
         #endif
     }
-    
+
     void HnBasisFunction::ComputeExtractionOperator(cell_t p_cell, Vector& Crow, int p1, int p2, int p3)
     {
         // a priori check
@@ -315,7 +315,7 @@ namespace Kratos
 //        std::cout << std::endl;
         #endif
 
-        // compute the Bezier extraction operator        
+        // compute the Bezier extraction operator
         std::vector<Vector> Crows;
         int nb_xi, nb_eta, nb_zeta;
         Vector Ubar_xi, Ubar_eta, Ubar_zeta;

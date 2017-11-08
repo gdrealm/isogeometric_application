@@ -24,7 +24,7 @@ namespace Kratos
 {
 
 /**
-    This interface class represents a union of domains (rectangle/cuboid) in the parameter space of NURBS in 2D. THis is useful to manage the refinement domain in the hierarchical NURBS mesh
+This class represents a union of domains (rectangle/cuboid) in the parameter space of NURBS in 2D. THis is useful to manage the refinement domain in the hierarchical NURBS mesh
  */
 class DomainManager
 {

@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 18 Aug 2015 $
 //   Revision:            $Revision: 1.0 $
@@ -16,8 +16,7 @@
 #include <map>
 #include <iostream>
 
-// External includes 
-#include <omp.h>
+// External includes
 
 // Project includes
 #include "includes/define.h"
@@ -62,7 +61,7 @@ public:
     /// Set the tolerance for the internal searching algorithm
     void SetTolerance(double Tol) {mTol = Tol;}
 
-    /// Check if the bf exists in the list; ortherwise create new bf and return
+    /// Check if the bf exists in the list; otherwise create new bf and return
     typename TBasisFuncType::Pointer CreateBf(unsigned int Level,
                                               const std::vector<knot_t>& rpKnots1,
                                               const std::vector<knot_t>& rpKnots2,

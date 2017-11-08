@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 21 May 2015 $
 //   Revision:            $Revision: 1.1 $
@@ -16,7 +16,7 @@
 #include <set>
 #include <iostream>
 
-// External includes 
+// External includes
 
 // Project includes
 #include "includes/define.h"
