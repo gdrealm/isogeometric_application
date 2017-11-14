@@ -17,3 +17,5 @@ HIDE_UNDOC_RELATIONS   = NO
 HAVE_DOT               = YES
 CALL_GRAPH             = YES
 CALLER_GRAPH           = YES
+
+EXCLUDE_PATTERNS       = */zdeprecated/* *.bak
