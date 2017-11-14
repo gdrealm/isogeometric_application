@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 20 Aug 2015 $
 //   Revision:            $Revision: 1.0 $
@@ -9,9 +9,9 @@
 // System includes
 #include <string>
 #include <vector>
-#include <iostream> 
+#include <iostream>
 
-// External includes 
+// External includes
 #include "boost/numeric/ublas/vector.hpp"
 
 // Project includes

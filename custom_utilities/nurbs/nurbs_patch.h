@@ -40,6 +40,7 @@ public:
     typedef Patch<TDim> BaseType;
     typedef KnotArray1D<double> knot_container_t;
     typedef typename knot_container_t::knot_t knot_t;
+    typedef typename BaseType::ControlPointType ControlPointType;
 
     /// Default constructor
     NURBSPatch() : BaseType() {}
@@ -51,13 +52,13 @@ public:
     virtual ~NURBSPatch() {}
 
     /// Get the order of the NURBS patch in specific direction
-    virtual const std::size_t& Order(const std::size_t& i) const {return mOrders[i];}
+    virtual const std::size_t Order(const std::size_t& i) const {return mOrders[i];}
 
     /// Get the number of control points of the NURBSPatch in specific direction
-    const std::size_t& Number(const std::size_t& i) const {return mNumbers[i];}
+    const std::size_t Number(const std::size_t& i) const {return mNumbers[i];}
 
     /// Get the number of basis functions defined over the NURBS NURBSPatch
-    virtual const std::size_t& Number() const
+    virtual const std::size_t TotalNumber() const
     {
         std::size_t Number = 1;
         for (std::size_t i = 0; i < TDim; ++i)
@@ -65,11 +66,17 @@ public:
         return Number;
     }
 
-    /// Get the string describing the type of the patch
-    virtual const std::string Type() const
+    /// Get the string representing the type of the patch
+    virtual std::string Type() const
+    {
+        return StaticType();
+    }
+
+    /// Get the string representing the type of the patch
+    static std::string StaticType()
     {
         std::stringstream ss;
-        ss << "NURBS patch<" << TDim << ">";
+        ss << "NURBSPatch" << TDim << "D";
         return ss.str();
     }
 
@@ -118,26 +125,29 @@ public:
         return BaseType::Validate();
     }
 
-    /// Compare between two patches in terms of parametric and control points
-    virtual bool IsEqual(const Patch<TDim>& rPatch1, const Patch<TDim>& rPatch2) const
+    /// Compare between two NURBS patches in terms of parametric information
+    virtual bool IsCompatible(const Patch<TDim>& rOtherPatch) const
     {
-        if (rPatch1.Type() != Type() || rPatch2.Type() != Type())
+        if (rOtherPatch.Type() != Type())
         {
-            KRATOS_THROW_ERROR(std::logic_error, "Error, the patch type is not", Type())
+            KRATOS_WATCH(rOtherPatch.Type())
+            KRATOS_WATCH(Type())
+            std::cout << "WARNING!!! the other patch type is not " << Type() << std::endl;
+            return false;
         }
 
-        const NURBSPatch<TDim>& Patch1 = dynamic_cast<const NURBSPatch<TDim>&>(rPatch1);
-        const NURBSPatch<TDim>& Patch2 = dynamic_cast<const NURBSPatch<TDim>&>(rPatch2);
+        const NURBSPatch<TDim>& rOtherNURBSPatch = dynamic_cast<const NURBSPatch<TDim>&>(rOtherPatch);
 
-        // firstly compare the knot vectors
+        // compare the knot vectors and order information
         for (std::size_t i = 0; i < TDim; ++i)
         {
-            if (!(Patch1.KnotVector(i) == Patch2.KnotVector(i)))
+            if (!(this->Number(i)) == rOtherNURBSPatch.Number(i))
+                return false;
+            if (!(this->Order(i)) == rOtherNURBSPatch.Order(i))
+                return false;
+            if (!(this->KnotVector(i) == rOtherNURBSPatch.KnotVector(i)))
                 return false;
         }
-
-        // secondly check the control points
-        // TODO
 
         return true;
     }
@@ -152,21 +162,25 @@ public:
             if (side == _LEFT_)
             {
                 pBPatch->SetKnotVector(0, KnotVector(1));
+                pBPatch->SetInfo(0, Number(1), Order(1));
                 // TODO set the control points and grid functions
             }
             else if (side == _RIGHT_)
             {
                 pBPatch->SetKnotVector(0, KnotVector(1));
+                pBPatch->SetInfo(0, Number(1), Order(1));
                 // TODO set the control points and grid functions
             }
             else if (side == _TOP_)
             {
                 pBPatch->SetKnotVector(0, KnotVector(0));
+                pBPatch->SetInfo(0, Number(0), Order(0));
                 // TODO set the control points and grid functions
             }
             else if (side == _BOTTOM_)
             {
                 pBPatch->SetKnotVector(0, KnotVector(0));
+                pBPatch->SetInfo(0, Number(0), Order(0));
                 // TODO set the control points and grid functions
             }
         }
@@ -176,21 +190,48 @@ public:
             {
                 pBPatch->SetKnotVector(0, KnotVector(1));
                 pBPatch->SetKnotVector(1, KnotVector(2));
+                pBPatch->SetInfo(0, Number(1), Order(1));
+                pBPatch->SetInfo(1, Number(2), Order(2));
                 // TODO set the control points and grid functions
             }
             else if (side == _RIGHT_)
             {
                 pBPatch->SetKnotVector(0, KnotVector(1));
+                pBPatch->SetKnotVector(1, KnotVector(2));
+                pBPatch->SetInfo(0, Number(1), Order(1));
+                pBPatch->SetInfo(1, Number(2), Order(2));
                 // TODO set the control points and grid functions
             }
             else if (side == _TOP_)
             {
                 pBPatch->SetKnotVector(0, KnotVector(0));
+                pBPatch->SetKnotVector(1, KnotVector(1));
+                pBPatch->SetInfo(0, Number(0), Order(0));
+                pBPatch->SetInfo(1, Number(1), Order(1));
                 // TODO set the control points and grid functions
             }
             else if (side == _BOTTOM_)
             {
                 pBPatch->SetKnotVector(0, KnotVector(0));
+                pBPatch->SetKnotVector(1, KnotVector(1));
+                pBPatch->SetInfo(0, Number(0), Order(0));
+                pBPatch->SetInfo(1, Number(1), Order(1));
+                // TODO set the control points and grid functions
+            }
+            else if (side == _FRONT_)
+            {
+                pBPatch->SetKnotVector(0, KnotVector(0));
+                pBPatch->SetKnotVector(1, KnotVector(2));
+                pBPatch->SetInfo(0, Number(0), Order(0));
+                pBPatch->SetInfo(1, Number(1), Order(2));
+                // TODO set the control points and grid functions
+            }
+            else if (side == _BACK_)
+            {
+                pBPatch->SetKnotVector(0, KnotVector(0));
+                pBPatch->SetKnotVector(1, KnotVector(2));
+                pBPatch->SetInfo(0, Number(0), Order(0));
+                pBPatch->SetInfo(1, Number(1), Order(2));
                 // TODO set the control points and grid functions
             }
         }
@@ -201,24 +242,27 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << Type() << ": n = (";
+        rOStream << Type() << ", Id = " << BaseType::Id() << ", Add = " << this << ", n = (";
         for (std::size_t i = 0; i < TDim; ++i)
             rOStream << " " << this->Number(i);
         rOStream << "), p = (";
         for (std::size_t i = 0; i < TDim; ++i)
             rOStream << " " << this->Order(i);
-        rOStream << ")" << std::endl;
+        rOStream << ")";
     }
 
     virtual void PrintData(std::ostream& rOStream) const
     {
         for (std::size_t i = 0; i < TDim; ++i)
         {
-            rOStream << "knot " << i << ":";
+            rOStream << " knot vector " << i << ":";
             for (std::size_t j = 0; j < mpKnotVectors[i].size(); ++j)
                 rOStream << " " << mpKnotVectors[i].pKnotAt(j)->Value();
             rOStream << std::endl;
         }
+        if (BaseType::ControlPointGrid() != NULL)
+            rOStream << *(BaseType::ControlPointGrid());
+        BaseType::PrintData(rOStream);
     }
 
 private:
@@ -231,6 +275,9 @@ private:
     boost::array<knot_container_t, TDim> mpKnotVectors;
 };
 
+/**
+ * Template specific instantiation for null-D NURBS patch to terminate the compilation
+ */
 template<>
 class NURBSPatch<0> : public Patch<0>
 {
@@ -253,19 +300,29 @@ public:
     virtual ~NURBSPatch() {}
 
     /// Get the order of the NURBS patch in specific direction
-    virtual const std::size_t& Order(const std::size_t& i) const {return 0;}
+    virtual const std::size_t Order(const std::size_t& i) const {return 0;}
 
     /// Get the number of basis functions defined over the NURBS NURBSPatch
-    virtual const std::size_t& Number() const {return 0;}
+    virtual const std::size_t Number() const {return 0;}
 
     /// Get the string describing the type of the patch
-    virtual const std::string Type() const
+    virtual std::string Type() const
     {
-        return "NURBS patch<0>";
+        return StaticType();
+    }
+
+    /// Get the string describing the type of the patch
+    static std::string StaticType()
+    {
+        return "NURBSPatch0D";
     }
 
     /// Set the knot vector in direction i.
     void SetKnotVector(const std::size_t& i, const knot_container_t& p_knot_vector)
+    {}
+
+    /// Set the NURBS information in the direction i
+    void SetInfo(const std::size_t& i, const std::size_t& Number, const std::size_t& Order)
     {}
 
     /// Validate the NURBSPatch before using
@@ -274,12 +331,15 @@ public:
         return BaseType::Validate();
     }
 
-    /// Compare between two patches in terms of parametric and control points
-    virtual bool IsEqual(const Patch<0>& rPatch1, const Patch<0>& rPatch2) const
+    /// Compare between two NURBS patches in terms of parametric information
+    virtual bool IsCompatible(const Patch<0>& rOtherPatch) const
     {
-        if (rPatch1.Type() != Type() || rPatch2.Type() != Type())
+        if (rOtherPatch.Type() != Type())
         {
-            KRATOS_THROW_ERROR(std::logic_error, "Error, the patch type is not", Type())
+            KRATOS_WATCH(rOtherPatch.Type())
+            KRATOS_WATCH(Type())
+            std::cout << "WARNING!!! the other patch type is not " << Type() << std::endl;
+            return false;
         }
 
         return true;
@@ -290,9 +350,11 @@ public:
 template<std::size_t TDim>
 inline std::ostream& operator <<(std::ostream& rOStream, const NURBSPatch<TDim>& rThis)
 {
+    rOStream << "-------------Begin NURBS PatchInfo-------------" << std::endl;
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
     rThis.PrintData(rOStream);
+    rOStream << "-------------End NURBS PatchInfo-------------" << std::endl;
     return rOStream;
 }
 

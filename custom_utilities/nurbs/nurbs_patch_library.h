@@ -46,7 +46,7 @@ public:
     /// The knot vector only contains 0 and 1, i.e [0 0 0 ... 1 1 1].
     /// All the weights are 1.
     template<std::size_t TDim>
-    static typename Patch<TDim>::Pointer CreateRegularPatch(const std::vector<std::size_t>& Orders)
+    static typename NURBSPatch<TDim>::Pointer CreateRegularPatch(const std::vector<std::size_t>& Orders)
     {
         typename NURBSPatch<TDim>::Pointer pPatch = typename NURBSPatch<TDim>::Pointer(new NURBSPatch<TDim>());
 
@@ -58,6 +58,7 @@ public:
             for (std::size_t i = 0; i < Orders[dim]+1; ++i)
                 knot_vector.pCreateKnot(1.0);
             pPatch->SetKnotVector(dim, knot_vector);
+            pPatch->SetInfo(dim, Orders[dim]+1, Orders[dim]);
         }
 
         return pPatch;

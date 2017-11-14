@@ -135,6 +135,30 @@ public:
         return true;
     }
 
+    // overload operator ()
+    const knot_t operator() (const int& i) const
+    {
+        return pKnotAt(i);
+    }
+
+    // overload operator ()
+    knot_t operator() (const int& i)
+    {
+        return pKnotAt(i);
+    }
+
+    // overload operator []
+    TDataType& operator[] (const int& i)
+    {
+        return pKnotAt(i)->Value();
+    }
+
+    // overload operator []
+    const TDataType& operator[] (const int& i) const
+    {
+        return pKnotAt(i)->Value();
+    }
+
     /// Information
     void PrintInfo(std::ostream& rOStream) const
     {

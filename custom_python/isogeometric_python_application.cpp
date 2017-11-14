@@ -34,13 +34,14 @@ BOOST_PYTHON_MODULE(KratosIsogeometricApplication)
 {
 
     using namespace boost::python;
-    
+
     class_<KratosIsogeometricApplication,
            KratosIsogeometricApplication::Pointer,
            bases<KratosApplication>, boost::noncopyable > ("KratosIsogeometricApplication")
            ;
 
-    IsogeometricApplication_AddCustomUtilitiesToPython();
+    IsogeometricApplication_AddCustomUtilities1ToPython();
+    IsogeometricApplication_AddCustomUtilities2ToPython();
     IsogeometricApplication_AddProcessesToPython();
     IsogeometricApplication_AddIOToPython();
 
@@ -48,7 +49,7 @@ BOOST_PYTHON_MODULE(KratosIsogeometricApplication)
     KRATOS_REGISTER_IN_PYTHON_VARIABLE( NUM_DIVISION_2 )
     KRATOS_REGISTER_IN_PYTHON_VARIABLE( NUM_DIVISION_3 )
     KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS( LOCAL_COORDINATES )
-    
+
 }
 
 

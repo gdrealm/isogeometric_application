@@ -35,37 +35,79 @@ public:
     /// Default constructor
     ControlPoint() : mX(0.0), mY(0.0), mZ(0.0), mW(1.0) {}
 
+    /// Constant constructor
+    ControlPoint(const double& v) : mX(v), mY(v), mZ(v), mW(v) {}
+
     /// Destructor
     virtual ~ControlPoint() {}
 
+    /// homogeneous X-coordinate
+    TDataType& X() {return mX;}
+    const TDataType& X() const {return mX;}
+
     /// X-coordinate
-    const TDataType& X0() const {return mX/mW;}
+    const TDataType X0() const {return mX/mW;}
+
+    /// homogeneous Y-coordinate
+    TDataType& Y() {return mY;}
+    const TDataType& Y() const {return mY;}
 
     /// Y-coordinate
-    const TDataType& Y0() const {return mY/mW;}
+    const TDataType Y0() const {return mY/mW;}
+
+    /// homogeneous Z-coordinate
+    TDataType& Z() {return mZ;}
+    const TDataType& Z() const {return mZ;}
 
     /// Z-coordinate
-    const TDataType& Z0() const {return mZ/mW;}
+    const TDataType Z0() const {return mZ/mW;}
 
     /// Weight
+    TDataType& W() {return mW;}
     const TDataType& W() const {return mW;}
 
     /// Set the coordinate. The input is the physical coordinates in 3D space.
-    void SetCoordinates(const TDataType& X, const TDataType& Y, const TDataType& Z, const TDataType& W)
+    void SetCoordinates(const TDataType& _X, const TDataType& _Y, const TDataType& _Z, const TDataType& _W)
     {
-        mX = W*X;
-        mY = W*Y;
-        mZ = W*Z;
-        mW = W;
+        mX = _W*_X;
+        mY = _W*_Y;
+        mZ = _W*_Z;
+        mW = _W;
     }
 
     /// Add to the coordinate. The input is the increment of physical coordinates in 3D space.
-    void AddCoordinates(const TDataType& X, const TDataType& Y, const TDataType& Z, const TDataType& W)
+    void AddCoordinates(const TDataType& _X, const TDataType& _Y, const TDataType& _Z, const TDataType& _W)
     {
-        mX += W*X;
-        mY += W*Y;
-        mZ += W*Z;
-        mW += W;
+        mX += _W*_X;
+        mY += _W*_Y;
+        mZ += _W*_Z;
+        mW += _W;
+    }
+
+    // overload operator []
+    TDataType& operator[] (const int& i)
+    {
+        if (i == 0) return X();
+        else if (i == 1) return Y();
+        else if (i == 2) return Z();
+        else if (i == 3) return W();
+    }
+
+    const TDataType& operator[] (const int& i) const
+    {
+        if (i == 0) return X();
+        else if (i == 1) return Y();
+        else if (i == 2) return Z();
+        else if (i == 3) return W();
+    }
+
+    // overload operator ()
+    TDataType operator() (const int& i) const
+    {
+        if (i == 0) return X0();
+        else if (i == 1) return Y0();
+        else if (i == 2) return Z0();
+        else if (i == 3) return W();
     }
 
     /// Assignment operator
@@ -95,8 +137,30 @@ public:
         return lhs;
     }
 
+    /// Multiplication operator
+    ControlPoint& operator*=(const TDataType& alpha)
+    {
+        this->mX *= alpha;
+        this->mY *= alpha;
+        this->mZ *= alpha;
+        this->mW *= alpha;
+        return *this;
+    }
+
+    /// Multiplication operator
+    friend ControlPoint operator*(const double& alpha, ControlPoint c)
+    {
+        c *= alpha;
+        return c;
+    }
+
     /// Information
     void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << "Control Point";
+    }
+
+    void PrintData(std::ostream& rOStream) const
     {
         rOStream << "(" << X0() << ", " << Y0() << ", " << Z0() << ", " << W() << ")";
     }
@@ -109,7 +173,9 @@ private:
 template<class TDataType>
 inline std::ostream& operator <<(std::ostream& rOStream, const ControlPoint<TDataType>& rThis)
 {
-    rThis.PrintInfo(rOStream);
+    // rThis.PrintInfo(rOStream);
+    // rOStream << ": ";
+    rThis.PrintData(rOStream);
     return rOStream;
 }
 

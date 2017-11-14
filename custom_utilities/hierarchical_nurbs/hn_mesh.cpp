@@ -33,12 +33,13 @@ namespace Kratos
     template<std::size_t TDim>
     void HnMesh<TDim>::PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "Hierarchical NURBS mesh " << mName << ", number of levels = " << mLastLevel;
+        rOStream << "Hierarchical NURBS mesh " << Name() << ", Id = " << BaseType::Id() << ", number of levels = " << mLastLevel;
     }
 
     template<std::size_t TDim>
     void HnMesh<TDim>::PrintData(std::ostream& rOStream) const
     {
+        BaseType::PrintData(rOStream);
     }
 
     template<std::size_t TDim>

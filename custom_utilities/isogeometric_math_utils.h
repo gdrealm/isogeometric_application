@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 20 Aug 2015 $
 //   Revision:            $Revision: 1.0 $
@@ -16,7 +16,7 @@
 #include <ctime>
 
 
-// External includes 
+// External includes
 
 
 // Project includes
@@ -81,10 +81,10 @@ public:
             else
                 break;
         }
-        
+
         // compute the index of the basis function w.r.t the extended knot vector
         nt = p - a + 1;
-        
+
         // count the multiplicity of the last knot
         int b = 0;
         for(std::size_t i = n - 1; i >= 0; --i)
@@ -94,7 +94,7 @@ public:
             else
                 break;
         }
-        
+
         // compute the extended knot vector
         std::size_t len = nt + n + (p-b+1);
         if(Ubar.size() != len)
@@ -130,7 +130,7 @@ public:
                         C(i*dimB1 + k, j*dimB2 + l) = A(i, j) * B(k, l);
     }
 
-    
+
     /**
         Compute outer product of 2 vectors
      */
@@ -145,7 +145,7 @@ public:
             for(std::size_t j = 0; j < dimB; ++j)
                 C(i * dimB + j) = A(i) * B(j);
     }
-    
+
 
     /**
      * Convert a modified compressed sparse row matrix to compressed sparse row matrix B <- A
@@ -153,10 +153,10 @@ public:
     static Matrix MCSR2CSR(const Matrix& A)
     {
         unsigned int n = (unsigned int)(A(0, 0) - 1);
-        
+
         CompressedMatrix B(n, n);
         noalias( B ) = ZeroMatrix(n, n);
-        
+
         for(unsigned int i = 0; i < n; ++i)
         {
             // compute number of nonzeros for this row
@@ -173,10 +173,10 @@ public:
                 else
                     break;
             }
-            
+
             // insert the diagonal
             B.push_back(i, i, A(1, i));
-            
+
             // traverse left for off-diagonal entries
             for(unsigned int j = 0; j < nnz; ++j)
             {
@@ -187,28 +187,28 @@ public:
                 }
             }
         }
-        
+
         B.complete_index1_data();
-        
+
         return B;
     }
-    
+
     /**
      * Convert a modified compressed sparse row matrix to trivial matrix
      */
     static Matrix MCSR2MAT(const Matrix& A)
     {
         unsigned int n = (unsigned int)(A(0, 0) - 1);
-        
+
         Matrix B = ZeroMatrix(n, n);
-        
+
         for(unsigned int i = 0; i < n; ++i)
         {
             // compute number of nonzeros for this row
             int nnz = (unsigned int)(A(0, i + 1) - A(0, i));
 
             B(i, i) = A(1, i);
-            
+
             // traverse left for off-diagonal entries
             for(unsigned int j = 0; j < nnz; ++j)
             {

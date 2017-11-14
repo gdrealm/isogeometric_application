@@ -66,7 +66,8 @@ namespace Kratos
 namespace Python
 {
 
-void  IsogeometricApplication_AddCustomUtilitiesToPython();
+void  IsogeometricApplication_AddCustomUtilities1ToPython();
+void  IsogeometricApplication_AddCustomUtilities2ToPython();
 
 }  // namespace Python.
 

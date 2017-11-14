@@ -168,7 +168,18 @@ public:
     const int& GetEchoLevel() const {return mEchoLevel;}
 
     /// Get the number of basis functions defined over the patch
-    virtual const std::size_t& Number() const {return mBasisFuncs.size();}
+    virtual const std::size_t TotalNumber() const {return mBasisFuncs.size();}
+
+    /// Get the order of the patch in specific direction
+    virtual const std::size_t Order(const std::size_t& i) const
+    {
+        if (i == 0)
+            return mOrder1;
+        else if (i == 1)
+            return mOrder2;
+        else if (i == 2)
+            return mOrder3;
+    }
 
     /// Set the maximum level allowed in the hierarchical mesh
     void SetMaxLevels(const std::size_t& MaxLevels) {mMaxLevels = MaxLevels;}
@@ -207,7 +218,18 @@ public:
     **************************************************************************/
 
     /// Get the string describing the type of the patch
-    virtual const std::string Type() const {return "Hierarchical NURB Patch";}
+    virtual std::string Type() const
+    {
+        return StaticType();
+    }
+
+    /// Get the string describing the type of the patch
+    static std::string StaticType()
+    {
+        std::stringstream ss;
+        ss << "HierarchicalNURBSPatch" << TDim << "D";
+        return ss.str();
+    }
 
     /// Print information of this hierarchical mesh
     void PrintInfo(std::ostream& rOStream) const;
@@ -352,6 +374,18 @@ class HnMesh<0> : public Patch<0>
 
     /// Get the name of this hierarchical mesh
     const std::string& Name() const {return mName;}
+
+    /// Get the string describing the type of the patch
+    virtual std::string Type() const
+    {
+        return StaticType();
+    }
+
+    /// Get the string describing the type of the patch
+    static std::string StaticType()
+    {
+        return "HierarchicalNURBSPatch0D";
+    }
 
 private:
     std::string mName;

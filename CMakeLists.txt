@@ -57,7 +57,8 @@ endif()
 ## generate variables with the sources
 set( KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/isogeometric_application.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_1_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_2_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_processes_to_python.cpp
 #    ${PROJECT_SOURCE_DIR}/kratos/sources/io.cpp
 #    ${PROJECT_SOURCE_DIR}/kratos/sources/model_part_io.cpp
