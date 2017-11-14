@@ -1,0 +1,40 @@
+BeginZE /media/91bda0f3-39f4-43f3-819e-fca93eb92ec2/hbui/kratos_rub/applications_nonfree/test_examples_isogeometric_application/test_tmesh/TmeshFig23_full.gid/TmeshFig23_full.vv
+   x -14.2026309967041016 20.2026309967041016
+   y 11.7177982330322266 -5.71779823303222656
+   z -26.1533946990966797 26.1533946990966797
+   e 8.71779823303222656
+   v 0 0 0
+   r 1
+   m 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+   c 3 3 0
+   pd 0
+   pno 0
+   pfo 0
+   pf 4
+   pv 0
+   NowUse 0
+   DrawingType 0
+   LightVector 56.7272987365722656 -2.90557003021240234 136.632003784179688 0
+   OGLShadow(UseShadows) 0
+   OGLShadow(RenderMode) RenderNice
+   OGLShadow(ShadowBias) -0.002
+   OGLShadow(AmbientShadows) 1
+   OGLShadow(UseFBO) 1
+   OGLShadow(FBOSize) 2048
+   OGLShadow(DimmedLightFactor) 0.02
+   OGLStereo(UseStereo) 0
+   OGLStereo(RelativeEyeDistance) 1
+   OGLStereo(FlipEyes) 0
+   OGLStereo(StereoMode) AnaglyphColors
+   OGLStereo(EyeDistance) 0.075
+   OGLStereo(LeftEyeDistance) 1 0 0 1
+   OGLStereo(RightEyeDistance) 0 1 1 1
+EndZE /media/91bda0f3-39f4-43f3-819e-fca93eb92ec2/hbui/kratos_rub/applications_nonfree/test_examples_isogeometric_application/test_tmesh/TmeshFig23_full.gid/TmeshFig23_full.vv
+
+BeginMirror
+   Mirror 0 Angle 0.0 AngleFake -15.0 SizeFactor 2.0 HeightOffset 0.25 Color #d9e5f24d Backlight Off EdgeStyle No Type Scene DrawMode Mirror
+EndMirror
+
+BeginInfo
+eJzdV9ty6jYUfecrNNOXdiaHgRNCM7zlQjO0QDJAMvRJI9vbRj2y5CPZAXom/fZuyXfj9AP6hL2Wkfdl7SV554vb4c1wPCa7b3jxc37zy2DJZXYiHug4Cxi5Ht4OR18mky8RSNDcJz9+mk7/STT43MD4y6uXyTQj29UL2WVAfs8EGd+Q0WQ2Gs9GE/K6eyBfR+PJBzndTul0MtipCJ8Y/jojT8s9eecmY4LwgIxO0+CKsDSFOEnxgcHuABoIN0Qqot5BC3Z2f/GVTOGUDgeD5wTkk5gNCCFv8/Xj82ZGftxrziR5YZn4sPgG8flmbpkVGEb24/FH/vxmu3heIzwe3hBHTTH7r458XGxflnd/ksX6t+fN6m6XP+jx1BANAbm9IpEGkPbCE5gz/jKRHBgZXZEAkvRAvk6uiElB+lxYFi81KExk6NZfLlaL3RaXtDcrdiI7zCfDZLf8b5hhuSa3JTMXEIPEFy9kwH0wM3I9Go0u2DfQ6SV9/dhd+WZacg+ZB3iRfPLuu3fGBfMEYIcCDD2GWOkzMe6hEVndn1MwxVo8zmJyVPoblxGRWYzCISokUAQ3IzejEflj4FKf73fzta28S/9pSe9eXpZzmjD/GwQ04ScQpoax69hqyrRmZ6q8v8BPHbm5p67ONM2Dr0DNjtTLwhC0KbFQs8jGQROtIs3iC9wcWAC6hA9MhDQUiqV5NCXOYxZhfuVtnImUGxYnAlpQJyDl+yIzXEn6PQN9LmG3chFoJ69EcRsrw0ghbaSR4ybR+IoSyyMvFjBNFCOlgskoYxHQMSqiwalj+46y2ONYiBItUqCe0nZ1X2CWXc5XMRqAsZldUCgsGrOLv4B8pywI+mBczeMSeimtjPGY7uMClV538ZhrrXBIqYYE2EVOEjuRqKMtWkjTo+ryaGoplq1uaqqZNIkyNqVU81OJF8rsbWHBdfRWoG21Hbm0HcAXOGS3oDhyMqDwPWOplY0BK4Wi5Uj3qRbhnmped7m8NFRJ362Gk0iZF+nyGi9Zde2C8JVQug31xlXTYSb9TyihIu5TlbTRmMuYndqYyTysel5Oi/qCJ/RdiSwGeuCyxlGDXGCrmy5Rk9L+JS0EmkPJuWkYFstdxFOZDAxyplrcOQn2Hsen9LGSClWEa+FwVICd1UIJnuBpH14rxDJRkpXy6Iy6ZQ/cpJV0LOCcJQ/JJVk9WdhmnkWx33S42lJzUADusEG3Dp8YkqN6DCnHxTlCJagwNFA9jabg4ztw0HTMqlgMYD8Cps9tTZVKQVsDPxNMd+jcnqyoTAPTdfhlPhWbl4AeNauEZuXUTrb/9vqxA1AIsPuV/bWY2su6cMPLulTpV01cqIB6nJkuXgxr79vb/em1riZhNk/3FcZjbHC1F1moOz2L+1UuuFgF0BWdJTWzxxm0LDeZJfofBrxYP20+M4jVfHvnpEq5tJHUWDEeAU5QVKEoLzyBNLd4B7dt1EFn3/N1s9Xrt9Jf0MMqqO90gLDg0SFFyz9ROCVKFrsjEt1tGCF8B56MMbRQYAsKw8nxy8Ygfrk9XIBjOrb483yL/2ZYNjtNLoTt0yIfksZ+VGOpPbGVUL1Xd6ktdUd5O3kxT4q92uGf7f0tsj0XLQrlXGD7yxOaQ+sTSOO2eQTZvq57DO8Dqf3MHfW3882bO9BbyO2iEbj++XYm7anEEU7b7usCpRWqLobZ58e5fa4XtzugVxTaqgm0RqxQXsW8VPtSiwKYaYpxn+cUeuh2IY9qJCkW/Wh9n9hvj0nn2+NhuZivd//L5J6xa/hVhZ8P5SV+YJHVfP1qoX8Bd4siTQ==
+EndInfo

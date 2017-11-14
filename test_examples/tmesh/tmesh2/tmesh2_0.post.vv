@@ -1,0 +1,67 @@
+BeginZE /media/91bda0f3-39f4-43f3-819e-fca93eb92ec2/hbui/kratos_rub/applications_nonfree/test_examples_isogeometric_application/test_tmesh/tmesh2/tmesh2_0.post.vv
+   x 0.571250617504119873 2.34382319450378418
+   y 2.110137939453125 1.13022994995117188
+   z -6.53834867477416992 6.53834867477416992
+   e 2.17944955825805664
+   v 0 0 0
+   r 1
+   m 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+   c 1.5 1.5 0
+   pd 0
+   pno 0
+   pfo 0
+   pf 4
+   pv 0
+   NowUse 2
+   DrawingType 3
+   LightVector 56.7272987365722656 -2.90557003021240234 136.632003784179688 0
+   OGLShadow(UseShadows) 0
+   OGLShadow(RenderMode) RenderNice
+   OGLShadow(ShadowBias) -0.002
+   OGLShadow(AmbientShadows) 1
+   OGLShadow(UseFBO) 0
+   OGLShadow(FBOSize) 2048
+   OGLShadow(DimmedLightFactor) 0.02
+   OGLStereo(UseStereo) 0
+   OGLStereo(RelativeEyeDistance) 1
+   OGLStereo(FlipEyes) 0
+   OGLStereo(StereoMode) AnaglyphColors
+   OGLStereo(EyeDistance) 0.075
+   OGLStereo(LeftEyeDistance) 1 0 0 1
+   OGLStereo(RightEyeDistance) 0 1 1 1
+EndZE /media/91bda0f3-39f4-43f3-819e-fca93eb92ec2/hbui/kratos_rub/applications_nonfree/test_examples_isogeometric_application/test_tmesh/tmesh2/tmesh2_0.post.vv
+
+BeginMirror
+   Mirror 0 Angle 0.0 AngleFake -15.0 SizeFactor 2.0 HeightOffset 0.25 Color #d9e5f24d Backlight Off EdgeStyle No Type Scene DrawMode Mirror
+EndMirror
+
+BeginInfo
+eJzdV9ty6jYUfecrNNOXdiaHgQNJM7zlQjO0QDJAMvRJI9vbRj2y5CPZAXom/fZuyXfj9AP6hL2Wkfdl7SV554vb4fVwPCa7b3jxc37zy2DJZXYiHug4CxiZDG+Hoy/T6ZcIJGjukx8/3dz8k2jwuYHxl1cvk2lGtqsXssuA/J4JMr4mo+lsNJ6NpuR190C+jsbTD3K6vaE308FORfjE8NcZeVruyTs3GROEB2R0uplcEZamECcpPjDYHUAD4YZIRdQ7aMHO7i++kimc0uFg8JyAfBKzASHkbb5+fN7MyI97zZkkLywTHxbfID7fzC2zAsPIfjz+yJ/fbBfPa4THw2viqBvM/qsjHxfbl+Xdn2Sx/u15s7rb5Q96PDVEQ0Bur0ikAaS98ATmjL9MJAdGRlckgCQ9kK/TK2JSkD4XlsVLDQoTGbr1l4vVYrfFJe3Nip3IDvPJMNkt/xtmWK7pbcnMBcQg8cULGXAfzIxMRqPRBfsGOr2kJ4/dla9vSu4h8wAvkk/efffOuGCeAOxQgKHHECt9JsY9NCKr+3MKpliLx1lMjkp/4zIiMotROESFBIrgZuR6NCJ/DFzq8/1uvraVd+k/Lendy8tyThPmf4OAJvwEwtQwdh1bTZnW7EyV9xf4qSM399TVmaZ58BWo2ZF6WRiCNiUWahbZOGiiVaRZfIGbAwtAl/CBiZCGQrE0j6bEecwizK+8jTORcsPiREAL6gSkfF9khitJv2egzyXsVi4C7eSVKG5jZRgppI00ctwkGl9RYnnkxQKmiWKkVDAZZSwCOkZFNDh1bN9RFnscC1GiRQrUU9qu7gvMssv5KkYDMDazCwqFRWN28ReQ75QFQR+Mq3lcQi+llTEe031coNJJF4+51gqHlGpIgF3kJLETiTraooU0Paouj6aWYtnqpqaaSZMoY1NKNT+VeKHM3hYWXEdvBdpW25FL2wF8gUN2C4ojJwMK3zOWWtkYsFIoWo50n2oR7qnmpMvlpaFK+m41nETKvEiX13jJqmsXhK+E0m2oN66aDjPpf0IJFXGfqqSNxlzG7NTGTOZh1fNyWtQXPKHvSmQx0AOXNY4a5AJb3XSJmpT2L2kh0BxKzk3DsFjuIp7KZGCQM9Xizkmw9zg+pY+VVKgiXAuHowLsrBZK8ARP+/BaIZaJkqyUR2fULXvgJq2kYwHnLHlILsnqycI28yyK/abD1ZaagwJwhw26dfjEkBzVY0g5Ls4RKkGFoYHqaTQFH9+Bg6ZjVsViAPsRMH1ua6pUCtoa+JlgukPn9mRFZRqYrsMv86nYvAT0qFklNCundrL9t5PHDkAhwO5X9tdiai/rwg0v61KlXzVxoQLqcWa6eDGsvW9v96fXupqE2TzdVxiPscHVXmSh7vQs7le54GIVQFd0ltTMHmfQstxkluh/GPBi/bT5zCBW8+2dkyrl0kZSY8V4BDhBUYWivPAE0tziHdy2UQedfc/XzVav30p/QQ+roL7TAcKCR4cULf9E4ZQoWeyOSHS3YYTwHXgyxtBCgS0oDCfHLxuD+OX2cAGO6djiz/Mt/pth2ew0uRC2T4t8SBr7UY2l9sRWQvVe3aW21B3l7eTFPCn2aod/tve3yPZctCiUc4HtL09oDq1PII3b5hFk+7ruMbwPpPYzd9Tfzjdv7kBvIbeLRuD659uZtKcSRzhtu68LlFaouhhmnx/n9rle3O6AXlFoqybQGrFCeRXzUu1LLQpgpinGfZ5T6KHbhTyqkaRY9KP1fWK/Paadb4+H5WK+3v0vk3vGruFXFX4+lJf4gUVW8/Wrhf4FyiIiHA==
+EndInfo
+
+BeginPostState
+BeginSingleMesh
+  Num meshes: 0
+  Num sets: 1
+  Num cuts: 0
+  Set: 0
+  State: On
+    Name: "Kratos_Quadrilateral2D4_Mesh_1"
+    IdSet: 1
+    Color Type: 0
+    Color Ambient: 0.2 0.2 0.2 0.5
+    Color Diffuse: 0.6 0.6 0.6 0.5
+    Color Specular: 1 1 1 0.5
+    Color Shininess: 0.5
+    Property Massive: 0
+    Property Transparent: 0
+    Property Style: 14
+    Property Edge Width: 1
+    Property Vector Filter Factor: 0
+    Property Stream Arrow: 0
+  EndSet: 0
+EndSingleMesh
+  Post_Prefs_Vector_Size: 0 32 32 32
+  ResultView: {Id 6} {No results} {} {} {} {} 4 0
+EndPostState
+
