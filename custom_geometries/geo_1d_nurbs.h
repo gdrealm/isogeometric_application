@@ -187,12 +187,12 @@ public:
      * Type of values container
      */
     typedef typename BaseType::NormalType ValuesContainerType;
-    
+
     /**
      * Type of Matrix
      */
     typedef typename BaseType::MatrixType MatrixType;
-    
+
     /**
      * Type of Vector
      */
@@ -480,7 +480,7 @@ public:
      * integration point index of given integration method.
      *
      * @param DeltaPosition Matrix with the nodes position increment which describes
-     * the configuration where the jacobian has to be calculated.     
+     * the configuration where the jacobian has to be calculated.
      *
      * @see DeterminantOfJacobian
      * @see InverseOfJacobian
@@ -571,7 +571,7 @@ public:
         rResult( 0, 0 ) = j0;
         rResult( 1, 0 ) = j1;
         rResult( 2, 0 ) = j2;
-        
+
         return rResult;
     }
 
@@ -613,7 +613,7 @@ public:
         rResult( 0, 0 ) = j0;
         rResult( 1, 0 ) = j1;
         rResult( 2, 0 ) = j2;
-        
+
         return rResult;
     }
 
@@ -792,7 +792,7 @@ public:
     {
         int span = BSplineUtils::FindSpan(mNumber, mOrder, rPoint[0], mKnots);
         int start = span - mOrder;
-        
+
         // bound checking
         if(ShapeFunctionIndex - start > mOrder || ShapeFunctionIndex - start < 0)
         {
@@ -832,29 +832,29 @@ public:
         int Span = BSplineUtils::FindSpan(mNumber, mOrder, rCoordinates[0], mKnots);
 
         BSplineUtils::BasisFuns(ShapeFunctionValues1, Span, rCoordinates[0], mOrder, mKnots);
-        
+
         int Start = Span - mOrder;
-        
+
         double Denom = 0.0;
         double N;
         double W;
-        
+
         unsigned int i, Index;
         for(Index = Start; Index <= Span; ++Index)
         {
             W = mCtrlWeights[Index];
             N = ShapeFunctionValues1(Index - Start);
-            
+
             rResults(Index) = W * N;
-                
+
             Denom += rResults(Index);
         }
-        
+
         rResults *= (1.0 / Denom);
-        
+
         return rResults;
     }
-    
+
     /**
      * Calculates the local gradients at a given point
      */
@@ -874,7 +874,7 @@ public:
         double denom_der = 0.0;
         int start = span - mOrder;
         double N, dN, W;
-        
+
         unsigned int i;
         for(i = start; i <= span; ++i)
         {
@@ -918,7 +918,7 @@ public:
         double denom_der = 0.0;
         int start = span - mOrder;
         double N, dN, W;
-        
+
         unsigned int i;
         for(i = start; i <= span; ++i)
         {
@@ -1284,9 +1284,9 @@ private:
         for (k = 0; k < NumberOfIntegrationMethod; ++k)
         {
             offset = k + mOrder;
-            
+
             IntegrationPointsArrayType TempGaussRule;
-            
+
             for(i = 0; i < UnrepeatedKnots.size() - 1; ++i)
             {
                 left = UnrepeatedKnots[i];

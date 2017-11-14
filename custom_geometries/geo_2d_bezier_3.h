@@ -155,7 +155,7 @@ public:
      */
     typedef typename BaseType::ShapeFunctionsSecondDerivativesType
     ShapeFunctionsSecondDerivativesType;
-    
+
     /**
      * Type of the normal vector used for normal to edges in geomety.
      */
@@ -170,7 +170,7 @@ public:
      * Type of Matrix
      */
     typedef typename BaseType::MatrixType MatrixType;
-    
+
     /**
      * Type of Vector
      */
@@ -346,14 +346,14 @@ public:
     {
         MatrixType shape_functions_values;
         ShapeFunctionsGradientsType shape_functions_local_gradients;
-        
+
         //getting derivatives of shape functions
         BaseType::CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             shape_functions_values,
             shape_functions_local_gradients,
             ThisMethod
         );
-        
+
         SizeType NumberOfIntegrationPoints = this->IntegrationPointsNumber( ThisMethod );
 
         if ( rResult.size() != NumberOfIntegrationPoints )
@@ -367,7 +367,7 @@ public:
         {
             //defining single jacobian matrix
             MatrixType jacobian = ZeroMatrix( 3, 2 );
-            
+
             //loop over all nodes
             for ( IndexType i = 0; i < this->PointsNumber(); ++i )
             {
@@ -403,14 +403,14 @@ public:
     {
         MatrixType shape_functions_values;
         ShapeFunctionsGradientsType shape_functions_local_gradients;
-        
+
         //getting derivatives of shape functions
         BaseType::CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             shape_functions_values,
             shape_functions_local_gradients,
             ThisMethod
         );
-        
+
         SizeType NumberOfIntegrationPoints = this->IntegrationPointsNumber( ThisMethod );
 
         if ( rResult.size() != NumberOfIntegrationPoints )
@@ -424,7 +424,7 @@ public:
         {
             //defining single jacobian matrix
             MatrixType jacobian = ZeroMatrix( 3, 2 );
-            
+
             //loop over all nodes
             for ( IndexType i = 0; i < this->PointsNumber(); ++i )
             {
@@ -450,7 +450,7 @@ public:
     {
         JacobiansType J;
         J = Jacobian( J, ThisMethod );
-        
+
         if ( rResults.size() != J.size() )
         {
             rResults.resize(J.size());
@@ -465,19 +465,19 @@ public:
 
         return rResults;
     }
-    
+
     virtual JacobiansType& Jacobian0( JacobiansType& rResult, IntegrationMethod ThisMethod ) const
     {
         MatrixType shape_functions_values;
         ShapeFunctionsGradientsType shape_functions_local_gradients;
-        
+
         //getting derivatives of shape functions
         BaseType::CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             shape_functions_values,
             shape_functions_local_gradients,
             ThisMethod
         );
-        
+
         SizeType NumberOfIntegrationPoints = this->IntegrationPointsNumber( ThisMethod );
 
         if ( rResult.size() != NumberOfIntegrationPoints )
@@ -491,7 +491,7 @@ public:
         {
             //defining single jacobian matrix
             MatrixType jacobian = ZeroMatrix( 3, 2 );
-            
+
             //loop over all nodes
             for ( IndexType i = 0; i < this->PointsNumber(); ++i )
             {
@@ -645,7 +645,7 @@ private:
      * Static Member Variables
      */
 //    static const GeometryData msGeometryData;
-    
+
     ///@}
     ///@name Serialization
     ///@{

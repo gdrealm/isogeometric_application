@@ -193,7 +193,7 @@ public:
      * Type of Matrix
      */
     typedef typename BaseType::MatrixType MatrixType;
-    
+
     /**
      * Type of Vector
      */
@@ -427,7 +427,7 @@ public:
 
         return false;
     }
-    
+
     /**
     * Returns the local coordinates of a given arbitrary point
     */
@@ -437,9 +437,9 @@ public:
         #ifdef DEBUG_LEVEL2
         std::cout << typeid(*this).name() << "::" << __FUNCTION__ << std::endl;
         #endif
-        
+
         int LocalDim = BaseType::LocalSpaceDimension();
-        
+
         Matrix J = ZeroMatrix( LocalDim, LocalDim );
 
         if ( rResult.size() != LocalDim )
@@ -484,7 +484,7 @@ public:
             KRATOS_WATCH(rResult)
             KRATOS_WATCH(MathUtils<double>::Norm( DeltaXi ))
             #endif
-            
+
             if ( MathUtils<double>::Norm( DeltaXi ) < tol )
             {
                 break;
@@ -494,7 +494,7 @@ public:
         #ifdef DEBUG_LEVEL2
         KRATOS_WATCH(rResult)
         #endif
-            
+
         return( rResult );
     }
 
@@ -575,7 +575,7 @@ public:
      * integration point index of given integration method.
      *
      * @param DeltaPosition Matrix with the nodes position increment which describes
-     * the configuration where the jacobian has to be calculated.     
+     * the configuration where the jacobian has to be calculated.
      *
      * @see DeterminantOfJacobian
      * @see InverseOfJacobian
@@ -683,7 +683,7 @@ public:
         rResult( 2, 0 ) = j20;
         rResult( 2, 1 ) = j21;
         rResult( 2, 2 ) = j22;
-        
+
         return rResult;
     }
 
@@ -733,7 +733,7 @@ public:
             j21 += ( this->GetPoint( i ).Z() ) * ( shape_functions_gradients( i, 1 ) );
             j22 += ( this->GetPoint( i ).Z() ) * ( shape_functions_gradients( i, 2 ) );
         }
-        
+
         rResult( 0, 0 ) = j00;
         rResult( 0, 1 ) = j01;
         rResult( 0, 2 ) = j02;
@@ -756,14 +756,14 @@ public:
         //calculating integration points and local gradients
         ShapeFunctionsGradientsType shape_functions_gradients;
         Matrix shape_functions_values;
-        
+
         CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients
         (
             shape_functions_values,
             shape_functions_gradients,
             integration_points
         );
-        
+
         if ( rResult.size() != integration_points.size() )
         {
             JacobiansType temp( integration_points.size() );
@@ -796,7 +796,7 @@ public:
 
         return rResult;
     }
-    
+
     /**
      * :TODO: TO BE TESTED
      */
@@ -1043,7 +1043,7 @@ public:
         #ifdef DEBUG_LEVEL1
         std::cout << typeid(*this).name() << "::" << __FUNCTION__ << std::endl;
         #endif
-    
+
         int Index3 = ShapeFunctionIndex % mNumber3;
         int Index2 = (ShapeFunctionIndex / mNumber3) % mNumber2;
         int Index1 = (ShapeFunctionIndex / mNumber3) / mNumber2;
@@ -1065,7 +1065,7 @@ public:
         int Start1 = Span1 - mOrder1;
         int Start2 = Span2 - mOrder2;
         int Start3 = Span3 - mOrder3;
-        
+
         // bound checking
         if((Index1 - Start1 > mOrder1) || (Index1 - Start1 < 0))
         {
@@ -1087,7 +1087,7 @@ public:
         BSplineUtils::BasisFuns(ShapeFunctionValues1, Span1, rPoint[0], mOrder1, mKnots1);
         BSplineUtils::BasisFuns(ShapeFunctionValues2, Span2, rPoint[1], mOrder2, mKnots2);
         BSplineUtils::BasisFuns(ShapeFunctionValues3, Span3, rPoint[2], mOrder3, mKnots3);
-        
+
         #ifdef DEBUG_LEVEL1
         KRATOS_WATCH(ShapeFunctionValues1)
         KRATOS_WATCH(ShapeFunctionValues2)
@@ -1100,7 +1100,7 @@ public:
         KRATOS_WATCH(mNumber2)
         KRATOS_WATCH(mNumber3)
         #endif
-        
+
         double Denom = 0.0;
         unsigned int Index;
         for(unsigned int i = Start1; i <= Span1; ++i) //i \in {0, ... , mNumber1 -1}
@@ -1117,7 +1117,7 @@ public:
                 }
             }
         }
-        
+
         #ifdef DEBUG_LEVEL1
         KRATOS_WATCH(Denom)
         KRATOS_WATCH(Index1)
@@ -1130,7 +1130,7 @@ public:
                ShapeFunctionValues3[Index3 - Start3] *
                ( mCtrlWeights[ShapeFunctionIndex] / Denom );
     }
-    
+
     /**
      * Calculates the value of all shape functions at a given point.
      *
@@ -1156,17 +1156,17 @@ public:
         BSplineUtils::BasisFuns(ShapeFunctionValues1, Span1, rCoordinates[0], mOrder1, mKnots1);
         BSplineUtils::BasisFuns(ShapeFunctionValues2, Span2, rCoordinates[1], mOrder2, mKnots2);
         BSplineUtils::BasisFuns(ShapeFunctionValues3, Span3, rCoordinates[2], mOrder3, mKnots3);
-        
+
         int Start1 = Span1 - mOrder1;
         int Start2 = Span2 - mOrder2;
         int Start3 = Span3 - mOrder3;
-        
+
         double Denom = 0.0;
         double N1;
         double N2;
         double N3;
         double W;
-        
+
         unsigned int i, j, k, Index;
         for(i = Start1; i <= Span1; ++i)
         {
@@ -1175,21 +1175,21 @@ public:
                 for(k = Start3; k <= Span3; ++k)
                 {
                     Index = (i * mNumber2 + j) * mNumber3 + k;
-                    
+
                     W = mCtrlWeights[Index];
                     N1 = ShapeFunctionValues1(i - Start1);
                     N2 = ShapeFunctionValues2(j - Start2);
                     N3 = ShapeFunctionValues3(k - Start3);
-                    
+
                     rResults(Index) = W * N1 * N2 * N3;
-                    
+
                     Denom += rResults(Index);
                 }
             }
         }
-        
+
         rResults *= (1.0 / Denom);
-        
+
         return rResults;
     }
 
@@ -1234,7 +1234,7 @@ public:
                 for(k = Start3; k <= Span3; ++k)
                 {
                     Index = (i * mNumber2 + j) * mNumber3 + k;
-                    
+
                     W = mCtrlWeights[Index];
                     N1 = ShapeFunctionsValuesAndDerivatives1(0, i - Start1);
                     dN1 = ShapeFunctionsValuesAndDerivatives1(1, i - Start1);
@@ -1242,7 +1242,7 @@ public:
                     dN2 = ShapeFunctionsValuesAndDerivatives2(1, j - Start2);
                     N3 = ShapeFunctionsValuesAndDerivatives3(0, k - Start3);
                     dN3 = ShapeFunctionsValuesAndDerivatives3(1, k - Start3);
-                    
+
                     Denom += W * N1 * N2 * N3;
                     Denom_der1 += W * dN1 * N2 * N3;
                     Denom_der2 += W * N1 * dN2 * N3;
@@ -1250,7 +1250,7 @@ public:
                 }
             }
         }
-        
+
         for(i = Start1; i <= Span1; ++i)
         {
             for(j = Start2; j <= Span2; ++j)
@@ -1258,7 +1258,7 @@ public:
                 for(k = Start3; k <= Span3; ++k)
                 {
                     Index = (i * mNumber2 + j) * mNumber3 + k;
-                    
+
                     W = mCtrlWeights[Index];
                     N1 = ShapeFunctionsValuesAndDerivatives1(0, i - Start1);
                     dN1 = ShapeFunctionsValuesAndDerivatives1(1, i - Start1);
@@ -1266,7 +1266,7 @@ public:
                     dN2 = ShapeFunctionsValuesAndDerivatives2(1, j - Start2);
                     N3 = ShapeFunctionsValuesAndDerivatives3(0, k - Start3);
                     dN3 = ShapeFunctionsValuesAndDerivatives3(1, k - Start3);
-                    
+
                     rResult(Index, 0) = W * N2 * N3 * (dN1 * Denom - Denom_der1 * N1) / pow(Denom, 2);
                     rResult(Index, 1) = W * N1 * N3 * (dN2 * Denom - Denom_der2 * N2) / pow(Denom, 2);
                     rResult(Index, 2) = W * N1 * N2 * (dN3 * Denom - Denom_der3 * N3) / pow(Denom, 2);
@@ -1287,7 +1287,7 @@ public:
         #ifdef DEBUG_LEVEL3
         std::cout << typeid(*this).name() << "::" << __FUNCTION__ << std::endl;
         #endif
-    
+
         //setting up result matrix
         shape_functions_local_gradients.resize( mNumber1 * mNumber2 * mNumber3, 3 );
         noalias( shape_functions_local_gradients ) = ZeroMatrix( mNumber1 * mNumber2 * mNumber3, 3 );
@@ -1318,13 +1318,13 @@ public:
         int Start1 = Span1 - mOrder1;
         int Start2 = Span2 - mOrder2;
         int Start3 = Span3 - mOrder3;
-        
+
         #ifdef DEBUG_LEVEL3
         KRATOS_WATCH(Span1)
         KRATOS_WATCH(Span2)
         KRATOS_WATCH(Span3)
         #endif
-        
+
         BSplineUtils::BasisFunsDer(ShapeFunctionsValuesAndDerivatives1, Span1, rPoint[0], mOrder1, mKnots1, NumberOfDerivatives);
         BSplineUtils::BasisFunsDer(ShapeFunctionsValuesAndDerivatives2, Span2, rPoint[1], mOrder2, mKnots2, NumberOfDerivatives);
         BSplineUtils::BasisFunsDer(ShapeFunctionsValuesAndDerivatives3, Span3, rPoint[2], mOrder3, mKnots3, NumberOfDerivatives);
@@ -1336,7 +1336,7 @@ public:
         double N2, dN2;
         double N3, dN3;
         double W;
-        
+
         unsigned int i, j, k, Index;
         for(i = Start1; i <= Span1; ++i)
         {
@@ -1345,7 +1345,7 @@ public:
                 for(k = Start3; k <= Span3; ++k)
                 {
                     Index = (i * mNumber2 + j) * mNumber3 + k;
-                    
+
                     W = mCtrlWeights[Index];
                     N1 = ShapeFunctionsValuesAndDerivatives1(0, i - Start1);
                     dN1 = ShapeFunctionsValuesAndDerivatives1(1, i - Start1);
@@ -1353,7 +1353,7 @@ public:
                     dN2 = ShapeFunctionsValuesAndDerivatives2(1, j - Start2);
                     N3 = ShapeFunctionsValuesAndDerivatives3(0, k - Start3);
                     dN3 = ShapeFunctionsValuesAndDerivatives3(1, k - Start3);
-                    
+
                     Denom += W * N1 * N2 * N3;
                     Denom_der1 += W * dN1 * N2 * N3;
                     Denom_der2 += W * N1 * dN2 * N3;
@@ -1369,7 +1369,7 @@ public:
                 for(k = Start3; k <= Span3; ++k)
                 {
                     Index = (i * mNumber2 + j) * mNumber3 + k;
-                    
+
                     W = mCtrlWeights[Index];
                     N1 = ShapeFunctionsValuesAndDerivatives1(0, i - Start1);
                     dN1 = ShapeFunctionsValuesAndDerivatives1(1, i - Start1);
@@ -1377,7 +1377,7 @@ public:
                     dN2 = ShapeFunctionsValuesAndDerivatives2(1, j - Start2);
                     N3 = ShapeFunctionsValuesAndDerivatives3(0, k - Start3);
                     dN3 = ShapeFunctionsValuesAndDerivatives3(1, k - Start3);
-                    
+
                     shape_functions_values(Index) = W * N1 * N2 * N3 / Denom;
                     shape_functions_local_gradients(Index, 0) = W * N2 * N3 * (dN1 * Denom - Denom_der1 * N1) / pow(Denom, 2);
                     shape_functions_local_gradients(Index, 1) = W * N1 * N3 * (dN2 * Denom - Denom_der2 * N2) / pow(Denom, 2);
@@ -1440,7 +1440,7 @@ public:
             {
                 for ( j = 0; j < 3; ++j )
                 {
-                    rResult[pnt]( i, j ) = ( locG[pnt]( i, 0 ) * invJ[pnt]( j, 0 ) ) 
+                    rResult[pnt]( i, j ) = ( locG[pnt]( i, 0 ) * invJ[pnt]( j, 0 ) )
                                          + ( locG[pnt]( i, 1 ) * invJ[pnt]( j, 1 ) )
                                          + ( locG[pnt]( i, 2 ) * invJ[pnt]( j, 2 ) );
                 }
@@ -1538,20 +1538,20 @@ public:
 
         //generate all integration points
         IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(NumberOfIntegrationMethod);
-        
+
         #ifdef DEBUG_LEVEL3
         std::cout << "Generate integration_points completed." << std::endl;
         KRATOS_WATCH(all_integration_points.size())
 //        for(int i = 0; i < all_integration_points.size(); i++)
 //            KRATOS_WATCH(all_integration_points[i])
         #endif
-        
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "Generate integration points: " << end_compute - start_compute << " s" << std::endl;
         start_compute = end_compute;
         #endif
-        
+
         //generate all shape function values and derivatives
         ShapeFunctionsValuesContainerType shape_functions_values;
         ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
@@ -1565,7 +1565,7 @@ public:
                 all_integration_points[i]
             );
         }
-        
+
         #ifdef ENABLE_PROFILING
         end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "Generate shape function values and derivatives: " << end_compute - start_compute << " s" << std::endl;
@@ -1591,7 +1591,7 @@ public:
                         shape_functions_local_gradients//ThisShapeFunctionsLocalGradients
                 )
         );
-        
+
         #ifdef ENABLE_PROFILING
         end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "Initialize pNewGeometryData: " << end_compute - start_compute << " s" << std::endl;
@@ -1604,7 +1604,7 @@ public:
 //            for ( unsigned int j = 0 ; j < all_integration_points[i].size() ; j++ )
 //                temp[j] = outer_prod( row( shape_functions_values[i], j ), row( shape_functions_values[i], j ) );
 //        }
-//        
+//
 //        end_compute = OpenMPUtils::GetCurrentTime();
 //        std::cout << "Dummy calculation: " << end_compute - start_compute << " s" << std::endl;
 //        start_compute = end_compute;
@@ -1761,11 +1761,11 @@ private:
         #ifdef DEBUG_LEVEL3
         std::cout << typeid(*this).name() << "::" << __FUNCTION__ << std::endl;
         #endif
-        
+
         shape_function_local_gradients.resize(integration_points.size());
         std::fill(shape_function_local_gradients.begin(), shape_function_local_gradients.end(), Matrix());
         shape_function_values.resize(integration_points.size(), mNumber1 * mNumber2 * mNumber3);
-        
+
         #ifdef DEBUG_LEVEL3
         KRATOS_WATCH(integration_points.size())
         #endif
@@ -1933,7 +1933,7 @@ private:
         for (k = 0; k < NumberOfIntegrationMethod; ++k)
         {
             integration_points[k] = GaussRule[k];
-            
+
 //            std::cout << "GaussRule[" << k << "]: " << std::endl;
 //            for(int i = 0; i < GaussRule[k].size(); ++i)
 //            {

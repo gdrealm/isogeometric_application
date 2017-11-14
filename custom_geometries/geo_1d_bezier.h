@@ -187,7 +187,7 @@ public:
      * Type of Matrix
      */
     typedef typename BaseType::MatrixType MatrixType;
-    
+
     /**
      * Type of Vector
      */
@@ -492,7 +492,7 @@ public:
      * integration point index of given integration method.
      *
      * @param DeltaPosition MatrixType with the nodes position increment which describes
-     * the configuration where the jacobian has to be calculated.     
+     * the configuration where the jacobian has to be calculated.
      *
      * @see DeterminantOfJacobian
      * @see InverseOfJacobian
@@ -580,7 +580,7 @@ public:
         rResult( 0, 0 ) = j0;
         rResult( 1, 0 ) = j1;
         rResult( 2, 0 ) = j2;
-        
+
         return rResult;
     }
 
@@ -619,7 +619,7 @@ public:
         rResult( 0, 0 ) = j0;
         rResult( 1, 0 ) = j1;
         rResult( 2, 0 ) = j2;
-        
+
         return rResult;
     }
 
@@ -780,19 +780,19 @@ public:
         //compute all Bezier shape functions & derivatives at rPoint
         VectorType bezier_functions_values(mOrder + 1);
         BezierUtils::bernstein(bezier_functions_values, mOrder, rPoint[0]);
-        
+
         //compute the Bezier weight
         VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
         double denom = inner_prod(bezier_functions_values, bezier_weights);
-        
+
         //compute the shape function values
         VectorType shape_functions_values(mNumber);
         noalias( shape_functions_values ) = prod(mExtractionOperator, bezier_functions_values);
-        
+
         return shape_functions_values(ShapeFunctionIndex) *
                     mCtrlWeights(ShapeFunctionIndex) / denom;
     }
-    
+
     /**
      * Calculates the value of all shape functions at a given point.
      *
@@ -806,18 +806,18 @@ public:
         //compute all Bezier shape functions & derivatives at rPoint
         VectorType bezier_functions_values(mOrder + 1);
         BezierUtils::bernstein(bezier_functions_values, mOrder, rPoint[0]);
-        
+
         //compute the Bezier weight
         VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
         double denom = inner_prod(bezier_functions_values, bezier_weights);
-        
+
         //compute the shape function values
         rResults.resize(mNumber);
         noalias( rResults ) = prod(mExtractionOperator, bezier_functions_values);
-        
+
         for(unsigned int i = 0; i < mNumber; ++i)
             rResults(i) *= (mCtrlWeights(i) / denom);
-        
+
         return rResults;
     }
 
@@ -831,16 +831,16 @@ public:
         VectorType bezier_functions_values(mOrder + 1);
         VectorType bezier_functions_derivatives(mOrder + 1);
         BezierUtils::bernstein(bezier_functions_values, bezier_functions_derivatives, mOrder, rPoint[0]);
-        
+
         //compute the Bezier weight
         VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
         double denom = inner_prod(bezier_functions_values, bezier_weights);
-        
+
         //compute the shape function values
         VectorType shape_functions_values = prod(mExtractionOperator, bezier_functions_values);
         for(int i = 0; i < mNumber; ++i)
             shape_functions_values(i) *= (mCtrlWeights(i) / denom);
-        
+
         //compute the shape function local gradients
         rResult.resize(mNumber, 1);
         double tmp = inner_prod(bezier_functions_derivatives, bezier_weights);
@@ -863,17 +863,17 @@ public:
         VectorType bezier_functions_values(mOrder + 1);
         VectorType bezier_functions_derivatives(mOrder + 1);
         BezierUtils::bernstein(bezier_functions_values, bezier_functions_derivatives, mOrder, rPoint[0]);
-        
+
         //compute the Bezier weight
         VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
         double denom = inner_prod(bezier_functions_values, bezier_weights);
-        
+
         //compute the shape function values
         shape_functions_values.resize(mNumber);
         noalias( shape_functions_values ) = prod(mExtractionOperator, bezier_functions_values);
         for(int i = 0; i < mNumber; ++i)
             shape_functions_values(i) *= (mCtrlWeights(i) / denom);
-        
+
         //compute the shape function local gradients
         shape_functions_local_gradients.resize(mNumber, 1);
         double tmp = inner_prod(bezier_functions_derivatives, bezier_weights);
@@ -972,7 +972,7 @@ public:
         mCtrlWeights = Weights;
         mOrder = Degree1;
         mNumber = mCtrlWeights.size();
-        
+
         // select the type of extraction operator to save in memory
         if(ExtractionOperator.size1() == 2 && ExtractionOperator.size2() != 2)
         // extraction operator is stored as compressed matrix
@@ -991,7 +991,7 @@ public:
             mExtractionOperator = ExtractionOperator;
         else
             KRATOS_THROW_ERROR(std::logic_error, "Invalid extraction operator", __FUNCTION__)
-        
+
 
         // size checking
         if(mNumber != this->size())
@@ -1056,10 +1056,10 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "The number of row of extraction operator must be equal to number of nodes", __FUNCTION__)
         if(mExtractionOperator.size2() != (mOrder + 1))
             KRATOS_THROW_ERROR(std::logic_error, "The number of column of extraction operator must be equal to (p_u+1)", __FUNCTION__)
-        
+
         // find the existing integration rule or create new one if not existed
         BezierUtils::RegisterIntegrationRule<2, 2, 2>(NumberOfIntegrationMethod, Degree1);
-        
+
         // get the geometry_data according to integration rule. Note that this is a static geometry_data of a reference Bezier element, not the real Bezier element.
         mpGeometryData = BezierUtils::RetrieveIntegrationRule<2, 2, 2>(NumberOfIntegrationMethod, Degree1);
         BaseType::mpGeometryData = &(*mpGeometryData);
@@ -1242,12 +1242,12 @@ private:
         for (k = 0; k < NumberOfIntegrationMethod; ++k)
         {
             offset1 = k + mOrder; // this allows for one more order than the order of the curve
-            
+
             if(offset1 >= BaseRule.size())
                 KRATOS_THROW_ERROR(std::logic_error, "There are not enough Gauss point to support for integration", __FUNCTION__)
-            
+
             IntegrationPointsArrayType TempGaussRule;
-            
+
             for(j1 = 0; j1 < BaseRule[offset1].size(); ++j1)
             {
                 IntegrationPointType& temp1 = BaseRule[offset1][j1];
@@ -1269,7 +1269,7 @@ private:
         for (k = 0; k < NumberOfIntegrationMethod; ++k)
         {
             integration_points[k] = GaussRule[k];
-            
+
 //            std::cout << "GaussRule[" << k << "]: " << std::endl;
 //            for(int i = 0; i < GaussRule[k].size(); ++i)
 //            {
