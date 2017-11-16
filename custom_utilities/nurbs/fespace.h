@@ -155,8 +155,6 @@ public:
 
 private:
 
-    std::size_t mId;
-
     /**
      * data for grid function interpolation
      */
@@ -187,10 +185,7 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(FESpace);
 
     /// Default constructor
-    FESpace() : mId(0) {}
-
-    /// Constructor with id
-    FESpace(const std::size_t& Id) : mId(Id) {}
+    FESpace() {}
 
     /// Destructor
     virtual ~FESpace() {}
@@ -253,10 +248,162 @@ public:
     virtual void PrintData(std::ostream& rOStream) const
     {
     }
-
-private:
-    std::size_t mId;
 };
+
+
+/**
+ * Template specific instantiation for -1-D FESpace to terminate the compilation
+ */
+template<>
+class FESpace<-1>
+{
+public:
+    /// Pointer definition
+    KRATOS_CLASS_POINTER_DEFINITION(FESpace);
+
+    /// Default constructor
+    FESpace() {}
+
+    /// Destructor
+    virtual ~FESpace() {}
+
+    /// Get the number of basis functions defined over the FESpace
+    virtual const std::size_t TotalNumber() const
+    {
+        return 0;
+    }
+
+    /// Get the order of the FESpace in specific direction
+    virtual const std::size_t Order(const std::size_t& i) const
+    {
+        return 0;
+    }
+
+    /// Get the string describing the type of the FESpace
+    virtual std::string Type() const
+    {
+        return StaticType();
+    }
+
+    /// Get the string describing the type of the FESpace
+    static std::string StaticType()
+    {
+        return "FESpace<-1>D";
+    }
+
+    /// Overload comparison operator
+    virtual bool operator==(const FESpace<-1>& rOther)
+    {
+        return true;
+    }
+
+    /// Check the compatibility between boundaries of two FESpacees
+    virtual bool CheckBoundaryCompatibility(const FESpace<-1>& rFESpace1, const BoundarySide& side1,
+            const FESpace<-1>& rFESpace2, const BoundarySide& side2) const
+    {
+        return true;
+    }
+
+    /// Validate the FESpace before using
+    virtual bool Validate() const
+    {
+        return true;
+    }
+
+    // /// Construct the boundary FESpace based on side
+    // virtual typename FESpace<-2>::Pointer ConstructBoundaryFESpace(const BoundarySide& side) const
+    // {
+    //     return NULL;
+    // }
+
+    /// Information
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << "FESpace<-1>";
+    }
+
+    virtual void PrintData(std::ostream& rOStream) const
+    {
+    }
+};
+
+
+/**
+ * Template specific instantiation for -2-D FESpace to terminate the compilation
+ */
+template<>
+class FESpace<-2>
+{
+public:
+    /// Pointer definition
+    KRATOS_CLASS_POINTER_DEFINITION(FESpace);
+
+    /// Default constructor
+    FESpace() {}
+
+    /// Destructor
+    virtual ~FESpace() {}
+
+    /// Get the number of basis functions defined over the FESpace
+    virtual const std::size_t TotalNumber() const
+    {
+        return 0;
+    }
+
+    /// Get the order of the FESpace in specific direction
+    virtual const std::size_t Order(const std::size_t& i) const
+    {
+        return 0;
+    }
+
+    /// Get the string describing the type of the FESpace
+    virtual std::string Type() const
+    {
+        return StaticType();
+    }
+
+    /// Get the string describing the type of the FESpace
+    static std::string StaticType()
+    {
+        return "FESpace<-2>D";
+    }
+
+    /// Overload comparison operator
+    virtual bool operator==(const FESpace<-2>& rOther)
+    {
+        return true;
+    }
+
+    /// Check the compatibility between boundaries of two FESpacees
+    virtual bool CheckBoundaryCompatibility(const FESpace<-2>& rFESpace1, const BoundarySide& side1,
+            const FESpace<-2>& rFESpace2, const BoundarySide& side2) const
+    {
+        return true;
+    }
+
+    /// Validate the FESpace before using
+    virtual bool Validate() const
+    {
+        return true;
+    }
+
+    // /// Construct the boundary FESpace based on side
+    // virtual typename FESpace<-3>::Pointer ConstructBoundaryFESpace(const BoundarySide& side) const
+    // {
+    //     return NULL;
+    // }
+
+    /// Information
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << "FESpace<-2>";
+    }
+
+    virtual void PrintData(std::ostream& rOStream) const
+    {
+    }
+};
+
 
 /// output stream function
 template<int TDim>

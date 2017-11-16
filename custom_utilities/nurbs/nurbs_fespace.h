@@ -284,9 +284,6 @@ public:
     /// Default constructor
     NURBSFESpace() : BaseType() {}
 
-    /// Constructor with id
-    NURBSFESpace(const std::size_t& Id) : BaseType(Id) {}
-
     /// Destructor
     virtual ~NURBSFESpace() {}
 

@@ -202,39 +202,9 @@ TPatchType& GetReference(typename TPatchType::Pointer& dummy)
 }
 
 template<class TPatchType>
-typename TPatchType::Pointer Patch_pGetLeft(typename TPatchType::Pointer dummy)
+typename TPatchType::Pointer Patch_pGetNeighbor(TPatchType& rDummy, const BoundarySide& side)
 {
-    return dummy->pLeft();
-}
-
-template<class TPatchType>
-typename TPatchType::Pointer Patch_pGetRight(typename TPatchType::Pointer dummy)
-{
-    return dummy->pRight();
-}
-
-template<class TPatchType>
-typename TPatchType::Pointer Patch_pGetTop(typename TPatchType::Pointer dummy)
-{
-    return dummy->pTop();
-}
-
-template<class TPatchType>
-typename TPatchType::Pointer Patch_pGetBottom(typename TPatchType::Pointer dummy)
-{
-    return dummy->pBottom();
-}
-
-template<class TPatchType>
-typename TPatchType::Pointer Patch_pGetFront(typename TPatchType::Pointer dummy)
-{
-    return dummy->pFront();
-}
-
-template<class TPatchType>
-typename TPatchType::Pointer Patch_pGetBack(typename TPatchType::Pointer dummy)
-{
-    return dummy->pBack();
+    return rDummy.pNeighbor(side);
 }
 
 template<int TDim>
@@ -423,7 +393,6 @@ void IsogeometricApplication_AddFESpacesToPython()
     .def("Number", &NURBSFESpace<TDim>::Number)
     .def(self_ns::str(self))
     ;
-    
 }
 
 template<int TDim>
@@ -484,12 +453,7 @@ void IsogeometricApplication_AddPatchesToPython()
     .def("CreateVectorGridFunction", &Patch<TDim>::CreateVectorGridFunction)
     .def("Order", &Patch<TDim>::Order)
     .def("TotalNumber", &Patch<TDim>::TotalNumber)
-    .def("Left", &Patch_pGetLeft<Patch<TDim> >)
-    .def("Right", &Patch_pGetRight<Patch<TDim> >)
-    .def("Top", &Patch_pGetTop<Patch<TDim> >)
-    .def("Bottom", &Patch_pGetBottom<Patch<TDim> >)
-    .def("Front", &Patch_pGetFront<Patch<TDim> >)
-    .def("Back", &Patch_pGetBack<Patch<TDim> >)
+    .def("Neighbor", &Patch_pGetNeighbor<Patch<TDim> >)
     .def(self_ns::str(self))
     ;
 

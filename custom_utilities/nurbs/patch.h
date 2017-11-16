@@ -34,6 +34,14 @@ namespace Kratos
 template<int TDim> class Patch;
 template<int TDim> class MultiPatch;
 
+/// Define the location of the sub-patches on the patch. The location for corners, edges or faces can be seen in
+/// Fig.2, Burstedde et al, SCALABLE ALGORITHMS FOR PARALLEL ADAPTIVE MESH REFINEMENT ON FORESTS OF OCTREES
+enum SubPatchLocator
+{
+    _C0_, _C1_, _C2_, _C3_, _C4_, _C5_, _C6_, _C7_,
+    _E0_, _E1_, _E2_, _E3_, _E4_, _E5_, _E6_, _E7_, _E8_, _E9_, _E10_, _E11_,
+    _F0_, _F1_, _F2_, _F3_, _F4_, _F5_
+};
 
 /**
 This class represents an isogeometric patch in parametric coordinates. An isogeometric patch can be a NURBS patch, a hierarchical NURBS patch, or a T-Splines patch.
@@ -62,11 +70,19 @@ public:
     /// Constructor with id
     Patch(const std::size_t& Id) : mId(Id), mFESpace(NULL)
     {
+        mpNeighbors.resize(2*TDim);
+        mpSubPatches.resize(TDim*(TDim-1)*(TDim-1)/2);
+        mpSubSubPatches.resize(2*TDim*(TDim-1));
+        mpSubSubSubPatches.resize(2^TDim);
     }
 
     /// Constructor with id and FESpace
     Patch(const std::size_t& Id, typename FESpace<TDim>::Pointer FESpace) : mId(Id), mFESpace(FESpace)
     {
+        mpNeighbors.resize(2*TDim);
+        mpSubPatches.resize(TDim*(TDim-1)*(TDim-1)/2);
+        mpSubSubPatches.resize(2*TDim*(TDim-1));
+        mpSubSubSubPatches.resize(2^TDim);
         if (mFESpace == NULL)
             KRATOS_THROW_ERROR(std::logic_error, "Invalid FESpace is provided", "")
     }
@@ -247,15 +263,15 @@ public:
         }
 
         // check the compatibility between patch
-        if (pLeft() != NULL)
+        if (pNeighbor(_LEFT_) != NULL)
         {
-            if (this->Type() != pLeft()->Type())
+            if (this->Type() != pNeighbor(_LEFT_)->Type())
             {
                 KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and left neighbor is incompatible", "")
             }
             else
             {
-                bool check = CheckBoundaryCompatibility(*this, _LEFT_, *pLeft(), _RIGHT_);
+                bool check = CheckBoundaryCompatibility(*this, _LEFT_, *pNeighbor(_LEFT_), _RIGHT_);
                 if (!check)
                 {
                     KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and left neighbor is incompatible", "")
@@ -264,15 +280,15 @@ public:
             }
         }
 
-        if (pRight() != NULL)
+        if (pNeighbor(_RIGHT_) != NULL)
         {
-            if (this->Type() != pRight()->Type())
+            if (this->Type() != pNeighbor(_RIGHT_)->Type())
             {
                 KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and right neighbor is incompatible", "")
             }
             else
             {
-                bool check = CheckBoundaryCompatibility(*this, _RIGHT_, *pLeft(), _LEFT_);
+                bool check = CheckBoundaryCompatibility(*this, _RIGHT_, *pNeighbor(_LEFT_), _LEFT_);
                 if (!check)
                 {
                     KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and right neighbor is incompatible", "")
@@ -281,15 +297,15 @@ public:
             }
         }
 
-        if (pTop() != NULL)
+        if (pNeighbor(_TOP_) != NULL)
         {
-            if (this->Type() != pTop()->Type())
+            if (this->Type() != pNeighbor(_TOP_)->Type())
             {
                 KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and right neighbor is incompatible", "")
             }
             else
             {
-                bool check = CheckBoundaryCompatibility(*this, _TOP_, *pTop(), _BOTTOM_);
+                bool check = CheckBoundaryCompatibility(*this, _TOP_, *pNeighbor(_TOP_), _BOTTOM_);
                 if (!check)
                 {
                     KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and top neighbor is incompatible", "")
@@ -298,15 +314,15 @@ public:
             }
         }
 
-        if (pBottom() != NULL)
+        if (pNeighbor(_BOTTOM_) != NULL)
         {
-            if (this->Type() != pBottom()->Type())
+            if (this->Type() != pNeighbor(_BOTTOM_)->Type())
             {
                 KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and bottom neighbor is incompatible", "")
             }
             else
             {
-                bool check = CheckBoundaryCompatibility(*this, _BOTTOM_, *pTop(), _TOP_);
+                bool check = CheckBoundaryCompatibility(*this, _BOTTOM_, *pNeighbor(_TOP_), _TOP_);
                 if (!check)
                 {
                     KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and bottom neighbor is incompatible", "")
@@ -315,15 +331,15 @@ public:
             }
         }
 
-        if (pFront() != NULL)
+        if (pNeighbor(_FRONT_) != NULL)
         {
-            if (this->Type() != pFront()->Type())
+            if (this->Type() != pNeighbor(_FRONT_)->Type())
             {
                 KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and front neighbor is incompatible", "")
             }
             else
             {
-                bool check = CheckBoundaryCompatibility(*this, _FRONT_, *pFront(), _BACK_);
+                bool check = CheckBoundaryCompatibility(*this, _FRONT_, *pNeighbor(_FRONT_), _BACK_);
                 if (!check)
                 {
                     KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and front neighbor is incompatible", "")
@@ -332,15 +348,15 @@ public:
             }
         }
 
-        if (pBack() != NULL)
+        if (pNeighbor(_BACK_) != NULL)
         {
-            if (this->Type() != pBack()->Type())
+            if (this->Type() != pNeighbor(_BACK_)->Type())
             {
                 KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and back neighbor is incompatible", "")
             }
             else
             {
-                bool check = CheckBoundaryCompatibility(*this, _BACK_, *pBack(), _FRONT_);
+                bool check = CheckBoundaryCompatibility(*this, _BACK_, *pNeighbor(_BACK_), _FRONT_);
                 if (!check)
                 {
                     KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and back neighbor is incompatible", "")
@@ -379,80 +395,22 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// Get/Set the left neighbor
-    /// ->shared_from_this() is used to avoid the problem with boost python in assigning the shared_ptr to weak_ptr as reported here: https://stackoverflow.com/questions/8233252/boostpython-and-weak-ptr-stuff-disappearing
-    void pSetLeft(Patch<TDim>::Pointer pLeft) {mpLeft = pLeft->shared_from_this();}
-    Patch<TDim>& Left() {return *pLeft();}
-    const Patch<TDim>& Left() const {return *pLeft();}
-    // typename Patch<TDim>::Pointer pLeft() {return mpLeft;}
-    // const typename Patch<TDim>::Pointer pLeft() const {return mpLeft;}
-    typename Patch<TDim>::Pointer pLeft() {return mpLeft.lock();}
-    const typename Patch<TDim>::Pointer pLeft() const {return mpLeft.lock();}
-
-    /// Get/Set the right neighbor
-    void pSetRight(Patch<TDim>::Pointer pRight) {mpRight = pRight->shared_from_this();}
-    Patch<TDim>& Right() {return *pRight();}
-    const Patch<TDim>& Right() const {return *pRight();}
-    // typename Patch<TDim>::Pointer& pRefRight() {return mpRight;}
-    // const typename Patch<TDim>::Pointer& pRefRight() const {return mpRight;}
-    // typename Patch<TDim>::Pointer pRight() {return mpRight;}
-    // const typename Patch<TDim>::Pointer pRight() const {return mpRight;}
-    typename Patch<TDim>::Pointer pRight() {return mpRight.lock();}
-    const typename Patch<TDim>::Pointer pRight() const {return mpRight.lock();}
-
-    /// Get/Set the top neighbor
-    void pSetTop(Patch<TDim>::Pointer pTop) {mpTop = pTop->shared_from_this();}
-    Patch<TDim>& Top() {return *pTop();}
-    const Patch<TDim>& Top() const {return *pTop();}
-    // typename Patch<TDim>::Pointer pTop() {return mpTop;}
-    // const typename Patch<TDim>::Pointer pTop() const {return mpTop;}
-    typename Patch<TDim>::Pointer pTop() {return mpTop.lock();}
-    const typename Patch<TDim>::Pointer pTop() const {return mpTop.lock();}
-
-    /// Get/Set the bottom neighbor
-    void pSetBottom(Patch<TDim>::Pointer pBottom) {mpBottom = pBottom->shared_from_this();}
-    Patch<TDim>& Bottom() {return *pBottom();}
-    const Patch<TDim>& Bottom() const {return *pBottom();}
-    // typename Patch<TDim>::Pointer pBottom() {return mpBottom;}
-    // const typename Patch<TDim>::Pointer pBottom() const {return mpBottom;}
-    typename Patch<TDim>::Pointer pBottom() {return mpBottom.lock();}
-    const typename Patch<TDim>::Pointer pBottom() const {return mpBottom.lock();}
-
-    /// Get/Set the front neighbor
-    void pSetFront(Patch<TDim>::Pointer pFront) {mpFront = pFront->shared_from_this();}
-    Patch<TDim>& Front() {return *pFront();}
-    const Patch<TDim>& Front() const {return *pFront();}
-    // typename Patch<TDim>::Pointer pFront() {return mpFront;}
-    // const typename Patch<TDim>::Pointer pFront() const {return mpFront;}
-    typename Patch<TDim>::Pointer pFront() {return mpFront.lock();}
-    const typename Patch<TDim>::Pointer pFront() const {return mpFront.lock();}
-
-    /// Get/Set the back neighbor
-    void pSetBack(Patch<TDim>::Pointer pBack) {mpBack = pBack->shared_from_this();}
-    Patch<TDim>& Back() {return *pBack();}
-    const Patch<TDim>& Back() const {return *pBack();}
-    // typename Patch<TDim>::Pointer pBack() {return mpBack;}
-    // const typename Patch<TDim>::Pointer pBack() const {return mpBack;}
-    typename Patch<TDim>::Pointer pBack() {return mpBack.lock();}
-    const typename Patch<TDim>::Pointer pBack() const {return mpBack.lock();}
-
-    /// Get all the "real" neighbors of this patch
-    NeighborPatchContainerType GetNeighbors() const
+    void pSetNeighbor(const BoundarySide& side, typename Patch<TDim>::Pointer pNeighbor) {mpNeighbors[side] = pNeighbor->shared_from_this();}
+    Patch<TDim>& Neighbor(const BoundarySide& side) {return *pNeighbor(side);}
+    const Patch<TDim>& Neighbor(const BoundarySide& side) const {return *pNeighbor(side);}
+    typename Patch<TDim>::Pointer pNeighbor(const BoundarySide& side)
     {
-        NeighborPatchContainerType pNeighbors;
-        if (pLeft() != NULL)
-            pNeighbors.push_back(pLeft());
-        if (pRight() != NULL)
-            pNeighbors.push_back(pRight());
-        if (pTop() != NULL)
-            pNeighbors.push_back(pTop());
-        if (pBottom() != NULL)
-            pNeighbors.push_back(pBottom());
-        if (pFront() != NULL)
-            pNeighbors.push_back(pFront());
-        if (pBack() != NULL)
-            pNeighbors.push_back(pBack());
-        return pNeighbors;
+        if (side < 2*TDim)
+            return mpNeighbors[side].lock();
+        else
+            return NULL;
+    }
+    typename Patch<TDim>::ConstPointer pNeighbor(const BoundarySide& side) const
+    {
+        if (side < 2*TDim)
+            return mpNeighbors[side].lock();
+        else
+            return NULL;
     }
 
     /// Get/Set the parent multipatch
@@ -462,6 +420,7 @@ public:
     typename MultiPatch<TDim>::Pointer pParentMultiPatch() {return mpParentMultiPatch.lock();}
     const typename MultiPatch<TDim>::Pointer pParentMultiPatch() const {return mpParentMultiPatch.lock();}
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /// Compare the two patches in terms of its parametric information. The grid function data, including control points, shall not be checked.
@@ -515,29 +474,29 @@ public:
         rOStream << "Neighbors = ";
         if (TDim == 2)
         {
-            if (pLeft() != NULL)
-                rOStream << " left:" << pLeft()->Id();
-            if (pRight() != NULL)
-                rOStream << " right:" << pRight()->Id();
-            if (pTop() != NULL)
-                rOStream << " top:" << pTop()->Id();
-            if (pBottom() != NULL)
-                rOStream << " bottom:" << pBottom()->Id();
+            if (pNeighbor(_LEFT_) != NULL)
+                rOStream << " left:" << pNeighbor(_LEFT_)->Id();
+            if (pNeighbor(_RIGHT_) != NULL)
+                rOStream << " right:" << pNeighbor(_RIGHT_)->Id();
+            if (pNeighbor(_TOP_) != NULL)
+                rOStream << " top:" << pNeighbor(_TOP_)->Id();
+            if (pNeighbor(_BOTTOM_) != NULL)
+                rOStream << " bottom:" << pNeighbor(_BOTTOM_)->Id();
         }
         else if (TDim == 3)
         {
-            if (pLeft() != NULL)
-                rOStream << " left:" << pLeft()->Id();
-            if (pRight() != NULL)
-                rOStream << " right:" << pRight()->Id();
-            if (pTop() != NULL)
-                rOStream << " top:" << pTop()->Id();
-            if (pBottom() != NULL)
-                rOStream << " bottom:" << pBottom()->Id();
-            if (pFront() != NULL)
-                rOStream << " front:" << pFront()->Id();
-            if (pBack() != NULL)
-                rOStream << " back:" << pBack()->Id();
+            if (pNeighbor(_LEFT_) != NULL)
+                rOStream << " left:" << pNeighbor(_LEFT_)->Id();
+            if (pNeighbor(_RIGHT_) != NULL)
+                rOStream << " right:" << pNeighbor(_RIGHT_)->Id();
+            if (pNeighbor(_TOP_) != NULL)
+                rOStream << " top:" << pNeighbor(_TOP_)->Id();
+            if (pNeighbor(_BOTTOM_) != NULL)
+                rOStream << " bottom:" << pNeighbor(_BOTTOM_)->Id();
+            if (pNeighbor(_FRONT_) != NULL)
+                rOStream << " front:" << pNeighbor(_FRONT_)->Id();
+            if (pNeighbor(_BACK_) != NULL)
+                rOStream << " back:" << pNeighbor(_BACK_)->Id();
         }
     }
 
@@ -557,12 +516,14 @@ private:
     /**
      * neighboring data
      */
-    typename Patch<TDim>::WeakPointer mpLeft;
-    typename Patch<TDim>::WeakPointer mpRight;
-    typename Patch<TDim>::WeakPointer mpTop;
-    typename Patch<TDim>::WeakPointer mpBottom;
-    typename Patch<TDim>::WeakPointer mpFront;
-    typename Patch<TDim>::WeakPointer mpBack;
+    std::vector<typename Patch<TDim>::WeakPointer> mpNeighbors;
+
+    /**
+     * sub-patch data
+     */
+    std::vector<typename Patch<TDim-1>::WeakPointer> mpSubPatches;
+    std::vector<typename Patch<TDim-2>::WeakPointer> mpSubSubPatches;
+    std::vector<typename Patch<TDim-3>::WeakPointer> mpSubSubSubPatches;
 
     /**
      * pointer to parent multipatch
@@ -688,6 +649,182 @@ private:
     std::size_t mId;
 };
 
+/**
+ * Template specific instantiation for -1-D patch to terminate the compilation.
+ */
+template<>
+class Patch<-1>
+{
+public:
+    /// Pointer definition
+    KRATOS_CLASS_POINTER_DEFINITION(Patch);
+
+    /// Default constructor
+    Patch() : mId(0) {}
+
+    /// Constructor with id
+    Patch(const std::size_t& Id) : mId(Id) {}
+
+    /// Destructor
+    virtual ~Patch() {}
+
+    /// Set the FESpace for the patch
+    void SetFESpace(typename FESpace<-1>::Pointer FESpace) {}
+
+    /// Get the Id of this patch
+    const std::size_t& Id() const {return mId;}
+
+    /// Get the number of basis functions defined over the patch
+    virtual const std::size_t TotalNumber() const
+    {
+        return 0;
+    }
+
+    /// Get the order of the patch in specific direction
+    virtual const std::size_t Order(const std::size_t& i) const
+    {
+        return 0;
+    }
+
+    /// Get the string describing the type of the patch
+    virtual std::string Type() const
+    {
+        return StaticType();
+    }
+
+    /// Get the string describing the type of the patch
+    static std::string StaticType()
+    {
+        return "Patch<-1>D";
+    }
+
+    /// Validate the patch
+    virtual bool Validate() const
+    {
+        return true;
+    }
+
+    /// Overload comparison operator
+    virtual bool operator==(const Patch<-1>& rOther)
+    {
+        return Id() == rOther.Id();
+    }
+
+    /// Check the compatibility between boundaries of two patches
+    virtual bool CheckBoundaryCompatibility(const Patch<-1>& rPatch1, const BoundarySide& side1,
+            const Patch<-1>& rPatch2, const BoundarySide& side2) const
+    {
+        return true;
+    }
+
+    // /// Construct the boundary patch based on side
+    // virtual typename Patch<-1>::Pointer ConstructBoundaryPatch(const BoundarySide& side) const
+    // {
+    //     return NULL;
+    // }
+
+    /// Information
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << "Patch<-1>";
+    }
+
+    virtual void PrintData(std::ostream& rOStream) const
+    {
+    }
+
+private:
+    std::size_t mId;
+};
+
+/**
+ * Template specific instantiation for -2-D patch to terminate the compilation.
+ */
+template<>
+class Patch<-2>
+{
+public:
+    /// Pointer definition
+    KRATOS_CLASS_POINTER_DEFINITION(Patch);
+
+    /// Default constructor
+    Patch() : mId(0) {}
+
+    /// Constructor with id
+    Patch(const std::size_t& Id) : mId(Id) {}
+
+    /// Destructor
+    virtual ~Patch() {}
+
+    /// Set the FESpace for the patch
+    void SetFESpace(typename FESpace<-2>::Pointer FESpace) {}
+
+    /// Get the Id of this patch
+    const std::size_t& Id() const {return mId;}
+
+    /// Get the number of basis functions defined over the patch
+    virtual const std::size_t TotalNumber() const
+    {
+        return 0;
+    }
+
+    /// Get the order of the patch in specific direction
+    virtual const std::size_t Order(const std::size_t& i) const
+    {
+        return 0;
+    }
+
+    /// Get the string describing the type of the patch
+    virtual std::string Type() const
+    {
+        return StaticType();
+    }
+
+    /// Get the string describing the type of the patch
+    static std::string StaticType()
+    {
+        return "Patch<-2>D";
+    }
+
+    /// Validate the patch
+    virtual bool Validate() const
+    {
+        return true;
+    }
+
+    /// Overload comparison operator
+    virtual bool operator==(const Patch<-2>& rOther)
+    {
+        return Id() == rOther.Id();
+    }
+
+    /// Check the compatibility between boundaries of two patches
+    virtual bool CheckBoundaryCompatibility(const Patch<-2>& rPatch1, const BoundarySide& side1,
+            const Patch<-2>& rPatch2, const BoundarySide& side2) const
+    {
+        return true;
+    }
+
+    // /// Construct the boundary patch based on side
+    // virtual typename Patch<-2>::Pointer ConstructBoundaryPatch(const BoundarySide& side) const
+    // {
+    //     return NULL;
+    // }
+
+    /// Information
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << "Patch<-2>";
+    }
+
+    virtual void PrintData(std::ostream& rOStream) const
+    {
+    }
+
+private:
+    std::size_t mId;
+};
+
 /// output stream function
 template<int TDim>
 inline std::ostream& operator <<(std::ostream& rOStream, const Patch<TDim>& rThis)
@@ -774,6 +911,7 @@ public:
     typename PatchType::Pointer GetPatch(const std::size_t& Id) {return mpPatches(Id);}
 
     /// Access the underlying list of patches
+    /// WARNING!!! be careful with this routine
     PatchContainerType& Patches() {return mpPatches;}
 
     /// Access the underlying list of patches
@@ -829,31 +967,8 @@ public:
             // pBPatch1->SynchronizeGridFunction(*pBPatch2);
 
             // set the neighbor information
-            if (side1 == _LEFT_)
-                pPatch1->pSetLeft(pPatch2);
-            else if (side1 == _RIGHT_)
-                pPatch1->pSetRight(pPatch2);
-            else if (side1 == _TOP_)
-                pPatch1->pSetTop(pPatch2);
-            else if (side1 == _BOTTOM_)
-                pPatch1->pSetBottom(pPatch2);
-            else if (side1 == _FRONT_)
-                pPatch1->pSetFront(pPatch2);
-            else if (side1 == _BACK_)
-                pPatch1->pSetBack(pPatch2);
-
-            if (side2 == _LEFT_)
-                pPatch2->pSetLeft(pPatch1);
-            else if (side2 == _RIGHT_)
-                pPatch2->pSetRight(pPatch1);
-            else if (side2 == _TOP_)
-                pPatch2->pSetTop(pPatch1);
-            else if (side2 == _BOTTOM_)
-                pPatch2->pSetBottom(pPatch1);
-            else if (side2 == _FRONT_)
-                pPatch2->pSetFront(pPatch1);
-            else if (side2 == _BACK_)
-                pPatch2->pSetBack(pPatch1);
+            pPatch1->pSetNeighbor(side1, pPatch2);
+            pPatch2->pSetNeighbor(side2, pPatch1);
 
             // KRATOS_WATCH(*pPatch1)
             // KRATOS_WATCH(*pPatch2)
@@ -893,16 +1008,14 @@ public:
             rOStream << (*it) << std::endl;
     }
 
-protected:
-
-    // /// Access the underlying list of patches
-    // PatchContainerType& Patches() {return mpPatches;}
-
 private:
 
     std::size_t mGridSystemSize;
     PatchContainerType mpPatches; // container for all the patches
 
+    VertexPatchContainerType mpVertexPatches;
+    EdgePatchContainerType mpEdgePatches;
+    FacePatchContainerType mpFacePatches;
 };
 
 /// output stream function
