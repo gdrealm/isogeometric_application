@@ -1,6 +1,6 @@
 // see isogeometric_application/LICENSE.txt
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 2014-01-28 $
 //   Revision:            $Revision: 1.1 $
@@ -16,7 +16,7 @@
 #include <iostream>
 #include <fstream>
 
-// External includes 
+// External includes
 #include "boost/numeric/ublas/vector.hpp"
 
 // Project includes
@@ -37,7 +37,7 @@
 
 namespace Kratos
 {
-    
+
 ///@{
 
 ///@name Kratos Globals
@@ -66,9 +66,9 @@ namespace Kratos
 class BezierGeometryDataKey
 {
 public:
-    
+
     typedef std::size_t SizeType;
-    
+
     BezierGeometryDataKey(SizeType NumberOfIntegrationMethod,
                           SizeType Order1 = 0,
                           SizeType Order2 = 0,
@@ -85,7 +85,7 @@ public:
         mWorkingSpaceDimension = WorkingSpaceDimension;
         mLocalSpaceDimension = LocalSpaceDimension;
     }
-    
+
     bool operator<(const BezierGeometryDataKey& Key) const
     {
         if ( mNumberOfIntegrationMethod == Key.mNumberOfIntegrationMethod )
@@ -126,7 +126,7 @@ public:
             return mNumberOfIntegrationMethod < Key.mNumberOfIntegrationMethod;
         }
     }
-    
+
     void PrintInfo(std::ostream& os) const
     {
         os << "(NumberOfIntegrationMethod = " << mNumberOfIntegrationMethod
@@ -138,7 +138,7 @@ public:
            << ", LocalSpaceDimension = " << mLocalSpaceDimension
            << ")";
     }
-    
+
 private:
     SizeType mNumberOfIntegrationMethod;
     SizeType mOrder1;
@@ -163,7 +163,7 @@ inline std::ostream& operator<<(std::ostream& os, const BezierGeometryDataKey& K
 class BezierUtils
 {
 public:
-    
+
     ///@name Type Definitions
     ///@{
 
@@ -210,12 +210,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
-    
-    
+
+
     /********************************************************
             Fundamental Bezier handling functions
      ********************************************************/
-     
+
     /**
      * Computes Bernstein basis function B(i, p)(x) on [0, 1]
      * Remark when debugging hierarchical NURBS, it may be not correct
@@ -225,11 +225,11 @@ public:
         //bound checking
         if(i < 0 || i > p)
             return 0.0;
-            
+
         double a = x;
         double b = 1 - x;
         double coeff;
-        
+
         if(p == 0)
         {
             return 1.0;
@@ -247,10 +247,10 @@ public:
             }
             coeff = msBernsteinCoefs[cnt - 1];
         }
-        
+
         return coeff * pow(a, i) * pow(b, p - i);
     }
-    
+
     /**
      * Computes Bernstein basis function B(i, p)(x) on [0, 1] using recursive iteration
      */
@@ -263,15 +263,15 @@ public:
         {
             return 1.0;
         }
-        
+
         double a = x;
         double b = 1 - x;
-        
+
         double tmp1 = bernstein2(i, p - 1, x);
         double tmp2 = bernstein2(i - 1, p - 1, x);
         return b * tmp1 + a * tmp2;
     }
-    
+
     /**
      * Computes Bernstein basis function value & derivative B(i, p)(x) on [0, 1]
      */
@@ -283,24 +283,24 @@ public:
             d = 0.0;
             return;
         }
-        
+
         if(p == 0)
         {
             v = 1.0;
             d = 0.0;
             return;
         }
-        
+
         double a = x;
         double b = 1 - x;
-        
+
         double tmp1 = bernstein2(i, p - 1, x);
         double tmp2 = bernstein2(i - 1, p - 1, x);
-        
+
         v = b * tmp1 + a * tmp2;
         d = p * (tmp2 - tmp1);
     }
-    
+
     /**
      * Computes Bernstein basis function value & derivative & second derivative B(i, p)(x) on [0, 1]
      */
@@ -313,7 +313,7 @@ public:
             d2 = 0.0;
             return;
         }
-        
+
         if(p == 0)
         {
             v = 1.0;
@@ -321,34 +321,34 @@ public:
             d2 = 0.0;
             return;
         }
-        
+
         if(p == 1)
         {
             bernstein(v, d, i, p, x);
             d2 = 0.0;
             return;
         }
-        
+
         double a = x;
         double b = 1 - x;
-        
+
         double tmp1 = bernstein2(i    , p - 1, x);
         double tmp2 = bernstein2(i - 1, p - 1, x);
         double tmp3 = bernstein2(i    , p - 2, x);
         double tmp4 = bernstein2(i - 1, p - 2, x);
         double tmp5 = bernstein2(i - 2, p - 2, x);
-        
+
         v = b * tmp1 + a * tmp2;
         d = p * (tmp2 - tmp1);
         d2 = p * (p-1) * (tmp3 - 2 * tmp4 + tmp5);
     }
-    
+
     template<class ValuesContainerType>
     static inline void bernstein(ValuesContainerType& rS, const int& p, const double& x)
     {
         double a = x;
         double b = 1 - x;
-        
+
         if(p == 0)
         {
             rS[0] = 1.0;
@@ -365,22 +365,22 @@ public:
             rS[0] = 1.0;
             rS[p] = 1.0;
             int cnt = 0;
-            
+
             for(int j = 0; j < p - 2; ++j)
             {
                 cnt += (j + 2) / 2;
             }
-            
+
             for(int j = 0; j < p / 2; ++j)
             {
                 rS[j + 1] = msBernsteinCoefs[cnt + j];
             }
-            
+
             for(int j = 0; j < (p - 1) / 2; ++j)
             {
                 rS[p - j - 1] = rS[j + 1];
             }
-            
+
             for(int j = 0; j < p + 1; ++j)
             {
                 rS[j] *= (pow(a, j) * pow(b, p - j));
@@ -389,7 +389,7 @@ public:
             return;
         }
     }
-    
+
     template<class ValuesContainerType>
     static inline void bernstein(ValuesContainerType& rS,
                                  ValuesContainerType& rD,
@@ -401,7 +401,7 @@ public:
             bernstein(rS[i], rD[i], i, p, x);
         }
     }
-    
+
     template<class ValuesContainerType>
     static inline void bernstein(ValuesContainerType& rS,
                                  ValuesContainerType& rD,
@@ -418,7 +418,7 @@ public:
     /********************************************************
             End of Fundamental Bezier handling functions
      ********************************************************/
-     
+
     /********************************************************
             Bezier integration utilities
      ********************************************************/
@@ -430,7 +430,7 @@ public:
     {
         //define the key
         BezierGeometryDataKey Key(NumberOfIntegrationMethod, Order, 0, 0, TDimension, TWorkingSpaceDimension, TLocalSpaceDimension);
-        
+
         //find the key in existing map
         if(mIntegrationMethods.find(Key) != mIntegrationMethods.end())
         //found the key
@@ -476,7 +476,7 @@ public:
             std::cout << "Registerred BezierGeometryData " << Key << " successfully" << std::endl;
         }
     }
-    
+
     template<std::size_t TDimension, std::size_t TWorkingSpaceDimension, std::size_t TLocalSpaceDimension>
     static void RegisterIntegrationRule(
         unsigned int NumberOfIntegrationMethod,
@@ -497,7 +497,7 @@ public:
         {
             IntegrationPointsContainerType all_integration_points
                 = AllIntegrationPoints(NumberOfIntegrationMethod, Order1, Order2);
-            
+
             ShapeFunctionsValuesContainerType shape_functions_values;
             ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
 
@@ -762,7 +762,7 @@ public:
         //number of integration points used
         IntegrationMethod ThisIntegrationMethod = Geom.GetDefaultIntegrationMethod();
         const GeometryType::IntegrationPointsArrayType& integration_points = Geom.IntegrationPoints(ThisIntegrationMethod);
-        
+
         //initializing the Jacobian, the inverse Jacobian and Jacobians determinant in the reference configuration
         GeometryType::JacobiansType J0(integration_points.size());
 
@@ -807,15 +807,15 @@ public:
 //    {
 //        IsogeometricGeometryType& Geom = dynamic_cast<IsogeometricGeometryType&>(pElem->GetGeometry());
 //        unsigned int dim = Geom.WorkingSpaceDimension();
-// 
+//
 //        //number of integration points used
 //        IntegrationMethod ThisIntegrationMethod = Geom.GetDefaultIntegrationMethod();
 //        const GeometryType::IntegrationPointsArrayType& integration_points = Geom.IntegrationPoints(ThisIntegrationMethod);
-//        
+//
 //        //calculating determinants of Jacobian
 //        Vector DetJ;
 //        DetJ = Geom.DeterminantOfJacobian(DetJ, ThisIntegrationMethod);
-// 
+//
 //        //calculating contributions
 //        noalias(P) = ZeroVector(3);
 //        CoordinatesArrayType p_ref;
@@ -825,19 +825,19 @@ public:
 //        {
 //            //getting informations for integration
 //            double IntegrationWeight = integration_points[PointNumber].Weight();
-//            
+//
 //            //calculating the area fraction
 //            double dS = DetJ[PointNumber] * IntegrationWeight;
 //            TotalDomainInitialSize += dS;
-//            
+//
 //            //getting the local coodinates of integration point
 //            p_ref[0] = integration_points[PointNumber].X();
 //            p_ref[1] = integration_points[PointNumber].Y();
 //            p_ref[2] = integration_points[PointNumber].Z();
-//            
+//
 //            //calculating the global coordinates of integration point
 //            GlobalCoordinates(Geom, p, p_ref);
-//            
+//
 //            //contributing to the global center of mass
 //            P[0] += p[0] * dS;
 //            P[1] += p[1] * dS;
@@ -847,7 +847,7 @@ public:
 //        P *= (1.0 / TotalDomainInitialSize);
 //        return P;
 //    }
-     
+
     /********************************************************
             End of Geometry handling routines
      ********************************************************/
@@ -863,11 +863,11 @@ public:
         #ifdef ENABLE_PROFILING
         double start_compute = OpenMPUtils::GetCurrentTime();
         #endif
-        
+
         IntegrationMethod ThisMethod = GeometryData::GI_GAUSS_1;
-        
+
         ElementsArrayType& pElements = pModelPart->Elements();
-        
+
         std::ofstream Out;
         Out.open(FileName.c_str());
 
@@ -878,19 +878,19 @@ public:
         {
             MatrixType shape_functions_values;
             ShapeFunctionsGradientsType shape_functions_local_gradients;
-            
+
             IsogeometricGeometryType& rGeometry = dynamic_cast<IsogeometricGeometryType&>((*it)->GetGeometry());
-            
+
             rGeometry.CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
                 shape_functions_values,
                 shape_functions_local_gradients,
                 ThisMethod
             );
-            
+
             unsigned int integration_points_number = shape_functions_values.size1();
             unsigned int number_of_nodes = shape_functions_values.size2();
-            
-            
+
+
             Out << "{" << std::endl;
             for(unsigned int i = 0; i < integration_points_number; ++i)
             {
@@ -906,7 +906,7 @@ public:
                 else
                     Out << shape_functions_values(i, number_of_nodes - 1) << "}" << std::endl;;
             }
-            
+
             if(it != pElements.ptr_end() - 1)
             {
                 Out << "}," << std::endl;
@@ -916,7 +916,7 @@ public:
         }
         Out << "};" << std::endl;
         Out.close();
-        
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "Dumping shape functions values and local gradients completed: "
@@ -943,7 +943,7 @@ public:
         //define the base integration rule for 1st parametric dimension. This ensures that the number of integration points in each direction equal to order + 1
         std::vector<IntegrationPointsArrayType> BaseRule;
         BaseRule = GenerateBaseIntegrationRule(BaseRule);
-        
+
         ///////////////////////////////////////////////////////////////
         // Remarks: this current implementation supports integration with order up to 9
         IndexType k, j1, offset1;
@@ -956,7 +956,7 @@ public:
 
             if(offset1 >= BaseRule.size())
                 KRATOS_THROW_ERROR(std::logic_error, "There are not enough Gauss point to support for integration", __FUNCTION__)
-            
+
             for(j1 = 0; j1 < BaseRule[offset1].size(); ++j1)
             {
                 IntegrationPointType& temp1 = BaseRule[offset1][j1];
@@ -986,7 +986,7 @@ public:
         //define the base integration rule for 1st parametric dimension. This ensures that the number of integration points in each direction equal to order + 1
         std::vector<IntegrationPointsArrayType> BaseRule;
         BaseRule = GenerateBaseIntegrationRule(BaseRule);
-        
+
         ///////////////////////////////////////////////////////////////
         // Remarks: this current implementation supports integration with order up to 9
         IndexType k, j1, j2, offset1, offset2;
@@ -998,10 +998,10 @@ public:
         {
             offset1 = k + base_offset1;
             offset2 = k + base_offset2;
-            
+
             if(offset1 >= BaseRule.size() || offset2 >= BaseRule.size())
                 KRATOS_THROW_ERROR(std::logic_error, "There are not enough Gauss point to support for integration", __FUNCTION__)
-            
+
             for(j1 = 0; j1 < BaseRule[offset1].size(); ++j1)
             {
                 IntegrationPointType& temp1 = BaseRule[offset1][j1];
@@ -1113,7 +1113,7 @@ public:
     /********************************************************
             Bezier extraction subroutines
      ********************************************************/
-    
+
     /**
         Compute extended knot vector given the local knot vector
      */
@@ -1277,7 +1277,7 @@ private:
     ///@{
 
     static const int msBernsteinCoefs[];
-    
+
     static MapType mIntegrationMethods;
 
     ///@}
@@ -1304,14 +1304,14 @@ private:
         noalias( rResult ) = ZeroVector( 3 );
 
         Vector ShapesFunctionValues;
-        
+
         rGeometry.ShapeFunctionsValues(ShapesFunctionValues, LocalCoordinates);
-        
+
         for ( IndexType i = 0 ; i < rGeometry.size() ; ++i )
         {
             noalias( rResult ) += ShapesFunctionValues( i ) * rGeometry.GetPoint( i ).GetInitialPosition();
         }
-        
+
         return rResult;
     }
 
@@ -1344,7 +1344,7 @@ private:
             }
         }
     }
-    
+
     static void ShapeFunctionsValuesAndLocalGradients(
         IndexType Order,
         VectorType& shape_functions_values,
@@ -1356,12 +1356,12 @@ private:
         shape_functions_values.resize(Order + 1);
         VectorType shape_functions_derivatives(Order + 1);
         bernstein(shape_functions_values, shape_functions_derivatives, Order, rPoint[0]);
-        
+
         shape_functions_local_gradients.resize(1, Order + 1);
         for(int i = 0; i < Order + 1; ++i)
             shape_functions_local_gradients(0, i) = shape_functions_derivatives(i);
     }
-    
+
     /**************************************************************************
                 2nd order NURBS
      **************************************************************************/
@@ -1393,7 +1393,7 @@ private:
             }
         }
     }
-    
+
     static void ShapeFunctionsValuesAndLocalGradients(
         IndexType Order1,
         IndexType Order2,
@@ -1409,7 +1409,7 @@ private:
         VectorType bezier_functions_derivatives2(Order2 + 1);
         BezierUtils::bernstein(bezier_functions_values1, bezier_functions_derivatives1, Order1, rPoint[0]);
         BezierUtils::bernstein(bezier_functions_values2, bezier_functions_derivatives2, Order2, rPoint[1]);
-        
+
         //compute bivariate Bezier shape functions values
         shape_functions_values.resize((Order1 + 1) * (Order2 + 1));
         for(IndexType i = 0; i < Order1 + 1; ++i)
@@ -1417,12 +1417,12 @@ private:
             for(IndexType j = 0; j < Order2 + 1; ++j)
             {
                 IndexType index = j + i * (Order2 + 1);
-                
-                shape_functions_values(index) = 
+
+                shape_functions_values(index) =
                     bezier_functions_values1(i) * bezier_functions_values2(j);
             }
         }
-        
+
         //compute bivariate Bezier shape functions derivatives w.r.t local coordinates
         shape_functions_local_gradients.resize(2, (Order1 + 1) * (Order2 + 1));
         for(IndexType i = 0; i < Order1 + 1; ++i)
@@ -1430,15 +1430,15 @@ private:
             for(IndexType j = 0; j < Order2 + 1; ++j)
             {
                 IndexType index = j + i * (Order2 + 1);
-                
-                shape_functions_local_gradients(0, index) = 
+
+                shape_functions_local_gradients(0, index) =
                     bezier_functions_derivatives1(i) * bezier_functions_values2(j);
-                shape_functions_local_gradients(1, index) = 
+                shape_functions_local_gradients(1, index) =
                     bezier_functions_values1(i) * bezier_functions_derivatives2(j);
             }
         }
     }
-    
+
     /**************************************************************************
                 3rd order NURBS
      **************************************************************************/
@@ -1472,7 +1472,7 @@ private:
             }
         }
     }
-    
+
     static void ShapeFunctionsValuesAndLocalGradients(
         IndexType Order1,
         IndexType Order2,
@@ -1492,7 +1492,7 @@ private:
         BezierUtils::bernstein(bezier_functions_values1, bezier_functions_derivatives1, Order1, rPoint[0]);
         BezierUtils::bernstein(bezier_functions_values2, bezier_functions_derivatives2, Order2, rPoint[1]);
         BezierUtils::bernstein(bezier_functions_values3, bezier_functions_derivatives3, Order3, rPoint[2]);
-        
+
         //compute trivariate Bezier shape functions values
         shape_functions_values.resize((Order1 + 1) * (Order2 + 1) * (Order3 + 1));
         for(IndexType i = 0; i < (Order1 + 1); ++i)
@@ -1502,15 +1502,15 @@ private:
                 for(IndexType k = 0; k < (Order3 + 1); ++k)
                 {
                     IndexType index = k + (j + i * (Order2 + 1)) * (Order3 + 1);
-                    
-                    shape_functions_values(index) = 
+
+                    shape_functions_values(index) =
                         bezier_functions_values1(i) *
                         bezier_functions_values2(j) *
                         bezier_functions_values3(k);
                 }
             }
         }
-        
+
         //compute trivariate Bezier shape functions derivatives w.r.t local coordinates
         shape_functions_local_gradients.resize(3, (Order1 + 1) * (Order2 + 1) * (Order3 + 1));
         for(IndexType i = 0; i < Order1 + 1; ++i)
@@ -1520,16 +1520,16 @@ private:
                 for(IndexType k = 0; k < Order3 + 1; ++k)
                 {
                     IndexType index = k + (j + i * (Order2 + 1)) * (Order3 + 1);
-                    
-                    shape_functions_local_gradients(0, index) = 
+
+                    shape_functions_local_gradients(0, index) =
                         bezier_functions_derivatives1(i) *
                         bezier_functions_values2(j) *
                         bezier_functions_values3(k);
-                    shape_functions_local_gradients(1, index) = 
+                    shape_functions_local_gradients(1, index) =
                         bezier_functions_values1(i) *
                         bezier_functions_derivatives2(j) *
                         bezier_functions_values3(k);
-                    shape_functions_local_gradients(2, index) = 
+                    shape_functions_local_gradients(2, index) =
                         bezier_functions_values1(i) *
                         bezier_functions_values2(j) *
                         bezier_functions_derivatives3(k);
@@ -1537,7 +1537,7 @@ private:
             }
         }
     }
-    
+
     ///@}
     ///@name Private  Access
     ///@{
@@ -1560,7 +1560,7 @@ private:
         rRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints8, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
         rRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints9, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
         rRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints10, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        
+
         return rRule;
     }
 
