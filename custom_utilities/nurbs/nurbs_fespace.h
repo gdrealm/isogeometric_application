@@ -1,13 +1,13 @@
 //
 //   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
-//   Date:                $Date: 6 Nov 2017 $
+//   Date:                $Date: 15 Nov 2017 $
 //   Revision:            $Revision: 1.0 $
 //
 //
 
-#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_NURBS_PATCH_H_INCLUDED )
-#define  KRATOS_ISOGEOMETRIC_APPLICATION_NURBS_PATCH_H_INCLUDED
+#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_NURBS_FESPACE_H_INCLUDED )
+#define  KRATOS_ISOGEOMETRIC_APPLICATION_NURBS_FESPACE_H_INCLUDED
 
 // System includes
 #include <vector>
@@ -19,45 +19,39 @@
 #include "includes/define.h"
 #include "containers/array_1d.h"
 #include "custom_utilities/nurbs/knot_array_1d.h"
-#include "custom_utilities/nurbs/control_point.h"
-#include "custom_utilities/nurbs/grid_function.h"
-#include "custom_utilities/nurbs/patch.h"
+#include "custom_utilities/nurbs/fespace.h"
 
 namespace Kratos
 {
 
 /**
-This class represents a single NURBS patch in parametric coordinates.
+This class represents the FESpace for a single NURBS patch defined over parametric domain.
  */
-template<std::size_t TDim>
-class NURBSPatch : public Patch<TDim>
+template<int TDim>
+class NURBSFESpace : public FESpace<TDim>
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(NURBSPatch);
+    KRATOS_CLASS_POINTER_DEFINITION(NURBSFESpace);
 
     /// Type definition
-    typedef Patch<TDim> BaseType;
+    typedef FESpace<TDim> BaseType;
     typedef KnotArray1D<double> knot_container_t;
     typedef typename knot_container_t::knot_t knot_t;
-    typedef typename BaseType::ControlPointType ControlPointType;
 
     /// Default constructor
-    NURBSPatch() : BaseType() {}
-
-    /// Constructor with id
-    NURBSPatch(const std::size_t& Id) : BaseType(Id) {}
+    NURBSFESpace() : BaseType() {}
 
     /// Destructor
-    virtual ~NURBSPatch() {}
+    virtual ~NURBSFESpace() {}
 
     /// Get the order of the NURBS patch in specific direction
     virtual const std::size_t Order(const std::size_t& i) const {return mOrders[i];}
 
-    /// Get the number of control points of the NURBSPatch in specific direction
+    /// Get the number of control points of the NURBSFESpace in specific direction
     const std::size_t Number(const std::size_t& i) const {return mNumbers[i];}
 
-    /// Get the number of basis functions defined over the NURBS NURBSPatch
+    /// Get the number of basis functions defined over the NURBS NURBSFESpace
     virtual const std::size_t TotalNumber() const
     {
         std::size_t Number = 1;
@@ -76,7 +70,7 @@ public:
     static std::string StaticType()
     {
         std::stringstream ss;
-        ss << "NURBSPatch" << TDim << "D";
+        ss << "NURBSFESpace" << TDim << "D";
         return ss.str();
     }
 
@@ -110,7 +104,7 @@ public:
         mNumbers[i] = Number;
     }
 
-    /// Validate the NURBSPatch before using
+    /// Validate the NURBSFESpace
     virtual bool Validate() const
     {
         for (std::size_t i = 0; i < TDim; ++i)
@@ -126,26 +120,26 @@ public:
     }
 
     /// Compare between two NURBS patches in terms of parametric information
-    virtual bool IsCompatible(const Patch<TDim>& rOtherPatch) const
+    virtual bool IsCompatible(const FESpace<TDim>& rOtherFESpace) const
     {
-        if (rOtherPatch.Type() != Type())
+        if (rOtherFESpace.Type() != Type())
         {
-            KRATOS_WATCH(rOtherPatch.Type())
+            KRATOS_WATCH(rOtherFESpace.Type())
             KRATOS_WATCH(Type())
             std::cout << "WARNING!!! the other patch type is not " << Type() << std::endl;
             return false;
         }
 
-        const NURBSPatch<TDim>& rOtherNURBSPatch = dynamic_cast<const NURBSPatch<TDim>&>(rOtherPatch);
+        const NURBSFESpace<TDim>& rOtherNURBSFESpace = dynamic_cast<const NURBSFESpace<TDim>&>(rOtherFESpace);
 
         // compare the knot vectors and order information
         for (std::size_t i = 0; i < TDim; ++i)
         {
-            if (!(this->Number(i)) == rOtherNURBSPatch.Number(i))
+            if (!(this->Number(i)) == rOtherNURBSFESpace.Number(i))
                 return false;
-            if (!(this->Order(i)) == rOtherNURBSPatch.Order(i))
+            if (!(this->Order(i)) == rOtherNURBSFESpace.Order(i))
                 return false;
-            if (!(this->KnotVector(i) == rOtherNURBSPatch.KnotVector(i)))
+            if (!(this->KnotVector(i) == rOtherNURBSFESpace.KnotVector(i)))
                 return false;
         }
 
@@ -153,34 +147,34 @@ public:
     }
 
     /// Construct the boundary patch based on side
-    virtual typename Patch<TDim-1>::Pointer ConstructBoundaryPatch(const BoundarySide& side) const
+    virtual typename FESpace<TDim-1>::Pointer ConstructBoundaryFESpace(const BoundarySide& side) const
     {
-        typename NURBSPatch<TDim-1>::Pointer pBPatch = typename NURBSPatch<TDim-1>::Pointer(new NURBSPatch<TDim-1>(-1));
+        typename NURBSFESpace<TDim-1>::Pointer pBFESpace = typename NURBSFESpace<TDim-1>::Pointer(new NURBSFESpace<TDim-1>());
 
         if (TDim == 2)
         {
             if (side == _LEFT_)
             {
-                pBPatch->SetKnotVector(0, KnotVector(1));
-                pBPatch->SetInfo(0, Number(1), Order(1));
+                pBFESpace->SetKnotVector(0, KnotVector(1));
+                pBFESpace->SetInfo(0, Number(1), Order(1));
                 // TODO set the control points and grid functions
             }
             else if (side == _RIGHT_)
             {
-                pBPatch->SetKnotVector(0, KnotVector(1));
-                pBPatch->SetInfo(0, Number(1), Order(1));
+                pBFESpace->SetKnotVector(0, KnotVector(1));
+                pBFESpace->SetInfo(0, Number(1), Order(1));
                 // TODO set the control points and grid functions
             }
             else if (side == _TOP_)
             {
-                pBPatch->SetKnotVector(0, KnotVector(0));
-                pBPatch->SetInfo(0, Number(0), Order(0));
+                pBFESpace->SetKnotVector(0, KnotVector(0));
+                pBFESpace->SetInfo(0, Number(0), Order(0));
                 // TODO set the control points and grid functions
             }
             else if (side == _BOTTOM_)
             {
-                pBPatch->SetKnotVector(0, KnotVector(0));
-                pBPatch->SetInfo(0, Number(0), Order(0));
+                pBFESpace->SetKnotVector(0, KnotVector(0));
+                pBFESpace->SetInfo(0, Number(0), Order(0));
                 // TODO set the control points and grid functions
             }
         }
@@ -188,61 +182,61 @@ public:
         {
             if (side == _LEFT_)
             {
-                pBPatch->SetKnotVector(0, KnotVector(1));
-                pBPatch->SetKnotVector(1, KnotVector(2));
-                pBPatch->SetInfo(0, Number(1), Order(1));
-                pBPatch->SetInfo(1, Number(2), Order(2));
+                pBFESpace->SetKnotVector(0, KnotVector(1));
+                pBFESpace->SetKnotVector(1, KnotVector(2));
+                pBFESpace->SetInfo(0, Number(1), Order(1));
+                pBFESpace->SetInfo(1, Number(2), Order(2));
                 // TODO set the control points and grid functions
             }
             else if (side == _RIGHT_)
             {
-                pBPatch->SetKnotVector(0, KnotVector(1));
-                pBPatch->SetKnotVector(1, KnotVector(2));
-                pBPatch->SetInfo(0, Number(1), Order(1));
-                pBPatch->SetInfo(1, Number(2), Order(2));
+                pBFESpace->SetKnotVector(0, KnotVector(1));
+                pBFESpace->SetKnotVector(1, KnotVector(2));
+                pBFESpace->SetInfo(0, Number(1), Order(1));
+                pBFESpace->SetInfo(1, Number(2), Order(2));
                 // TODO set the control points and grid functions
             }
             else if (side == _TOP_)
             {
-                pBPatch->SetKnotVector(0, KnotVector(0));
-                pBPatch->SetKnotVector(1, KnotVector(1));
-                pBPatch->SetInfo(0, Number(0), Order(0));
-                pBPatch->SetInfo(1, Number(1), Order(1));
+                pBFESpace->SetKnotVector(0, KnotVector(0));
+                pBFESpace->SetKnotVector(1, KnotVector(1));
+                pBFESpace->SetInfo(0, Number(0), Order(0));
+                pBFESpace->SetInfo(1, Number(1), Order(1));
                 // TODO set the control points and grid functions
             }
             else if (side == _BOTTOM_)
             {
-                pBPatch->SetKnotVector(0, KnotVector(0));
-                pBPatch->SetKnotVector(1, KnotVector(1));
-                pBPatch->SetInfo(0, Number(0), Order(0));
-                pBPatch->SetInfo(1, Number(1), Order(1));
+                pBFESpace->SetKnotVector(0, KnotVector(0));
+                pBFESpace->SetKnotVector(1, KnotVector(1));
+                pBFESpace->SetInfo(0, Number(0), Order(0));
+                pBFESpace->SetInfo(1, Number(1), Order(1));
                 // TODO set the control points and grid functions
             }
             else if (side == _FRONT_)
             {
-                pBPatch->SetKnotVector(0, KnotVector(0));
-                pBPatch->SetKnotVector(1, KnotVector(2));
-                pBPatch->SetInfo(0, Number(0), Order(0));
-                pBPatch->SetInfo(1, Number(1), Order(2));
+                pBFESpace->SetKnotVector(0, KnotVector(0));
+                pBFESpace->SetKnotVector(1, KnotVector(2));
+                pBFESpace->SetInfo(0, Number(0), Order(0));
+                pBFESpace->SetInfo(1, Number(1), Order(2));
                 // TODO set the control points and grid functions
             }
             else if (side == _BACK_)
             {
-                pBPatch->SetKnotVector(0, KnotVector(0));
-                pBPatch->SetKnotVector(1, KnotVector(2));
-                pBPatch->SetInfo(0, Number(0), Order(0));
-                pBPatch->SetInfo(1, Number(1), Order(2));
+                pBFESpace->SetKnotVector(0, KnotVector(0));
+                pBFESpace->SetKnotVector(1, KnotVector(2));
+                pBFESpace->SetInfo(0, Number(0), Order(0));
+                pBFESpace->SetInfo(1, Number(1), Order(2));
                 // TODO set the control points and grid functions
             }
         }
 
-        return pBPatch;
+        return pBFESpace;
     }
 
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << Type() << ", Id = " << BaseType::Id() << ", Add = " << this << ", n = (";
+        rOStream << Type() << ", Add = " << this << ", n = (";
         for (std::size_t i = 0; i < TDim; ++i)
             rOStream << " " << this->Number(i);
         rOStream << "), p = (";
@@ -260,9 +254,6 @@ public:
                 rOStream << " " << mpKnotVectors[i].pKnotAt(j)->Value();
             rOStream << std::endl;
         }
-        if (BaseType::ControlPointGrid() != NULL)
-            rOStream << *(BaseType::ControlPointGrid());
-        BaseType::PrintData(rOStream);
     }
 
 private:
@@ -279,30 +270,30 @@ private:
  * Template specific instantiation for null-D NURBS patch to terminate the compilation
  */
 template<>
-class NURBSPatch<0> : public Patch<0>
+class NURBSFESpace<0> : public FESpace<0>
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(NURBSPatch);
+    KRATOS_CLASS_POINTER_DEFINITION(NURBSFESpace);
 
     /// Type definition
-    typedef Patch<0> BaseType;
+    typedef FESpace<0> BaseType;
     typedef KnotArray1D<double> knot_container_t;
     typedef typename knot_container_t::knot_t knot_t;
 
     /// Default constructor
-    NURBSPatch() : BaseType() {}
+    NURBSFESpace() : BaseType() {}
 
     /// Constructor with id
-    NURBSPatch(const std::size_t& Id) : BaseType(Id) {}
+    NURBSFESpace(const std::size_t& Id) : BaseType(Id) {}
 
     /// Destructor
-    virtual ~NURBSPatch() {}
+    virtual ~NURBSFESpace() {}
 
     /// Get the order of the NURBS patch in specific direction
     virtual const std::size_t Order(const std::size_t& i) const {return 0;}
 
-    /// Get the number of basis functions defined over the NURBS NURBSPatch
+    /// Get the number of basis functions defined over the NURBS NURBSFESpace
     virtual const std::size_t Number() const {return 0;}
 
     /// Get the string describing the type of the patch
@@ -314,7 +305,7 @@ public:
     /// Get the string describing the type of the patch
     static std::string StaticType()
     {
-        return "NURBSPatch0D";
+        return "NURBSFESpace0D";
     }
 
     /// Set the knot vector in direction i.
@@ -325,20 +316,20 @@ public:
     void SetInfo(const std::size_t& i, const std::size_t& Number, const std::size_t& Order)
     {}
 
-    /// Validate the NURBSPatch before using
+    /// Validate the NURBSFESpace before using
     virtual bool Validate() const
     {
         return BaseType::Validate();
     }
 
     /// Compare between two NURBS patches in terms of parametric information
-    virtual bool IsCompatible(const Patch<0>& rOtherPatch) const
+    virtual bool IsCompatible(const FESpace<0>& rOtherFESpace) const
     {
-        if (rOtherPatch.Type() != Type())
+        if (rOtherFESpace.Type() != Type())
         {
-            KRATOS_WATCH(rOtherPatch.Type())
+            KRATOS_WATCH(rOtherFESpace.Type())
             KRATOS_WATCH(Type())
-            std::cout << "WARNING!!! the other patch type is not " << Type() << std::endl;
+            std::cout << "WARNING!!! the other FESpace type is not " << Type() << std::endl;
             return false;
         }
 
@@ -347,18 +338,18 @@ public:
 };
 
 /// output stream function
-template<std::size_t TDim>
-inline std::ostream& operator <<(std::ostream& rOStream, const NURBSPatch<TDim>& rThis)
+template<int TDim>
+inline std::ostream& operator <<(std::ostream& rOStream, const NURBSFESpace<TDim>& rThis)
 {
-    rOStream << "-------------Begin NURBS PatchInfo-------------" << std::endl;
+    rOStream << "-------------Begin NURBSFESpace Info-------------" << std::endl;
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
     rThis.PrintData(rOStream);
-    rOStream << "-------------End NURBS PatchInfo-------------" << std::endl;
+    rOStream << "-------------End NURBSFESpace Info-------------" << std::endl;
     return rOStream;
 }
 
 } // namespace Kratos.
 
-#endif // KRATOS_ISOGEOMETRIC_APPLICATION_NURBS_PATCH_H_INCLUDED defined
+#endif // KRATOS_ISOGEOMETRIC_APPLICATION_NURBS_FESPACE_H_INCLUDED defined
 

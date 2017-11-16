@@ -21,7 +21,6 @@
 #include "includes/serializer.h"
 #include "containers/array_1d.h"
 #include "custom_utilities/nurbs/knot_array_1d.h"
-#include "custom_utilities/nurbs/control_point.h"
 #include "custom_utilities/nurbs/grid_function.h"
 
 
@@ -30,26 +29,16 @@
 namespace Kratos
 {
 
-enum BoundarySide
-{
-    _LEFT_,
-    _RIGHT_,
-    _TOP_,
-    _BOTTOM_,
-    _FRONT_,
-    _BACK_
-};
-
 
 // Declaration
-template<std::size_t TDim> class Patch;
-template<std::size_t TDim> class MultiPatch;
+template<int TDim> class Patch;
+template<int TDim> class MultiPatch;
 
 
 /**
 This class represents an isogeometric patch in parametric coordinates. An isogeometric patch can be a NURBS patch, a hierarchical NURBS patch, or a T-Splines patch.
  */
-template<std::size_t TDim>
+template<int TDim>
 class Patch : public boost::enable_shared_from_this<Patch<TDim> >
 {
 public:
@@ -58,20 +47,29 @@ public:
 
     /// Type definition
     typedef ControlPoint<double> ControlPointType;
-    typedef GridFunction<0, double> GridFunctionBaseType;
+
     typedef GridFunction<TDim, double> DoubleGridFunctionType;
     typedef std::vector<typename DoubleGridFunctionType::Pointer> DoubleGridFunctionContainterType;
+
     typedef GridFunction<TDim, array_1d<double, 3> > Array1DGridFunctionType;
     typedef std::vector<typename Array1DGridFunctionType::Pointer> Array1DGridFunctionContainerType;
+
     typedef GridFunction<TDim, Vector> VectorGridFunctionType;
     typedef std::vector<typename VectorGridFunctionType::Pointer> VectorGridFunctionContainerType;
+
     typedef std::vector<typename Patch<TDim>::Pointer> NeighborPatchContainerType;
 
-    /// Default constructor
-    Patch() : mId(0) {}
-
     /// Constructor with id
-    Patch(const std::size_t& Id) : mId(Id) {}
+    Patch(const std::size_t& Id) : mId(Id), mFESpace(NULL)
+    {
+    }
+
+    /// Constructor with id and FESpace
+    Patch(const std::size_t& Id, typename FESpace<TDim>::Pointer FESpace) : mId(Id), mFESpace(FESpace)
+    {
+        if (mFESpace == NULL)
+            KRATOS_THROW_ERROR(std::logic_error, "Invalid FESpace is provided", "")
+    }
 
     /// Destructor
     virtual ~Patch()
@@ -87,16 +85,25 @@ public:
     /// Get the Id of this patch
     const std::size_t& Id() const {return mId;}
 
+    /// Set the corresponding FESpace for the patch
+    void SetFESpace(typename FESpace<TDim>::Pointer FESpace) {mFESpace = FESpace;}
+
+    /// Get the FESpace
+    typename FESpace<TDim>::Pointer FESpace() {return mFESpace;}
+    typename FESpace<TDim>::ConstPointer FESpace() const {return mFESpace;}
+
     /// Get the number of basis functions defined over the patch
     virtual const std::size_t TotalNumber() const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+        assert(mFESpace == NULL);
+        return mFESpace->TotalNumber();
     }
 
     /// Get the order of the patch in specific direction
     virtual const std::size_t Order(const std::size_t& i) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+        assert(mFESpace == NULL);
+        return mFESpace->Order(i);
     }
 
     /// Get the string representing the type of the patch
@@ -114,40 +121,31 @@ public:
     }
 
     /// Reset all the dof numbers for each grid function to -1
-    void ResetDofs()
+    void ResetIds()
     {
-        for (std::size_t i = 0; i < mGridDofNumbers.size(); ++i)
-            mGridDofNumbers[i] = -1;
-    }
-
-    /// Enumerate the dofs of each grid function. The enumeration algorithm is pretty straightforward.
-    /// If the dof does not have pre-existing value, which assume it is -1, it will be assigned the incremental value.
-    std::size_t& Enumerate(std::size_t& start)
-    {
-        for (std::size_t i = 0; i < mGridDofNumbers.size(); ++i)
-        {
-            if (mGridDofNumbers[i] != -1)
-                mGridDofNumbers[i] = start++;
-        }
-
-        return start;
+        mFESpace->ResetIds();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /// Set the control point grid
-    void SetControlPointGrid(typename GridFunction<TDim, ControlPointType>::Pointer pControlPointGrid){CheckSize(*pControlPointGrid); mpControlPointGrid = pControlPointGrid;}
+    typename GridFunction<TDim, ControlPointType>::Pointer CreateControlPointGridFunction(typename ControlGrid<ControlPointType>::Pointer pControlPointGrid)
+    {
+        CheckSize(*pControlPointGrid, __FUNCTION__);
+        mpControlPointGridFunc = typename GridFunction<TDim, ControlPointType>::Pointer(new GridFunction<TDim, ControlPointType>(mFESpace, pControlPointGrid));
+        return mpControlPointGridFunc;
+    }
+
+    /// Get the control point grid function
+    typename GridFunction<TDim, ControlPointType>::Pointer ControlPointGridFunction() {return mpControlPointGridFunc;}
 
     /// Get the control point grid
-    typename GridFunction<TDim, ControlPointType>::Pointer ControlPointGrid() {return mpControlPointGrid;}
-
-    /// Get the control point grid
-    typename GridFunction<TDim, ControlPointType>::ConstPointer ControlPointGrid() const {return mpControlPointGrid;}
+    typename GridFunction<TDim, ControlPointType>::ConstPointer ControlPointGridFunction() const {return mpControlPointGridFunc;}
 
     /// Get the control point weights vector
     std::vector<double> GetControlWeights() const
     {
-        const typename GridFunction<TDim, ControlPointType>::DataContainerType& GridData = ControlPointGrid()->Data();
+        const typename GridFunction<TDim, ControlPointType>::DataContainerType& GridData = ControlPointGridFunction()->ControlGrid()->Data();
         std::vector<double> Weights(GridData.size());
         for (std::size_t i = 0; i < GridData.size(); ++i)
             Weights[i] = GridData[i].W();
@@ -156,66 +154,54 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// Add the grid function for double variable
-    void AddDoubleGridFunction(typename DoubleGridFunctionType::Pointer pGridFunction) {CheckSize(*pGridFunction); mpDoubleGridFunctions.push_back(pGridFunction);}
-
-    /// Get the underlying double grid functions
-    DoubleGridFunctionContainterType& DoubleGridFunctions() {return mpDoubleGridFunctions;}
-
-    /// Get the underlying double grid functions
-    const DoubleGridFunctionContainterType& DoubleGridFunctions() const {return mpDoubleGridFunctions;}
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /// Add the grid function for array_1d variable
-    void AddArray1DGridFunction(typename Array1DGridFunctionType::Pointer pGridFunction) {CheckSize(*pGridFunction); mpArray1DGridFunctions.push_back(pGridFunction);}
-
-    /// Get the underlying array_1d grid functions
-    Array1DGridFunctionContainerType& Array1DGridFunctions() {return mpArray1DGridFunctions;}
-
-    /// Get the underlying array_1d grid functions
-    const Array1DGridFunctionContainerType& Array1DGridFunctions() const {return mpArray1DGridFunctions;}
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /// Add the grid function for vector variable
-    void AddVectorGridFunction(typename VectorGridFunctionType::Pointer pGridFunction) {CheckSize(*pGridFunction); mpVectorGridFunctions.push_back(pGridFunction);}
-
-    /// Get the underlying vector grid functions
-    VectorGridFunctionContainerType& VectorGridFunctions() {return mpVectorGridFunctions;}
-
-    /// Get the underlying vector grid functions
-    const VectorGridFunctionContainerType& VectorGridFunctions() const {return mpVectorGridFunctions;}
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /// Get the grid function with name.
-    /// One must make sure that there is no repetition in grid function name. Otherwise, the first one will be picked in the order: double grid function, array_1d grid function and vector grid function.
-    GridFunctionBaseType::Pointer pGetGridFunction(const std::string& name) const
+    /// Create and add the grid function for double variable
+    typename DoubleGridFunctionType::Pointer CreateDoubleGridFunction(typename ControlGrid<double>::Pointer pControlGrid)
     {
-        for (typename DoubleGridFunctionContainterType::const_iterator it = DoubleGridFunctions().begin();
-                it != DoubleGridFunctions().end(); ++it)
-        {
-            if ((*it)->Name() == name)
-                return *it;
-        }
-
-        for (typename Array1DGridFunctionContainerType::const_iterator it = Array1DGridFunctions().begin();
-                it != Array1DGridFunctions().end(); ++it)
-        {
-            if ((*it)->Name() == name)
-                return *it;
-        }
-
-        for (typename VectorGridFunctionContainerType::const_iterator it = VectorGridFunctions().begin();
-                it != VectorGridFunctions().end(); ++it)
-        {
-            if ((*it)->Name() == name)
-                return *it;
-        }
-
-        return NULL;
+        CheckSize(*pControlGrid, __FUNCTION__);
+        typename DoubleGridFunctionType::Pointer pNewGridFunc = typename DoubleGridFunctionType::Pointer(new DoubleGridFunctionType(mFESpace, pControlGrid));
+        mpDoubleGridFuncs.push_back(pNewGridFunc);
+        return pNewGridFunc;
     }
+
+    /// Get the underlying double grid functions
+    DoubleGridFunctionContainterType& DoubleGridFunctions() {return mpDoubleGridFuncs;}
+
+    /// Get the underlying double grid functions
+    const DoubleGridFunctionContainterType& DoubleGridFunctions() const {return mpDoubleGridFuncs;}
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /// Create and add the grid function for array_1d variable
+    typename Array1DGridFunctionType::Pointer CreateArray1DGridFunction(typename ControlGrid<array_1d<double, 3> >::Pointer pControlGrid)
+    {
+        CheckSize(*pControlGrid, __FUNCTION__);
+        typename Array1DGridFunctionType::Pointer pNewGridFunc = typename Array1DGridFunctionType::Pointer(new Array1DGridFunctionType(mFESpace, pControlGrid));
+        mpArray1DGridFuncs.push_back(pNewGridFunc);
+        return pNewGridFunc;
+    }
+
+    /// Get the underlying array_1d grid functions
+    Array1DGridFunctionContainerType& Array1DGridFunctions() {return mpArray1DGridFuncs;}
+
+    /// Get the underlying array_1d grid functions
+    const Array1DGridFunctionContainerType& Array1DGridFunctions() const {return mpArray1DGridFuncs;}
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /// Create and add the grid function for vector variable
+    typename VectorGridFunctionType::Pointer CreateVectorGridFunction(typename ControlGrid<Vector>::Pointer pControlGrid)
+    {
+        CheckSize(*pControlGrid, __FUNCTION__);
+        typename VectorGridFunctionType::Pointer pNewGridFunc = typename VectorGridFunctionType::Pointer(new VectorGridFunctionType(mFESpace, pControlGrid));
+        mpVectorGridFuncs.push_back(pNewGridFunc);
+        return pNewGridFunc;
+    }
+
+    /// Get the underlying vector grid functions
+    VectorGridFunctionContainerType& VectorGridFunctions() {return mpVectorGridFuncs;}
+
+    /// Get the underlying vector grid functions
+    const VectorGridFunctionContainerType& VectorGridFunctions() const {return mpVectorGridFuncs;}
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -227,15 +213,15 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "The patch must have an Id", "")
         }
 
-        if (mpControlPointGrid->Size() != this->TotalNumber())
+        if (mpControlPointGridFunc->ControlGrid()->Size() != this->TotalNumber())
             KRATOS_THROW_ERROR(std::logic_error, "The control point grid is incompatible", "")
 
         for (typename DoubleGridFunctionContainterType::const_iterator it = DoubleGridFunctions().begin();
                 it != DoubleGridFunctions().end(); ++it)
         {
-            if ((*it)->Size() != this->TotalNumber())
+            if ((*it)->ControlGrid()->Size() != this->TotalNumber())
             {
-                KRATOS_THROW_ERROR(std::logic_error, "The double variable grid is incompatible", (*it)->Name())
+                KRATOS_THROW_ERROR(std::logic_error, "The double variable grid is incompatible", (*it)->ControlGrid()->Name())
                 return false;
             }
         }
@@ -243,9 +229,9 @@ public:
         for (typename Array1DGridFunctionContainerType::const_iterator it = Array1DGridFunctions().begin();
                 it != Array1DGridFunctions().end(); ++it)
         {
-            if ((*it)->Size() != this->TotalNumber())
+            if ((*it)->ControlGrid()->Size() != this->TotalNumber())
             {
-                KRATOS_THROW_ERROR(std::logic_error, "The array_1d variable grid is incompatible", (*it)->Name())
+                KRATOS_THROW_ERROR(std::logic_error, "The array_1d variable grid is incompatible", (*it)->ControlGrid()->Name())
                 return false;
             }
         }
@@ -253,9 +239,9 @@ public:
         for (typename VectorGridFunctionContainerType::const_iterator it = VectorGridFunctions().begin();
                 it != VectorGridFunctions().end(); ++it)
         {
-            if ((*it)->Size() != this->TotalNumber())
+            if ((*it)->ControlGrid()->Size() != this->TotalNumber())
             {
-                KRATOS_THROW_ERROR(std::logic_error, "The vector variable grid is incompatible", (*it)->Name())
+                KRATOS_THROW_ERROR(std::logic_error, "The vector variable grid is incompatible", (*it)->ControlGrid()->Name())
                 return false;
             }
         }
@@ -381,63 +367,14 @@ public:
     /// Construct the boundary patch based on side
     virtual typename Patch<TDim-1>::Pointer ConstructBoundaryPatch(const BoundarySide& side) const
     {
-        // TODO
-        return NULL;
-    }
+        typename Patch<TDim-1>::Pointer pBPatch = typename Patch<TDim-1>::Pointer(new Patch<TDim-1>(-1));
 
-    /// Synchronize the grid function data with the other patch
-    void SynchronizeGridFunction(Patch<TDim>& rOtherPatch)
-    {
-        // synchronize double grid function from the other patch
-        for (typename DoubleGridFunctionContainterType::iterator it = rOtherPatch.DoubleGridFunctions().begin();
-                it != rOtherPatch.DoubleGridFunctions().end(); ++it)
-        {
-            GridFunctionBaseType::Pointer pGridFunction = this->pGetGridFunction((*it)->Name());
-            if (pGridFunction != NULL)
-            {
-                pGridFunction->ResizeAndCopyFrom(*it);
-            }
-            else
-            {
-                GridFunctionBaseType::Pointer pNewGridFunction = (*it)->Clone();
-                this->DoubleGridFunctions().push_back(pNewGridFunction);
-            }
-        }
+        typename FESpace<TDim-1>::Pointer pBFESpace = this->FESpace()->ConstructBoundaryFESpace(side);
+        pBPatch->SetFESpace(pBFESpace);
 
-        // synchronize array_1d grid function
-        for (typename Array1DGridFunctionContainerType::iterator it = rOtherPatch.Array1DGridFunctions().begin();
-                it != rOtherPatch.Array1DGridFunctions().end(); ++it)
-        {
-            GridFunctionBaseType::Pointer pGridFunction = this->pGetGridFunction((*it)->Name());
-            if (pGridFunction != NULL)
-            {
-                pGridFunction->ResizeAndCopyFrom(*it);
-            }
-            else
-            {
-                GridFunctionBaseType::Pointer pNewGridFunction = (*it)->Clone();
-                this->Array1DGridFunctions().push_back(pNewGridFunction);
-            }
-        }
+        // TODO transfer the control values
 
-        // synchronize vector grid function
-        for (typename VectorGridFunctionContainerType::iterator it = rOtherPatch.VectorGridFunctions().begin();
-                it != rOtherPatch.VectorGridFunctions().end(); ++it)
-        {
-            GridFunctionBaseType::Pointer pGridFunction = this->pGetGridFunction((*it)->Name());
-            if (pGridFunction != NULL)
-            {
-                pGridFunction->ResizeAndCopyFrom(*it);
-            }
-            else
-            {
-                GridFunctionBaseType::Pointer pNewGridFunction = (*it)->Clone();
-                this->VectorGridFunctions().push_back(pNewGridFunction);
-            }
-        }
-
-        /* do the same thing with the other patch */
-        rOtherPatch.SynchronizeGridFunction(*this);
+        return pBPatch;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -530,11 +467,11 @@ public:
     /// Compare the two patches in terms of its parametric information. The grid function data, including control points, shall not be checked.
     virtual bool IsCompatible(const Patch<TDim>& rOtherPatch) const
     {
-        return false;
+        return *(this->FESpace()) == *(rOtherPatch.FESpace());
     }
 
     /// Compare between two patches in terms of parametric information and control points.
-    bool IsEqual(const Patch<TDim>& rOtherPatch) const
+    bool IsEquivalent(const Patch<TDim>& rOtherPatch) const
     {
         if (!this->IsCompatible(rOtherPatch))
             return false;
@@ -547,7 +484,7 @@ public:
     /// Compare between two patches in terms of parametric information and grid function data, including the control points.
     bool IsSame(const Patch<TDim>& rOtherPatch) const
     {
-        if (!this->IsEqual(rOtherPatch))
+        if (!this->IsEquivalent(rOtherPatch))
             return false;
 
         // TODO compare the grid function values
@@ -558,7 +495,7 @@ public:
     /// Overload comparison operator
     virtual bool operator==(const Patch<TDim>& rOther)
     {
-        return this->IsEqual(rOther);
+        return (Id() == rOther.Id()) && this->IsSame(rOther);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -571,6 +508,10 @@ public:
 
     virtual void PrintData(std::ostream& rOStream) const
     {
+        if (FESpace() != NULL)
+            rOStream << *FESpace() << std::endl;
+        if (ControlPointGridFunction() != NULL)
+            rOStream << *(ControlPointGridFunction()->ControlGrid());
         rOStream << "Neighbors = ";
         if (TDim == 2)
         {
@@ -604,15 +545,14 @@ private:
 
     std::size_t mId;
 
-    /**
-     * data for grid function interpolation
-     */
-    std::vector<std::size_t> mGridDofNumbers; // actually it is not d.o.f; this is to store a unique number to identify the grid function on the forest of patches.
+    // shape function information
+    typename FESpace<TDim>::Pointer mFESpace;
 
-    typename GridFunction<TDim, ControlPointType>::Pointer mpControlPointGrid;
-    DoubleGridFunctionContainterType mpDoubleGridFunctions;
-    Array1DGridFunctionContainerType mpArray1DGridFunctions;
-    VectorGridFunctionContainerType mpVectorGridFunctions;
+    // grid functions, including the grid function over the control points
+    typename GridFunction<TDim, ControlPointType>::Pointer mpControlPointGridFunc;
+    DoubleGridFunctionContainterType mpDoubleGridFuncs;
+    Array1DGridFunctionContainerType mpArray1DGridFuncs;
+    VectorGridFunctionContainerType mpVectorGridFuncs;
 
     /**
      * neighboring data
@@ -629,6 +569,9 @@ private:
      */
     typename MultiPatch<TDim>::WeakPointer mpParentMultiPatch;
 
+    /// Empty Constructor for serializer
+    Patch() : mId(0), mFESpace(NULL) {}
+
     /// Serializer
     friend class Serializer;
 
@@ -642,13 +585,14 @@ private:
 
     /// Auxiliary
     template<class TGridFunctionType>
-    void CheckSize(const TGridFunctionType& rGrid) const
+    void CheckSize(const TGridFunctionType& rGrid, const std::string& source) const
     {
         if (rGrid.Size() != this->TotalNumber())
         {
-            KRATOS_WATCH(rGrid.Size())
-            KRATOS_WATCH(this->TotalNumber())
-            KRATOS_THROW_ERROR(std::logic_error, "The size of grid function is not compatible", "")
+            std::stringstream ss;
+            ss << "The size of grid function (" << rGrid.size() << ") is not compatible with the current number of control values (" << this->TotalNumber()
+               << ") of patch " << Id() << ". Error at " << source;
+            KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
         }
     }
 };
@@ -656,7 +600,8 @@ private:
 
 
 /**
- * Template specific instantiation for null-D patch to terminate the compilation
+ * Template specific instantiation for null-D patch to terminate the compilation.
+ * In fact, null-D patch is a vertex
  */
 template<>
 class Patch<0>
@@ -673,6 +618,9 @@ public:
 
     /// Destructor
     virtual ~Patch() {}
+
+    /// Set the FESpace for the patch
+    void SetFESpace(typename FESpace<0>::Pointer FESpace) {}
 
     /// Get the Id of this patch
     const std::size_t& Id() const {return mId;}
@@ -710,7 +658,7 @@ public:
     /// Overload comparison operator
     virtual bool operator==(const Patch<0>& rOther)
     {
-        return true;
+        return Id() == rOther.Id();
     }
 
     /// Check the compatibility between boundaries of two patches
@@ -741,7 +689,7 @@ private:
 };
 
 /// output stream function
-template<std::size_t TDim>
+template<int TDim>
 inline std::ostream& operator <<(std::ostream& rOStream, const Patch<TDim>& rThis)
 {
     rOStream << "-------------Begin PatchInfo-------------" << std::endl;
@@ -749,7 +697,7 @@ inline std::ostream& operator <<(std::ostream& rOStream, const Patch<TDim>& rThi
     rOStream << std::endl;
     rThis.PrintData(rOStream);
     rOStream << std::endl;
-    rOStream << "-------------End PatchInfo-------------" << std::endl;
+    rOStream << "-------------End PatchInfo-------------";
     return rOStream;
 }
 
@@ -757,7 +705,7 @@ inline std::ostream& operator <<(std::ostream& rOStream, const Patch<TDim>& rThi
 /**
 This class represents an isogeometric multipatch in parametric coordinates. An isogeometric multipatch comprises a list of similar type patches, i.e NURBS patch, a hierarchical NURBS patch, or a T-Splines patch.
  */
-template<std::size_t TDim>
+template<int TDim>
 class MultiPatch : public boost::enable_shared_from_this<MultiPatch<TDim> >
 {
 public:
@@ -767,6 +715,15 @@ public:
     /// Type definition
     typedef Patch<TDim> PatchType;
     typedef PointerVectorSet<PatchType, IndexedObject> PatchContainerType;
+
+    typedef Patch<0> VertexPatchType;
+    typedef PointerVectorSet<VertexPatchType, IndexedObject> VertexPatchContainerType;
+
+    typedef Patch<1> EdgePatchType;
+    typedef PointerVectorSet<EdgePatchType, IndexedObject> EdgePatchContainerType;
+
+    typedef Patch<2> FacePatchType;
+    typedef PointerVectorSet<FacePatchType, IndexedObject> FacePatchContainerType;
 
     /// Default constructor
     MultiPatch() : mGridSystemSize(0) {}
@@ -865,6 +822,7 @@ public:
         typename Patch<TDim-1>::Pointer pBPatch2 = pPatch2->ConstructBoundaryPatch(side2);
 
         if( (*pBPatch1) == (*pBPatch2) )
+        // if( pBPatch1->IsCompatible(*pBPatch2) )
         {
             // synchronize grid function data
             // temporarily disable. I think it can create potential conflict.
@@ -899,13 +857,25 @@ public:
 
             // KRATOS_WATCH(*pPatch1)
             // KRATOS_WATCH(*pPatch2)
+
+            // TODO create the multipatch topology structure
+            
         }
         else
             KRATOS_THROW_ERROR(std::logic_error, "The two patch's boundaries are not conformed", "")
     }
 
-    /// Information
+    /// Generate the multipatch topology that can be read in Glvis
+    void GenerateCornerTopology(std::size_t& nvertices,
+        std::vector<std::vector<std::size_t> >& elements,
+        std::vector<std::vector<std::size_t> >& boundary,
+        std::vector<std::size_t>& boundary_attr,
+        std::vector<std::size_t>& edges_knotv) const
+    {
 
+    }
+
+    /// Information
     void PrintAddress(typename PatchType::Pointer pPatch)
     {
         std::cout << pPatch << std::endl;
@@ -936,7 +906,7 @@ private:
 };
 
 /// output stream function
-template<std::size_t TDim>
+template<int TDim>
 inline std::ostream& operator <<(std::ostream& rOStream, const MultiPatch<TDim>& rThis)
 {
     rOStream << ">>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<" << std::endl;

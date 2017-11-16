@@ -24,25 +24,25 @@
 namespace Kratos
 {
 
-    template<std::size_t TDim>
+    template<int TDim>
     HnMesh<TDim>::HnMesh(const std::size_t& Id, const std::string& Name)
     : Patch<TDim>(Id), mName(Name), mEchoLevel(0), mLastLevel(0), mMaxLevels(10)
     {
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::PrintInfo(std::ostream& rOStream) const
     {
         rOStream << "Hierarchical NURBS mesh " << Name() << ", Id = " << BaseType::Id() << ", number of levels = " << mLastLevel;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::PrintData(std::ostream& rOStream) const
     {
         BaseType::PrintData(rOStream);
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::PrintKnotVectors() const
     {
         std::cout << "###############Begin knot vectors################" << std::endl;
@@ -52,7 +52,7 @@ namespace Kratos
         std::cout << "###############End knot vectors##################" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::PrintCells(int level) const
     {
         if(level > 0)
@@ -74,7 +74,7 @@ namespace Kratos
         }
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::PrintBasisFuncs(int level) const
     {
         if(level > 0)
@@ -96,7 +96,7 @@ namespace Kratos
         }
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::PrintRefinementHistory() const
     {
         std::cout << "Refinement history:";
@@ -105,7 +105,7 @@ namespace Kratos
         std::cout << std::endl;
     }
 
-    // template<std::size_t TDim>
+    // template<int TDim>
 //    void HnMesh<TDim>::CheckNestedSpace()
 //    {
 //        std::cout << __FUNCTION__ << " starts" << std::endl;
@@ -127,7 +127,7 @@ namespace Kratos
 //        std::cout << __FUNCTION__ << " completed" << std::endl;
 //    }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::BuildNestedSpace(std::size_t level, std::map<std::size_t, std::set<std::size_t> >& rK)
     {
         // check the first criteria
@@ -167,7 +167,7 @@ namespace Kratos
             }
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::CheckNestedSpace()
     {
         std::cout << __FUNCTION__ << " starts" << std::endl;
@@ -228,7 +228,7 @@ namespace Kratos
         std::cout << __FUNCTION__ << " completed" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::ReadMesh(const std::string& fn)
     {
         std::ifstream infile(fn.c_str());
@@ -531,7 +531,7 @@ namespace Kratos
             std::cout << "ReadMesh and build level 1 completed" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::Refine(const std::size_t& Id)
     {
         #ifdef ENABLE_PROFILING
@@ -872,7 +872,7 @@ namespace Kratos
         }
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::RefineNodes(boost::python::list& pyList)
     {
         // extract the python list to std::set
@@ -900,7 +900,7 @@ namespace Kratos
         }
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::RefineWindow(const double& Xi_min, const double& Xi_max,
             const double& Eta_min, const double& Eta_max, const double& Zeta_min, const double& Zeta_max)
     {
@@ -936,7 +936,7 @@ namespace Kratos
         }
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::LinearDependencyRefine(const std::size_t& refine_cycle)
     {
         if(mLastLevel < 1)
@@ -1038,7 +1038,7 @@ namespace Kratos
         #endif
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::BuildMesh()
     {
         Vector Crow;
@@ -1057,19 +1057,19 @@ namespace Kratos
     }
 
     /// Validate the patch
-    template<std::size_t TDim>
+    template<int TDim>
     bool HnMesh<TDim>::Validate() const
     {
         // TODO
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::BuildBoundaryMesh(HnMesh<TDim>& rMesh, std::string boundary_mesh_type) const
     {
        // TODO
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::ExportCellTopology(std::string fn, bool cell_numbering) const
     {
         std::ofstream outfile(fn.c_str());
@@ -1131,7 +1131,7 @@ namespace Kratos
         std::cout << "Export cell topology to " << fn << " completed" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::ExportCellGeology(std::string fn)
     {
         // generate cell geology
@@ -1228,7 +1228,7 @@ namespace Kratos
         std::cout << "Export cell geology to " << fn << " completed" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::ExportSupportDomain(std::string fn, double distance)
     {
         std::ofstream outfile(fn.c_str());
@@ -1253,7 +1253,7 @@ namespace Kratos
         std::cout << "Export support domain to " << fn << " completed" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::ExportMatlab(std::string fn) const
     {
         std::ofstream outfile(fn.c_str());
@@ -1367,7 +1367,7 @@ namespace Kratos
         std::cout << "Export mesh information to " << fn << " completed" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::ExportMDPA(std::string fn) const
     {
         std::ofstream outfile(fn.c_str());
@@ -1577,7 +1577,7 @@ namespace Kratos
         std::cout << "Export MDPA to " << fn << " completed" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::ExportMDPA2(std::string fn) const
     {
         std::ofstream outfile(fn.c_str());
@@ -1700,7 +1700,7 @@ namespace Kratos
         std::cout << "Export MDPA to " << fn << " completed" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::ExportPostMDPA(std::string fn, int NumDivision1, int NumDivision2, int NumDivision3)
     {
         // create a vector of sampling knots in each direction
@@ -2015,7 +2015,7 @@ namespace Kratos
         std::cout << "Export post MDPA to " << fn << " completed" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::ExportCellGeologyAsPostMDPA(std::string fn)
     {
         // generate cell geology
@@ -2136,7 +2136,7 @@ namespace Kratos
         std::cout << "Export post MDPA to " << fn << " completed" << std::endl;
     }
 
-    template<std::size_t TDim>
+    template<int TDim>
     void HnMesh<TDim>::GenerateCellGeology(std::vector<unsigned int>& point_list,
                                      std::map<unsigned int, double>& X_list,
                                      std::map<unsigned int, double>& Y_list,

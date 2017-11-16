@@ -22,10 +22,8 @@
 #include "custom_utilities/nurbs/knot_array_1d.h"
 #include "custom_utilities/nurbs/control_point.h"
 #include "custom_utilities/nurbs/grid_function.h"
-#include "custom_utilities/nurbs/grid_function_utility.h"
 #include "custom_utilities/nurbs/patch.h"
-#include "custom_utilities/nurbs/nurbs_patch.h"
-#include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
+// #include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
 
 namespace Kratos
 {
@@ -50,24 +48,27 @@ public:
     virtual ~MultiPatchRefinementUtility() {}
 
     /// Insert the knots to the NURBS patch and make it compatible across neighbors
-    template<std::size_t TDim>
-    static void InsertKnots(typename NURBSPatch<TDim>::Pointer& pPatch, const std::vector<std::vector<double> >& ins_knots)
+    template<int TDim>
+    void InsertKnots(typename Patch<TDim>::Pointer& pPatch, const std::vector<std::vector<double> >& ins_knots)
     {
         std::set<std::size_t> refined_patches;
         InsertKnots<TDim>(pPatch, refined_patches, ins_knots);
     }
 
     /// Insert the knots to the NURBS patch and make it compatible across neighbors
-    template<std::size_t TDim>
-    static void InsertKnots(typename NURBSPatch<TDim>::Pointer& pPatch, std::set<std::size_t>& refined_patches, const std::vector<std::vector<double> >& ins_knots)
+    template<int TDim>
+    void InsertKnots(typename Patch<TDim>::Pointer& pPatch, std::set<std::size_t>& refined_patches, const std::vector<std::vector<double> >& ins_knots)
     {
+        if (pPatch->FESpace()->Type() != NURBSFESpace<TDim>::StaticType())
+            KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "only support the NURBS patch")
+
         if (std::find(refined_patches.begin(), refined_patches.end(), pPatch->Id()) == refined_patches.end())
         {
             // get the parent multipatch
             typename MultiPatch<TDim>::Pointer pMultiPatch = pPatch->pParentMultiPatch();
 
             // create new patch with same Id
-            typename NURBSPatch<TDim>::Pointer pNewPatch = typename NURBSPatch<TDim>::Pointer(new NURBSPatch<TDim>(pPatch->Id()));
+            typename Patch<TDim>::Pointer pNewPatch = typename Patch<TDim>::Pointer(new Patch<TDim>(pPatch->Id()));
 
             // compute the transformation matrix
             Matrix T;
@@ -75,68 +76,57 @@ public:
             std::vector<double> new_weights;
             std::vector<double> weights = pPatch->GetControlWeights();
 
+            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(pPatch->FESpace());
+            typename NURBSFESpace<TDim>::Pointer pNewFESpace = typename NURBSFESpace<TDim>::Pointer(new NURBSFESpace<TDim>());
+
             std::vector<std::size_t> new_size(TDim);
 
-            if (TDim == 1)
-            {
-                BSplineUtils::ComputeNURBSKnotInsertionCoefficients1D(T, new_knots[0], new_weights,
-                        pPatch->Order(0),
-                        pPatch->KnotVector(0), ins_knots[0], weights);
-            }
-            else if (TDim == 2)
-            {
-                BSplineUtils::ComputeNURBSKnotInsertionCoefficients2D(T, new_knots[0], new_knots[1], new_weights,
-                        pPatch->Order(0), pPatch->Order(1),
-                        pPatch->KnotVector(0), pPatch->KnotVector(1), ins_knots[0], ins_knots[1], weights);
-            }
-            else if (TDim == 3)
-            {
-                BSplineUtils::ComputeNURBSKnotInsertionCoefficients3D(T, new_knots[0], new_knots[1], new_knots[2], new_weights,
-                        pPatch->Order(0), pPatch->Order(1), pPatch->Order(2),
-                        pPatch->KnotVector(0), pPatch->KnotVector(1), pPatch->KnotVector(2), ins_knots[0], ins_knots[1], ins_knots[2], weights);
-            }
+            this->ComputeNURBSKnotInsertionCoefficients<TDim>(T, new_knots, new_weights, pFESpace, ins_knots, weights);
 
             for (std::size_t dim = 0; dim < TDim; ++dim)
             {
                 new_size[dim] = new_knots[dim].size() - pPatch->Order(dim) - 1;
-                pNewPatch->SetKnotVector(dim, new_knots[dim]);
-                pNewPatch->SetInfo(dim, new_size[dim], pPatch->Order(dim));
+                pNewFESpace->SetKnotVector(dim, new_knots[dim]);
+                pNewFESpace->SetInfo(dim, new_size[dim], pPatch->Order(dim));
             }
 
             // KRATOS_WATCH(T)
 
+            // set the new FESpace
+            pNewPatch->SetFESpace(pNewFESpace);
+
             // transform and transfer the control points
-            typename GridFunction<TDim, ControlPoint<double> >::Pointer pNewControlPoints
-                = GridFunctionUtility::Transform<TDim, ControlPoint<double>, Matrix>(T, new_size, pPatch->ControlPointGrid());
-            pNewControlPoints->SetName(pPatch->ControlPointGrid()->Name());
-            pNewPatch->SetControlPointGrid(pNewControlPoints);
+            typename ControlGrid<ControlPoint<double> >::Pointer pNewControlPoints = typename ControlGrid<ControlPoint<double> >::Pointer (new RegularControlGrid<TDim, ControlPoint<double> >(new_size));
+            ControlGridUtility::Transform<ControlPoint<double>, Matrix>(T, *(pPatch->ControlPointGridFunction()->ControlGrid()), *pNewControlPoints);
+            pNewControlPoints->SetName(pPatch->ControlPointGridFunction()->ControlGrid()->Name());
+            pNewPatch->CreateControlPointGridFunction(pNewControlPoints);
 
             // transfer the grid function
             for (typename Patch<TDim>::DoubleGridFunctionContainterType::const_iterator it = pPatch->DoubleGridFunctions().begin();
                     it != pPatch->DoubleGridFunctions().end(); ++it)
             {
-                typename GridFunction<TDim, double>::Pointer pNewDoubleGridFunction
-                    = GridFunctionUtility::Transform<TDim, double, Matrix>(T, new_size, *it);
-                pNewDoubleGridFunction->SetName((*it)->Name());
-                pNewPatch->AddDoubleGridFunction(pNewDoubleGridFunction);
+                typename ControlGrid<double>::Pointer pNewDoubleControlGrid = typename ControlGrid<double>::Pointer (new RegularControlGrid<TDim, double>(new_size));
+                ControlGridUtility::Transform<double, Matrix>(T, *((*it)->ControlGrid()), *pNewDoubleControlGrid);
+                pNewDoubleControlGrid->SetName((*it)->ControlGrid()->Name());
+                pNewPatch->CreateDoubleGridFunction(pNewDoubleControlGrid);
             }
 
             for (typename Patch<TDim>::Array1DGridFunctionContainerType::const_iterator it = pPatch->Array1DGridFunctions().begin();
                     it != pPatch->Array1DGridFunctions().end(); ++it)
             {
-                typename GridFunction<TDim, array_1d<double, 3> >::Pointer pNewArray1DGridFunction
-                    = GridFunctionUtility::Transform<TDim, array_1d<double, 3>, Matrix>(T, new_size, *it);
-                pNewArray1DGridFunction->SetName((*it)->Name());
-                pNewPatch->AddArray1DGridFunction(pNewArray1DGridFunction);
+                typename ControlGrid<array_1d<double, 3> >::Pointer pNewArray1DControlGrid = typename ControlGrid<array_1d<double, 3> >::Pointer (new RegularControlGrid<TDim, array_1d<double, 3> >(new_size));
+                ControlGridUtility::Transform<array_1d<double, 3>, Matrix>(T, *((*it)->ControlGrid()), *pNewArray1DControlGrid);
+                pNewArray1DControlGrid->SetName((*it)->ControlGrid()->Name());
+                pNewPatch->CreateArray1DGridFunction(pNewArray1DControlGrid);
             }
 
             for (typename Patch<TDim>::VectorGridFunctionContainerType::const_iterator it = pPatch->VectorGridFunctions().begin();
                     it != pPatch->VectorGridFunctions().end(); ++it)
             {
-                typename GridFunction<TDim, Vector>::Pointer pNewVectorGridFunction
-                    = GridFunctionUtility::Transform<TDim, Vector, Matrix>(T, new_size, *it);
-                pNewVectorGridFunction->SetName((*it)->Name());
-                pNewPatch->AddVectorGridFunction(pNewVectorGridFunction);
+                typename ControlGrid<Vector>::Pointer pNewVectorControlGrid = typename ControlGrid<Vector>::Pointer (new RegularControlGrid<TDim, Vector>(new_size));
+                ControlGridUtility::Transform<Vector, Matrix>(T, *((*it)->ControlGrid()), *pNewVectorControlGrid);
+                pNewVectorControlGrid->SetName((*it)->ControlGrid()->Name());
+                pNewPatch->CreateVectorGridFunction(pNewVectorControlGrid);
             }
 
             // mark refined patch
@@ -147,149 +137,144 @@ public:
 
             if (pPatch->pLeft() != NULL)
             {
-                if (pPatch->pLeft()->Type() == NURBSPatch<TDim>::StaticType())
+                if (pPatch->pLeft()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetLeft(pPatch->pLeft());
                     pPatch->pLeft()->pSetRight(pNewPatch);
 
-                    typename NURBSPatch<TDim>::Pointer pNeighbor = boost::dynamic_pointer_cast<NURBSPatch<TDim> >(pPatch->pLeft());
                     if (TDim == 2)
                     {
                         neib_ins_knots[1] = ins_knots[1];
-                        InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                     }
                     else if (TDim == 3)
                     {
                         neib_ins_knots[1] = ins_knots[1];
                         neib_ins_knots[2] = ins_knots[2];
-                        InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                     }
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pLeft();
+                    InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                else if (pPatch->pLeft()->Type() == HnMesh<TDim>::StaticType())
-                {
-                    //TODO
-                    KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
-                }
+                // else if (pPatch->pLeft()->FESpace()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
             }
 
             if (pPatch->pRight() != NULL)
             {
-                if (pPatch->pRight()->Type() == NURBSPatch<TDim>::StaticType())
+                if (pPatch->pRight()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetRight(pPatch->pRight());
                     pPatch->pRight()->pSetLeft(pNewPatch);
 
-                    typename NURBSPatch<TDim>::Pointer pNeighbor = boost::dynamic_pointer_cast<NURBSPatch<TDim> >(pPatch->pRight());
-
                     if (TDim == 2)
                     {
                         neib_ins_knots[1] = ins_knots[1];
-                        InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                     }
                     else if (TDim == 3)
                     {
                         neib_ins_knots[1] = ins_knots[1];
                         neib_ins_knots[2] = ins_knots[2];
-                        InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                     }
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pRight();
+                    InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                else if (pPatch->pRight()->Type() == HnMesh<TDim>::StaticType())
-                {
-                    //TODO
-                    KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
-                }
+                // else if (pPatch->pRight()->FESpace()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
             }
 
             if (pPatch->pTop() != NULL)
             {
-                if (pPatch->pTop()->Type() == NURBSPatch<TDim>::StaticType())
+                if (pPatch->pTop()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetTop(pPatch->pTop());
                     pPatch->pTop()->pSetBottom(pNewPatch);
 
-                    typename NURBSPatch<TDim>::Pointer pNeighbor = boost::dynamic_pointer_cast<NURBSPatch<TDim> >(pPatch->pTop());
                     if (TDim == 2)
                     {
                         neib_ins_knots[0] = ins_knots[0];
-                        InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                     }
                     else if (TDim == 3)
                     {
                         neib_ins_knots[0] = ins_knots[0];
                         neib_ins_knots[1] = ins_knots[1];
-                        InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                     }
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pTop();
+                    InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                else if (pPatch->pTop()->Type() == HnMesh<TDim>::StaticType())
-                {
-                    //TODO
-                    KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
-                }
+                // else if (pPatch->pTop()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
             }
 
             if (pPatch->pBottom() != NULL)
             {
-                if (pPatch->pBottom()->Type() == NURBSPatch<TDim>::StaticType())
+                if (pPatch->pBottom()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetBottom(pPatch->pBottom());
                     pPatch->pBottom()->pSetTop(pNewPatch);
 
-                    typename NURBSPatch<TDim>::Pointer pNeighbor = boost::dynamic_pointer_cast<NURBSPatch<TDim> >(pPatch->pBottom());
                     if (TDim == 2)
                     {
                         neib_ins_knots[0] = ins_knots[0];
-                        InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                     }
                     else if (TDim == 3)
                     {
                         neib_ins_knots[0] = ins_knots[0];
                         neib_ins_knots[1] = ins_knots[1];
-                        InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                     }
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pBottom();
+                    InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                else if (pPatch->pBottom()->Type() == HnMesh<TDim>::StaticType())
-                {
-                    //TODO
-                    KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
-                }
+                // else if (pPatch->pBottom()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
             }
 
             if (pPatch->pFront() != NULL)
             {
-                if (pPatch->pFront()->Type() == NURBSPatch<TDim>::StaticType())
+                if (pPatch->pFront()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetFront(pPatch->pFront());
                     pPatch->pFront()->pSetBack(pNewPatch);
 
-                    typename NURBSPatch<TDim>::Pointer pNeighbor = boost::dynamic_pointer_cast<NURBSPatch<TDim> >(pPatch->pFront());
                     neib_ins_knots[0] = ins_knots[0];
                     neib_ins_knots[2] = ins_knots[2];
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pFront();
                     InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                else if (pPatch->pFront()->Type() == HnMesh<TDim>::StaticType())
-                {
-                    //TODO
-                    KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
-                }
+                // else if (pPatch->pFront()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
             }
 
             if (pPatch->pBack() != NULL)
             {
-                if (pPatch->pBack()->Type() == NURBSPatch<TDim>::StaticType())
+                if (pPatch->pBack()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetBack(pPatch->pBack());
                     pPatch->pBack()->pSetFront(pNewPatch);
 
-                    typename NURBSPatch<TDim>::Pointer pNeighbor = boost::dynamic_pointer_cast<NURBSPatch<TDim> >(pPatch->pBack());
                     neib_ins_knots[0] = ins_knots[0];
                     neib_ins_knots[2] = ins_knots[2];
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pBack();
                     InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                else if (pPatch->pBack()->Type() == HnMesh<TDim>::StaticType())
-                {
-                    //TODO
-                    KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
-                }
+                // else if (pPatch->pBack()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
             }
 
             // swap
@@ -305,16 +290,16 @@ public:
     }
 
     /// Degree elevation for the NURBS patch and make it compatible across neighbors
-    template<std::size_t TDim>
-    static void DegreeElevate(typename NURBSPatch<TDim>::Pointer& pPatch, const std::vector<std::size_t>& order_increment)
+    template<int TDim>
+    void DegreeElevate(typename Patch<TDim>::Pointer& pPatch, const std::vector<std::size_t>& order_increment)
     {
         std::set<std::size_t> refined_patches;
         DegreeElevate<TDim>(pPatch, refined_patches, order_increment);
     }
 
     /// Degree elevation for the NURBS patch and make it compatible across neighbors
-    template<std::size_t TDim>
-    static void DegreeElevate(typename NURBSPatch<TDim>::Pointer& pPatch, std::set<std::size_t>& refined_patches, const std::vector<std::size_t>& order_increment)
+    template<int TDim>
+    void DegreeElevate(typename Patch<TDim>::Pointer& pPatch, std::set<std::size_t>& refined_patches, const std::vector<std::size_t>& order_increment)
     {
         if (std::find(refined_patches.begin(), refined_patches.end(), pPatch->Id()) == refined_patches.end())
         {
@@ -322,41 +307,192 @@ public:
             typename MultiPatch<TDim>::Pointer pMultiPatch = pPatch->pParentMultiPatch();
 
             // create new patch with same Id
-            typename NURBSPatch<TDim>::Pointer pNewPatch = typename NURBSPatch<TDim>::Pointer(new NURBSPatch<TDim>(pPatch->Id()));
+            typename Patch<TDim>::Pointer pNewPatch = typename Patch<TDim>::Pointer(new Patch<TDim>(pPatch->Id()));
+
+            // elevate the degree and initialize new patch
+            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(pPatch->FESpace());
+            typename NURBSFESpace<TDim>::Pointer pNewFESpace = typename NURBSFESpace<TDim>::Pointer(new NURBSFESpace<TDim>());
 
             std::vector<std::vector<double> > new_knots(TDim);
-            std::vector<double> new_weights;
-            std::vector<double> weights = pPatch->GetControlWeights();
 
             std::vector<std::size_t> new_size(TDim);
+            for (std::size_t i = 0; i < TDim; ++i)
+                new_size[i] = pFESpace->Number(i);
 
-            typename GridFunction<TDim, ControlPoint<double> >::Pointer pNewControlPoints
-                = typename GridFunction<TDim, ControlPoint<double> >::Pointer(new GridFunction<TDim, ControlPoint<double> >(1));
+            typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer pControlPoints
+                = boost::dynamic_pointer_cast<RegularControlGrid<TDim, ControlPoint<double> > >(pPatch->ControlPointGridFunction()->ControlGrid());
 
-            ControlPoint<double> null_control_point(0.0);
+            typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer pNewControlPoints
+                = typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer(new RegularControlGrid<TDim, ControlPoint<double> >(new_size)); // note here that the size is just temporary, it will be raised later on.
 
-            if (TDim == 1)
-            {
-                KRATOS_WATCH(order_increment[0])
-                BSplineUtils::ComputeBsplinesDegreeElevation1D(pPatch->Order(0),
-                        *(pPatch->ControlPointGrid()),
-                        pPatch->KnotVector(0),
-                        order_increment[0],
-                        *pNewControlPoints,
-                        new_knots[0],
-                        null_control_point);
-                KRATOS_WATCH(__LINE__)
-            }
+            this->ComputeBsplinesDegreeElevation<TDim>(*pControlPoints, *pFESpace, order_increment, *pNewControlPoints, new_knots);
 
             for (std::size_t dim = 0; dim < TDim; ++dim)
             {
-                new_size[dim] = new_knots[dim].size() - pPatch->Order(dim) - 1;
-                pNewPatch->SetKnotVector(dim, new_knots[dim]);
-                pNewPatch->SetInfo(dim, new_size[dim], pPatch->Order(dim));
+                new_size[dim] = new_knots[dim].size() - pFESpace->Order(dim) - order_increment[dim] - 1;
+                pNewFESpace->SetKnotVector(dim, new_knots[dim]);
+                pNewFESpace->SetInfo(dim, new_size[dim], pFESpace->Order(dim) + order_increment[dim]);
             }
 
-            pNewControlPoints->SetName(pPatch->ControlPointGrid()->Name());
-            pNewPatch->SetControlPointGrid(pNewControlPoints);
+            pNewControlPoints->SetName(pPatch->ControlPointGridFunction()->ControlGrid()->Name());
+            pNewPatch->SetFESpace(pNewFESpace);
+            pNewPatch->CreateControlPointGridFunction(pNewControlPoints);
+
+            // mark refined patch
+            refined_patches.insert(pPatch->Id());
+
+            // transfer the order increment to neighbors
+            std::vector<std::size_t> neib_order_increment(TDim);
+
+            if (pPatch->pLeft() != NULL)
+            {
+                if (pPatch->pLeft()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                {
+                    pNewPatch->pSetLeft(pPatch->pLeft());
+                    pPatch->pLeft()->pSetRight(pNewPatch);
+
+                    if(TDim == 1)
+                    {
+                        neib_order_increment[0] = order_increment[0];
+                    }
+                    else if(TDim == 2)
+                    {
+                        neib_order_increment[1] = order_increment[1];
+                    }
+                    else if (TDim == 3)
+                    {
+                        neib_order_increment[1] = order_increment[1];
+                        neib_order_increment[2] = order_increment[2];
+                    }
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pLeft();
+                    DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
+                }
+                // else if (pPatch->pLeft()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
+            }
+
+            if (pPatch->pRight() != NULL)
+            {
+                if (pPatch->pRight()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                {
+                    pNewPatch->pSetRight(pPatch->pRight());
+                    pPatch->pRight()->pSetLeft(pNewPatch);
+
+                    if(TDim == 1)
+                    {
+                        neib_order_increment[0] = order_increment[0];
+                    }
+                    else if (TDim == 2)
+                    {
+                        neib_order_increment[1] = order_increment[1];
+                    }
+                    else if (TDim == 3)
+                    {
+                        neib_order_increment[1] = order_increment[1];
+                        neib_order_increment[2] = order_increment[2];
+                    }
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pRight();
+                    DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
+                }
+                // else if (pPatch->pRight()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
+            }
+
+            if (pPatch->pTop() != NULL)
+            {
+                if (pPatch->pTop()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                {
+                    pNewPatch->pSetTop(pPatch->pTop());
+                    pPatch->pTop()->pSetBottom(pNewPatch);
+
+                    if (TDim == 2)
+                    {
+                        neib_order_increment[0] = order_increment[0];
+                    }
+                    else if (TDim == 3)
+                    {
+                        neib_order_increment[0] = order_increment[0];
+                        neib_order_increment[1] = order_increment[1];
+                    }
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pTop();
+                    DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
+                }
+                // else if (pPatch->pTop()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
+            }
+
+            if (pPatch->pBottom() != NULL)
+            {
+                if (pPatch->pBottom()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                {
+                    pNewPatch->pSetBottom(pPatch->pBottom());
+                    pPatch->pBottom()->pSetTop(pNewPatch);
+
+                    if (TDim == 2)
+                    {
+                        neib_order_increment[0] = order_increment[0];
+                    }
+                    else if (TDim == 3)
+                    {
+                        neib_order_increment[0] = order_increment[0];
+                        neib_order_increment[1] = order_increment[1];
+                    }
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pBottom();
+                    DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
+                }
+                // else if (pPatch->pBottom()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
+            }
+
+            if (pPatch->pFront() != NULL)
+            {
+                if (pPatch->pFront()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                {
+                    pNewPatch->pSetFront(pPatch->pFront());
+                    pPatch->pFront()->pSetBack(pNewPatch);
+
+                    neib_order_increment[0] = order_increment[0];
+                    neib_order_increment[2] = order_increment[2];
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pFront();
+                    DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
+                }
+                // else if (pPatch->pFront()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
+            }
+
+            if (pPatch->pBack() != NULL)
+            {
+                if (pPatch->pBack()->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                {
+                    pNewPatch->pSetBack(pPatch->pBack());
+                    pPatch->pBack()->pSetFront(pNewPatch);
+
+                    neib_order_increment[0] = order_increment[0];
+                    neib_order_increment[2] = order_increment[2];
+                    typename Patch<TDim>::Pointer pNeighbor = pPatch->pBack();
+                    DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
+                }
+                // else if (pPatch->pBack()->Type() == HnMesh<TDim>::StaticType())
+                // {
+                //     //TODO
+                //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+                // }
+            }
 
             // swap
             // KRATOS_WATCH(*pNewPatch)
@@ -382,7 +518,146 @@ public:
 
 private:
 
+    /// Compute the transformation matrix for knot insertion (NURBS version)
+    template<int TDim>
+    void ComputeNURBSKnotInsertionCoefficients(
+        Matrix& T,
+        std::vector<std::vector<double> >& new_knots,
+        std::vector<double>& new_weights,
+        typename NURBSFESpace<TDim>::Pointer& pFESpace,
+        const std::vector<std::vector<double> >& ins_knots,
+        const std::vector<double>& weights) const
+    {
+        std::stringstream ss;
+        ss << __FUNCTION__ << " is not implemented for dimension " << TDim;
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+    }
+
+    template<int TDim>
+    void ComputeBsplinesDegreeElevation(
+        const RegularControlGrid<TDim, ControlPoint<double> >& ControlPoints,
+        const NURBSFESpace<TDim>& rFESpace,
+        const std::vector<std::size_t>& order_increment,
+        RegularControlGrid<TDim, ControlPoint<double> >& NewControlPoints,
+        std::vector<std::vector<double> >& new_knots) const
+    {
+        std::stringstream ss;
+        ss << __FUNCTION__ << " is not implemented for dimension " << TDim;
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+    }
+
 };
+
+template<>
+void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<1>(
+    Matrix& T,
+    std::vector<std::vector<double> >& new_knots,
+    std::vector<double>& new_weights,
+    typename NURBSFESpace<1>::Pointer& pFESpace,
+    const std::vector<std::vector<double> >& ins_knots,
+    const std::vector<double>& weights) const
+{
+    BSplineUtils::ComputeNURBSKnotInsertionCoefficients1D(T,
+            new_knots[0],
+            new_weights,
+            pFESpace->Order(0),
+            pFESpace->KnotVector(0),
+            ins_knots[0],
+            weights);
+}
+
+template<>
+void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<2>(
+    Matrix& T,
+    std::vector<std::vector<double> >& new_knots,
+    std::vector<double>& new_weights,
+    typename NURBSFESpace<2>::Pointer& pFESpace,
+    const std::vector<std::vector<double> >& ins_knots,
+    const std::vector<double>& weights) const
+{
+    BSplineUtils::ComputeNURBSKnotInsertionCoefficients2D(T,
+            new_knots[0], new_knots[1],
+            new_weights,
+            pFESpace->Order(0), pFESpace->Order(1),
+            pFESpace->KnotVector(0), pFESpace->KnotVector(1),
+            ins_knots[0], ins_knots[1],
+            weights);
+}
+
+template<>
+void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<3>(
+    Matrix& T,
+    std::vector<std::vector<double> >& new_knots,
+    std::vector<double>& new_weights,
+    typename NURBSFESpace<3>::Pointer& pFESpace,
+    const std::vector<std::vector<double> >& ins_knots,
+    const std::vector<double>& weights) const
+{
+    BSplineUtils::ComputeNURBSKnotInsertionCoefficients3D(T,
+            new_knots[0], new_knots[1], new_knots[2],
+            new_weights,
+            pFESpace->Order(0), pFESpace->Order(1), pFESpace->Order(2),
+            pFESpace->KnotVector(0), pFESpace->KnotVector(1), pFESpace->KnotVector(2),
+            ins_knots[0], ins_knots[1], ins_knots[2],
+            weights);
+}
+
+template<>
+void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<1>(
+    const RegularControlGrid<1, ControlPoint<double> >& ControlPoints,
+    const NURBSFESpace<1>& rFESpace,
+    const std::vector<std::size_t>& order_increment,
+    RegularControlGrid<1, ControlPoint<double> >& NewControlPoints,
+    std::vector<std::vector<double> >& new_knots) const
+{
+    ControlPoint<double> null_control_point(0.0);
+
+    BSplineUtils::ComputeBsplinesDegreeElevation1D(rFESpace.Order(0),
+            ControlPoints,
+            rFESpace.KnotVector(0),
+            order_increment[0],
+            NewControlPoints,
+            new_knots[0],
+            null_control_point);
+}
+
+template<>
+void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<2>(
+    const RegularControlGrid<2, ControlPoint<double> >& ControlPoints,
+    const NURBSFESpace<2>& rFESpace,
+    const std::vector<std::size_t>& order_increment,
+    RegularControlGrid<2, ControlPoint<double> >& NewControlPoints,
+    std::vector<std::vector<double> >& new_knots) const
+{
+    ControlPoint<double> null_control_point(0.0);
+
+    BSplineUtils::ComputeBsplinesDegreeElevation2D(rFESpace.Order(0), rFESpace.Order(1),
+            ControlPoints,
+            rFESpace.KnotVector(0), rFESpace.KnotVector(1),
+            order_increment[0], order_increment[1],
+            NewControlPoints,
+            new_knots[0], new_knots[1],
+            null_control_point);
+}
+
+template<>
+void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<3>(
+    const RegularControlGrid<3, ControlPoint<double> >& ControlPoints,
+    const NURBSFESpace<3>& rFESpace,
+    const std::vector<std::size_t>& order_increment,
+    RegularControlGrid<3, ControlPoint<double> >& NewControlPoints,
+    std::vector<std::vector<double> >& new_knots) const
+{
+    ControlPoint<double> null_control_point(0.0);
+
+    BSplineUtils::ComputeBsplinesDegreeElevation3D(rFESpace.Order(0), rFESpace.Order(1), rFESpace.Order(2),
+            ControlPoints,
+            rFESpace.KnotVector(0), rFESpace.KnotVector(1), rFESpace.KnotVector(2),
+            order_increment[0], order_increment[1], order_increment[2],
+            NewControlPoints,
+            new_knots[0], new_knots[1], new_knots[2],
+            null_control_point);
+}
 
 /// output stream function
 inline std::ostream& operator <<(std::ostream& rOStream, const MultiPatchRefinementUtility& rThis)

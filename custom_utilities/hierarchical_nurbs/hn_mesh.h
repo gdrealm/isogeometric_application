@@ -52,7 +52,7 @@ enum HN_ECHO_FLAGS
 /**
 Hierarchical NURBS mesh and refinement
 */
-template<std::size_t TDim>
+template<int TDim>
 class HnMesh : public Patch<TDim>
 {
 private:
@@ -392,7 +392,7 @@ private:
 };
 
 /// output stream function
-template<std::size_t TDim>
+template<int TDim>
 inline std::ostream& operator<<(std::ostream& rOStream, const HnMesh<TDim>& rThis)
 {
     rThis.PrintInfo(rOStream);

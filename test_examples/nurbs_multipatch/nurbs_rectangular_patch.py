@@ -19,16 +19,24 @@ from KratosMultiphysics import *
 from KratosMultiphysics.IsogeometricApplication import *
 kernel = Kernel()   #defining kernel
 
-nurbs_patch_library = NURBSPatchLibrary()
-grid_func_util = GridFunctionUtility()
+nurbs_fespace_library = NURBSFESpaceLibrary()
+grid_util = ControlGridUtility()
 
-patch1 = nurbs_patch_library.CreateRectangularPatch(3, 3)
-ctrl_grid_1 = grid_func_util.CreateRectangularControlPointGrid(0.0, 0.0, patch1.Number(0), patch1.Number(1), 1.0, 1.0)
-patch1.SetControlPointGrid(ctrl_grid_1)
+fes1 = nurbs_fespace_library.CreateRectangularFESpace(3, 3)
+ctrl_grid_1 = grid_util.CreateRectangularControlPointGrid(0.0, 0.0, fes1.Number(0), fes1.Number(1), 1.0, 1.0)
+print(fes1)
+print(ctrl_grid_1)
+
+patch1 = Patch2D(1, fes1)
+patch1.CreateControlPointGridFunction(ctrl_grid_1)
 print(patch1)
 
-patch2 = nurbs_patch_library.CreateCubicPatch(3, 3, 2)
-ctrl_grid_2 = grid_func_util.CreateCubicControlPointGrid(0.0, 0.0, 0.0, patch2.Number(0), patch2.Number(1), patch2.Number(2), 1.0, 1.0, 1.0)
-patch2.SetControlPointGrid(ctrl_grid_2)
+fes2 = nurbs_fespace_library.CreateCubicFESpace(3, 3, 2)
+ctrl_grid_2 = grid_util.CreateCubicControlPointGrid(0.0, 0.0, 0.0, fes2.Number(0), fes2.Number(1), fes2.Number(2), 1.0, 1.0, 1.0)
+print(fes2)
+print(ctrl_grid_2)
+
+patch2 = Patch3D(2, fes2)
+patch2.CreateControlPointGridFunction(ctrl_grid_2)
 print(patch2)
 

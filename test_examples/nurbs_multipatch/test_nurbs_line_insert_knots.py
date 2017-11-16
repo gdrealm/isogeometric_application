@@ -19,19 +19,23 @@ from KratosMultiphysics import *
 from KratosMultiphysics.IsogeometricApplication import *
 kernel = Kernel()   #defining kernel
 
-nurbs_patch_library = NURBSPatchLibrary()
-grid_func_util = GridFunctionUtility()
+nurbs_fespace_library = NURBSFESpaceLibrary()
+grid_util = ControlGridUtility()
+multipatch_util = MultiPatchUtility()
 
-patch1_ptr = nurbs_patch_library.CreateLinearPatch(3)
+fes1 = nurbs_fespace_library.CreateLinearFESpace(3)
+ctrl_grid_1 = grid_util.CreateLinearControlPointGrid(0.0, 0.0, 0.0, fes1.Number(0), 1.0, 0.0, 0.0)
+#print(fes1)
+#print(ctrl_grid_1)
+
+patch1_ptr = multipatch_util.CreatePatchPointer(1, fes1)
 patch1 = patch1_ptr.GetReference()
-
-ctrl_grid_1 = grid_func_util.CreateLinearControlPointGrid(0.0, 0.0, 0.0, patch1.Number(0), 1.0, 0.0, 0.0)
-patch1.SetControlPointGrid(ctrl_grid_1)
+patch1.CreateControlPointGridFunction(ctrl_grid_1)
+print(patch1)
 
 print("######BEFORE REFINEMENT#######")
 print(patch1)
-nurbs_patch_util = NURBSPatchUtility()
-nurbs_patch_util.ExportGeo(patch1, "line.txt")
+multipatch_util.ExportGeo(patch1, "line.txt")
 
 print("######AFTER REFINEMENT#######")
 mpatch = MultiPatch1D()

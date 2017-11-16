@@ -6,8 +6,8 @@
 //
 //
 
-#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_GRID_FUNCTION_UTILITY_H_INCLUDED)
-#define  KRATOS_ISOGEOMETRIC_APPLICATION_GRID_FUNCTION_UTILITY_H_INCLUDED
+#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_CONTROL_GRID_UTILITY_H_INCLUDED)
+#define  KRATOS_ISOGEOMETRIC_APPLICATION_CONTROL_GRID_UTILITY_H_INCLUDED
 
 // System includes
 #include <vector>
@@ -18,8 +18,7 @@
 // Project includes
 #include "includes/define.h"
 #include "custom_utilities/nurbs/control_point.h"
-#include "custom_utilities/nurbs/patch.h"
-#include "custom_utilities/nurbs/nurbs_patch.h"
+#include "custom_utilities/nurbs/control_grid.h"
 
 namespace Kratos
 {
@@ -27,45 +26,44 @@ namespace Kratos
 /**
 This class is a library to generate various grid function for typical computational mechanics problems.
  */
-class GridFunctionUtility
+class ControlGridUtility
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(GridFunctionUtility);
+    KRATOS_CLASS_POINTER_DEFINITION(ControlGridUtility);
 
     /// Type definition
     typedef ControlPoint<double> ControlPointType;
 
     /// Default constructor
-    GridFunctionUtility() {}
+    ControlGridUtility() {}
 
     /// Destructor
-    virtual ~GridFunctionUtility() {}
+    virtual ~ControlGridUtility() {}
 
     /// Generate the regular equidistant control point grid. All the point has unit weight.
-    template<std::size_t TDim>
-    static typename GridFunction<TDim, ControlPointType>::Pointer CreateRegularControlPointGrid(
+    template<int TDim>
+    static typename ControlGrid<ControlPointType>::Pointer CreateRegularControlPointGrid(
             const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& spacing)
     {
         KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not implemented")
     }
 
     /// Transform a grid function to new grid function by a matrix multiplication.
-    template<std::size_t TDim, typename TDataType, typename TMatrixType>
-    static typename GridFunction<TDim, TDataType>::Pointer Transform(const TMatrixType& TformMat, const std::vector<std::size_t>& new_size,
-            const typename GridFunction<TDim, TDataType>::ConstPointer pGridFunction)
+    template<typename TDataType, typename TMatrixType>
+    static void Transform(const TMatrixType& TformMat,
+            const ControlGrid<TDataType>& rControlGrid,
+            ControlGrid<TDataType>& rNewControlGrid)
     {
-        typename GridFunction<TDim, TDataType>::Pointer pNewGridFunction = typename GridFunction<TDim, TDataType>::Pointer(new GridFunction<TDim, TDataType>(new_size));
-
         // ensure the transformation matrix size is compatible
-        if (TformMat.size1() != pGridFunction->Size())
+        if (TformMat.size1() != rControlGrid.Size())
             KRATOS_THROW_ERROR(std::logic_error, "The first size of the transformation matrix is not compatible with old grid function size", "")
 
-        if (TformMat.size2() != pNewGridFunction->Size())
+        if (TformMat.size2() != rNewControlGrid.Size())
             KRATOS_THROW_ERROR(std::logic_error, "The second size of the transformation matrix is not compatible with new grid function size", "")
 
         // get old data
-        const typename GridFunction<TDim, TDataType>::DataContainerType& OldData = pGridFunction->Data();
+        const typename ControlGrid<TDataType>::DataContainerType& OldData = rControlGrid.Data();
 
         // compute new data and store
         for (std::size_t i = 0; i < TformMat.size2(); ++i)
@@ -76,16 +74,14 @@ public:
                 if (TformMat(j, i) != 0.0)
                     NewData += TformMat(j, i) * OldData[j];
             }
-            pNewGridFunction->SetData(i, NewData);
+            rNewControlGrid.SetData(i, NewData);
         }
-
-        return pNewGridFunction;
     }
 
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "GridFunctionUtility";
+        rOStream << "ControlGridUtility";
     }
 
     virtual void PrintData(std::ostream& rOStream) const
@@ -96,11 +92,11 @@ public:
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<>
-GridFunction<1, ControlPoint<double> >::Pointer GridFunctionUtility::CreateRegularControlPointGrid<1>(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility::CreateRegularControlPointGrid<1>(
         const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
 {
-    typename GridFunction<1, ControlPointType>::Pointer pGrid
-        = typename GridFunction<1, ControlPointType>::Pointer(new GridFunction<1, ControlPointType>(ngrid[0]));
+    typename RegularControlGrid<1, ControlPointType>::Pointer pGrid
+        = typename RegularControlGrid<1, ControlPointType>::Pointer(new RegularControlGrid<1, ControlPointType>(ngrid[0]));
 
     pGrid->SetName("CONTROL_POINT");
 
@@ -119,11 +115,11 @@ GridFunction<1, ControlPoint<double> >::Pointer GridFunctionUtility::CreateRegul
 }
 
 template<>
-GridFunction<2, ControlPoint<double> >::Pointer GridFunctionUtility::CreateRegularControlPointGrid<2>(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility::CreateRegularControlPointGrid<2>(
         const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
 {
-    typename GridFunction<2, ControlPointType>::Pointer pGrid
-        = typename GridFunction<2, ControlPointType>::Pointer(new GridFunction<2, ControlPointType>(ngrid[0], ngrid[1]));
+    typename RegularControlGrid<2, ControlPointType>::Pointer pGrid
+        = typename RegularControlGrid<2, ControlPointType>::Pointer(new RegularControlGrid<2, ControlPointType>(ngrid[0], ngrid[1]));
 
     pGrid->SetName("CONTROL_POINT");
 
@@ -143,11 +139,11 @@ GridFunction<2, ControlPoint<double> >::Pointer GridFunctionUtility::CreateRegul
 }
 
 template<>
-GridFunction<3, ControlPoint<double> >::Pointer GridFunctionUtility::CreateRegularControlPointGrid<3>(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility::CreateRegularControlPointGrid<3>(
         const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
 {
-    typename GridFunction<3, ControlPointType>::Pointer pGrid
-        = typename GridFunction<3, ControlPointType>::Pointer(new GridFunction<3, ControlPointType>(ngrid[0], ngrid[1], ngrid[2]));
+    typename RegularControlGrid<3, ControlPointType>::Pointer pGrid
+        = typename RegularControlGrid<3, ControlPointType>::Pointer(new RegularControlGrid<3, ControlPointType>(ngrid[0], ngrid[1], ngrid[2]));
 
     pGrid->SetName("CONTROL_POINT");
 
@@ -172,7 +168,7 @@ GridFunction<3, ControlPoint<double> >::Pointer GridFunctionUtility::CreateRegul
 }
 
 /// output stream function
-inline std::ostream& operator <<(std::ostream& rOStream, const GridFunctionUtility& rThis)
+inline std::ostream& operator <<(std::ostream& rOStream, const ControlGridUtility& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -182,5 +178,5 @@ inline std::ostream& operator <<(std::ostream& rOStream, const GridFunctionUtili
 
 } // namespace Kratos.
 
-#endif // KRATOS_ISOGEOMETRIC_APPLICATION_GRID_FUNCTION_UTILITY_H_INCLUDED defined
+#endif // KRATOS_ISOGEOMETRIC_APPLICATION_CONTROL_GRID_UTILITY_H_INCLUDED defined
 

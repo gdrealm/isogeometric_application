@@ -1,6 +1,6 @@
 # nurbs mesh v.0.6
 #
-# NURBS representation for patch 0
+# NURBS representation for patch 1
 #
 #dim
 1 1
@@ -10,8 +10,8 @@
  4
 #knots
  0 0 0 0 1 1 1 1
-#u v
-	0	0.333333	0.666667	1
+#u
+	0	0.333333	1.33333	1
 	0	0	0	0
 	0	0	0	0
-	1	1	1	1
+	1	1	0.5	1
