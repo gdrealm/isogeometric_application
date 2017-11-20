@@ -59,7 +59,7 @@ public:
     template<int TDim>
     void InsertKnots(typename Patch<TDim>::Pointer& pPatch, std::set<std::size_t>& refined_patches, const std::vector<std::vector<double> >& ins_knots)
     {
-        if (pPatch->FESpace()->Type() != NURBSFESpace<TDim>::StaticType())
+        if (pPatch->pFESpace()->Type() != NURBSFESpace<TDim>::StaticType())
             KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "only support the NURBS patch")
 
         if (std::find(refined_patches.begin(), refined_patches.end(), pPatch->Id()) == refined_patches.end())
@@ -76,7 +76,7 @@ public:
             std::vector<double> new_weights;
             std::vector<double> weights = pPatch->GetControlWeights();
 
-            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(pPatch->FESpace());
+            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(pPatch->pFESpace());
             typename NURBSFESpace<TDim>::Pointer pNewFESpace = typename NURBSFESpace<TDim>::Pointer(new NURBSFESpace<TDim>());
 
             std::vector<std::size_t> new_size(TDim);
@@ -97,8 +97,8 @@ public:
 
             // transform and transfer the control points
             typename ControlGrid<ControlPoint<double> >::Pointer pNewControlPoints = typename ControlGrid<ControlPoint<double> >::Pointer (new RegularControlGrid<TDim, ControlPoint<double> >(new_size));
-            ControlGridUtility::Transform<ControlPoint<double>, Matrix>(T, *(pPatch->ControlPointGridFunction()->ControlGrid()), *pNewControlPoints);
-            pNewControlPoints->SetName(pPatch->ControlPointGridFunction()->ControlGrid()->Name());
+            ControlGridUtility::Transform<ControlPoint<double>, Matrix>(T, *(pPatch->ControlPointGridFunction()->pControlGrid()), *pNewControlPoints);
+            pNewControlPoints->SetName(pPatch->ControlPointGridFunction()->pControlGrid()->Name());
             pNewPatch->CreateControlPointGridFunction(pNewControlPoints);
 
             // transfer the grid function
@@ -106,8 +106,8 @@ public:
                     it != pPatch->DoubleGridFunctions().end(); ++it)
             {
                 typename ControlGrid<double>::Pointer pNewDoubleControlGrid = typename ControlGrid<double>::Pointer (new RegularControlGrid<TDim, double>(new_size));
-                ControlGridUtility::Transform<double, Matrix>(T, *((*it)->ControlGrid()), *pNewDoubleControlGrid);
-                pNewDoubleControlGrid->SetName((*it)->ControlGrid()->Name());
+                ControlGridUtility::Transform<double, Matrix>(T, *((*it)->pControlGrid()), *pNewDoubleControlGrid);
+                pNewDoubleControlGrid->SetName((*it)->pControlGrid()->Name());
                 pNewPatch->CreateDoubleGridFunction(pNewDoubleControlGrid);
             }
 
@@ -115,8 +115,8 @@ public:
                     it != pPatch->Array1DGridFunctions().end(); ++it)
             {
                 typename ControlGrid<array_1d<double, 3> >::Pointer pNewArray1DControlGrid = typename ControlGrid<array_1d<double, 3> >::Pointer (new RegularControlGrid<TDim, array_1d<double, 3> >(new_size));
-                ControlGridUtility::Transform<array_1d<double, 3>, Matrix>(T, *((*it)->ControlGrid()), *pNewArray1DControlGrid);
-                pNewArray1DControlGrid->SetName((*it)->ControlGrid()->Name());
+                ControlGridUtility::Transform<array_1d<double, 3>, Matrix>(T, *((*it)->pControlGrid()), *pNewArray1DControlGrid);
+                pNewArray1DControlGrid->SetName((*it)->pControlGrid()->Name());
                 pNewPatch->CreateArray1DGridFunction(pNewArray1DControlGrid);
             }
 
@@ -124,8 +124,8 @@ public:
                     it != pPatch->VectorGridFunctions().end(); ++it)
             {
                 typename ControlGrid<Vector>::Pointer pNewVectorControlGrid = typename ControlGrid<Vector>::Pointer (new RegularControlGrid<TDim, Vector>(new_size));
-                ControlGridUtility::Transform<Vector, Matrix>(T, *((*it)->ControlGrid()), *pNewVectorControlGrid);
-                pNewVectorControlGrid->SetName((*it)->ControlGrid()->Name());
+                ControlGridUtility::Transform<Vector, Matrix>(T, *((*it)->pControlGrid()), *pNewVectorControlGrid);
+                pNewVectorControlGrid->SetName((*it)->pControlGrid()->Name());
                 pNewPatch->CreateVectorGridFunction(pNewVectorControlGrid);
             }
 
@@ -137,7 +137,7 @@ public:
 
             if (pPatch->pNeighbor(_LEFT_) != NULL)
             {
-                if (pPatch->pNeighbor(_LEFT_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_LEFT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_LEFT_, pPatch->pNeighbor(_LEFT_));
                     pPatch->pNeighbor(_LEFT_)->pSetNeighbor(_RIGHT_, pNewPatch);
@@ -154,7 +154,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_LEFT_);
                     InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                // else if (pPatch->pNeighbor(_LEFT_)->FESpace()->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_LEFT_)->pFESpace()->Type() == HnMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -163,7 +163,7 @@ public:
 
             if (pPatch->pNeighbor(_RIGHT_) != NULL)
             {
-                if (pPatch->pNeighbor(_RIGHT_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_RIGHT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_RIGHT_, pPatch->pNeighbor(_RIGHT_));
                     pPatch->pNeighbor(_RIGHT_)->pSetNeighbor(_LEFT_, pNewPatch);
@@ -180,7 +180,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_RIGHT_);
                     InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                // else if (pPatch->pNeighbor(_RIGHT_)->FESpace()->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_RIGHT_)->pFESpace()->Type() == HnMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -189,7 +189,7 @@ public:
 
             if (pPatch->pNeighbor(_TOP_) != NULL)
             {
-                if (pPatch->pNeighbor(_TOP_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_TOP_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_TOP_, pPatch->pNeighbor(_TOP_));
                     pPatch->pNeighbor(_TOP_)->pSetNeighbor(_BOTTOM_, pNewPatch);
@@ -215,7 +215,7 @@ public:
 
             if (pPatch->pNeighbor(_BOTTOM_) != NULL)
             {
-                if (pPatch->pNeighbor(_BOTTOM_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_BOTTOM_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_BOTTOM_, pPatch->pNeighbor(_BOTTOM_));
                     pPatch->pNeighbor(_BOTTOM_)->pSetNeighbor(_TOP_, pNewPatch);
@@ -241,7 +241,7 @@ public:
 
             if (pPatch->pNeighbor(_FRONT_) != NULL)
             {
-                if (pPatch->pNeighbor(_FRONT_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_FRONT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_FRONT_, pPatch->pNeighbor(_FRONT_));
                     pPatch->pNeighbor(_FRONT_)->pSetNeighbor(_BACK_, pNewPatch);
@@ -260,7 +260,7 @@ public:
 
             if (pPatch->pNeighbor(_BACK_) != NULL)
             {
-                if (pPatch->pNeighbor(_BACK_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_BACK_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_BACK_, pPatch->pNeighbor(_BACK_));
                     pPatch->pNeighbor(_BACK_)->pSetNeighbor(_FRONT_, pNewPatch);
@@ -313,7 +313,7 @@ public:
             typename Patch<TDim>::Pointer pNewPatch = typename Patch<TDim>::Pointer(new Patch<TDim>(pPatch->Id()));
 
             // elevate the degree and initialize new patch
-            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(pPatch->FESpace());
+            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(pPatch->pFESpace());
             typename NURBSFESpace<TDim>::Pointer pNewFESpace = typename NURBSFESpace<TDim>::Pointer(new NURBSFESpace<TDim>());
 
             std::vector<std::vector<double> > new_knots(TDim);
@@ -323,7 +323,7 @@ public:
                 new_size[i] = pFESpace->Number(i);
 
             typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer pControlPoints
-                = boost::dynamic_pointer_cast<RegularControlGrid<TDim, ControlPoint<double> > >(pPatch->ControlPointGridFunction()->ControlGrid());
+                = boost::dynamic_pointer_cast<RegularControlGrid<TDim, ControlPoint<double> > >(pPatch->ControlPointGridFunction()->pControlGrid());
 
             typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer pNewControlPoints
                 = typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer(new RegularControlGrid<TDim, ControlPoint<double> >(new_size)); // note here that the size is just temporary, it will be raised later on.
@@ -337,7 +337,7 @@ public:
                 pNewFESpace->SetInfo(dim, new_size[dim], pFESpace->Order(dim) + order_increment[dim]);
             }
 
-            pNewControlPoints->SetName(pPatch->ControlPointGridFunction()->ControlGrid()->Name());
+            pNewControlPoints->SetName(pPatch->ControlPointGridFunction()->pControlGrid()->Name());
             pNewPatch->SetFESpace(pNewFESpace);
             pNewPatch->CreateControlPointGridFunction(pNewControlPoints);
 
@@ -349,7 +349,7 @@ public:
 
             if (pPatch->pNeighbor(_LEFT_) != NULL)
             {
-                if (pPatch->pNeighbor(_LEFT_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_LEFT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_LEFT_, pPatch->pNeighbor(_LEFT_));
                     pPatch->pNeighbor(_LEFT_)->pSetNeighbor(_RIGHT_, pNewPatch);
@@ -379,7 +379,7 @@ public:
 
             if (pPatch->pNeighbor(_RIGHT_) != NULL)
             {
-                if (pPatch->pNeighbor(_RIGHT_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_RIGHT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_RIGHT_, pPatch->pNeighbor(_RIGHT_));
                     pPatch->pNeighbor(_RIGHT_)->pSetNeighbor(_LEFT_, pNewPatch);
@@ -409,7 +409,7 @@ public:
 
             if (pPatch->pNeighbor(_TOP_) != NULL)
             {
-                if (pPatch->pNeighbor(_TOP_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_TOP_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_TOP_, pPatch->pNeighbor(_TOP_));
                     pPatch->pNeighbor(_TOP_)->pSetNeighbor(_BOTTOM_, pNewPatch);
@@ -435,7 +435,7 @@ public:
 
             if (pPatch->pNeighbor(_BOTTOM_) != NULL)
             {
-                if (pPatch->pNeighbor(_BOTTOM_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_BOTTOM_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_BOTTOM_, pPatch->pNeighbor(_BOTTOM_));
                     pPatch->pNeighbor(_BOTTOM_)->pSetNeighbor(_TOP_, pNewPatch);
@@ -461,7 +461,7 @@ public:
 
             if (pPatch->pNeighbor(_FRONT_) != NULL)
             {
-                if (pPatch->pNeighbor(_FRONT_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_FRONT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_FRONT_, pPatch->pNeighbor(_FRONT_));
                     pPatch->pNeighbor(_FRONT_)->pSetNeighbor(_BACK_, pNewPatch);
@@ -480,7 +480,7 @@ public:
 
             if (pPatch->pNeighbor(_BACK_) != NULL)
             {
-                if (pPatch->pNeighbor(_BACK_)->FESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_BACK_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_BACK_, pPatch->pNeighbor(_BACK_));
                     pPatch->pNeighbor(_BACK_)->pSetNeighbor(_FRONT_, pNewPatch);

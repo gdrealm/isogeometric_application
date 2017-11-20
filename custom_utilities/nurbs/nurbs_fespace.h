@@ -19,6 +19,7 @@
 #include "includes/define.h"
 #include "containers/array_1d.h"
 #include "custom_utilities/nurbs/knot_array_1d.h"
+#include "custom_utilities/nurbs/nurbs_indexing_utility.h"
 #include "custom_utilities/nurbs/fespace.h"
 
 namespace Kratos
@@ -77,7 +78,7 @@ public:
     /// Set the knot vector in direction i.
     void SetKnotVector(const std::size_t& i, const knot_container_t& p_knot_vector)
     {
-        mpKnotVectors[i] = p_knot_vector;
+        mKnotVectors[i] = p_knot_vector;
     }
 
     /// Create and set the knot vector in direction i.
@@ -90,12 +91,12 @@ public:
         else
         {
             for (std::size_t j = 0; j < values.size(); ++j)
-                mpKnotVectors[i].pCreateKnot(values[j]);
+                mKnotVectors[i].pCreateKnot(values[j]);
         }
     }
 
     /// Get the knot vector in i-direction
-    const knot_container_t& KnotVector(const std::size_t& i) const {return mpKnotVectors[i];}
+    const knot_container_t& KnotVector(const std::size_t& i) const {return mKnotVectors[i];}
 
     /// Set the NURBS information in the direction i
     void SetInfo(const std::size_t& i, const std::size_t& Number, const std::size_t& Order)
@@ -109,7 +110,7 @@ public:
     {
         for (std::size_t i = 0; i < TDim; ++i)
         {
-            if (mpKnotVectors[i].size() != mNumbers[i] + mOrders[i] + 1)
+            if (mKnotVectors[i].size() != mNumbers[i] + mOrders[i] + 1)
             {
                 KRATOS_THROW_ERROR(std::logic_error, "The knot vector is incompatible at dimension", i)
                 return false;
@@ -144,6 +145,216 @@ public:
         }
 
         return true;
+    }
+
+    /// Extract the index of the functions on the boundary
+    virtual std::vector<std::size_t> ExtractBoundaryFunctionIndices(const BoundarySide& side) const
+    {
+        std::vector<std::size_t> func_indices;
+
+        if (side == _LEFT_)
+        {
+            if (TDim == 1)
+            {
+                func_indices.resize(1);
+                func_indices[0] = BaseType::mFunctionIds[NURBSIndexingUtility::Index1D(1, this->Number(0))];
+            }
+            else if (TDim == 2)
+            {
+                func_indices.resize(this->Number(1));
+                for (std::size_t j = 0; j < this->Number(1); ++j)
+                    func_indices[NURBSIndexingUtility::Index1D(j+1, this->Number(1))]
+                        = BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(1, j+1, this->Number(0), this->Number(1))];
+            }
+            else if (TDim == 3)
+            {
+                func_indices.resize(this->Number(1)*this->Number(2));
+                for (std::size_t j = 0; j < this->Number(1); ++j)
+                    for (std::size_t k = 0; k < this->Number(2); ++k)
+                        func_indices[NURBSIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))]
+                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(1, j+1, k+1, this->Number(0), this->Number(1), this->Number(2))];
+            }
+        }
+        else if (side == _RIGHT_)
+        {
+            if (TDim == 1)
+            {
+                func_indices.resize(1);
+                func_indices[0] = BaseType::mFunctionIds[NURBSIndexingUtility::Index1D(this->Number(0), this->Number(0))];
+            }
+            else if (TDim == 2)
+            {
+                func_indices.resize(this->Number(1));
+                for (std::size_t j = 0; j < this->Number(1); ++j)
+                    func_indices[NURBSIndexingUtility::Index1D(j+1, this->Number(1))]
+                        = BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(this->Number(0), j+1, this->Number(0), this->Number(1))];
+            }
+            else if (TDim == 3)
+            {
+                func_indices.resize(this->Number(1)*this->Number(2));
+                for (std::size_t j = 0; j < this->Number(1); ++j)
+                    for (std::size_t k = 0; k < this->Number(2); ++k)
+                        func_indices[NURBSIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))]
+                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(this->Number(0), j+1, k+1, this->Number(0), this->Number(1), this->Number(2))];
+            }
+        }
+        else if (side == _FRONT_)
+        {
+            if (TDim == 2)
+            {
+                func_indices.resize(this->Number(0));
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    func_indices[NURBSIndexingUtility::Index1D(i+1, this->Number(0))]
+                        = BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(i+1, 0, this->Number(0), this->Number(1))];
+            }
+            else if (TDim == 3)
+            {
+                func_indices.resize(this->Number(0)*this->Number(2));
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    for (std::size_t k = 0; k < this->Number(2); ++k)
+                        func_indices[NURBSIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))]
+                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, 0, k+1, this->Number(0), this->Number(1), this->Number(2))];
+            }
+        }
+        else if (side == _BACK_)
+        {
+            if (TDim == 2)
+            {
+                func_indices.resize(this->Number(0));
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    func_indices[NURBSIndexingUtility::Index1D(i+1, this->Number(0))]
+                        = BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(i+1, this->Number(1), this->Number(0), this->Number(1))];
+            }
+            else if (TDim == 3)
+            {
+                func_indices.resize(this->Number(0)*this->Number(2));
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    for (std::size_t k = 0; k < this->Number(2); ++k)
+                        func_indices[NURBSIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))]
+                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, this->Number(1), k+1, this->Number(0), this->Number(1), this->Number(2))];
+            }
+        }
+        else if (side == _BOTTOM_)
+        {
+            if (TDim == 3)
+            {
+                func_indices.resize(this->Number(0)*this->Number(1));
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    for (std::size_t j = 0; j < this->Number(1); ++j)
+                        func_indices[NURBSIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))]
+                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, j+1, 0, this->Number(0), this->Number(1), this->Number(2))];
+            }
+        }
+        else if (side == _TOP_)
+        {
+            if (TDim == 3)
+            {
+                func_indices.resize(this->Number(0)*this->Number(1));
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    for (std::size_t j = 0; j < this->Number(1); ++j)
+                        func_indices[NURBSIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))]
+                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, j+1, this->Number(2), this->Number(0), this->Number(1), this->Number(2))];
+            }
+        }
+
+        return func_indices;
+    }
+
+    /// Assign the index for the functions on the boundary
+    virtual void AssignBoundaryFunctionIndices(const BoundarySide& side, const std::vector<std::size_t>& func_indices)
+    {
+        if (side == _LEFT_)
+        {
+            if (TDim == 1)
+            {
+                BaseType::mFunctionIds[NURBSIndexingUtility::Index1D(1, this->Number(0))] = func_indices[0];
+            }
+            else if (TDim == 2)
+            {
+                for (std::size_t j = 0; j < this->Number(1); ++j)
+                    BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(1, j+1, this->Number(0), this->Number(1))]
+                        = func_indices[NURBSIndexingUtility::Index1D(j+1, this->Number(1))];
+            }
+            else if (TDim == 3)
+            {
+                for (std::size_t j = 0; j < this->Number(1); ++j)
+                    for (std::size_t k = 0; k < this->Number(2); ++k)
+                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(1, j+1, k+1, this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[NURBSIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))];
+            }
+        }
+        else if (side == _RIGHT_)
+        {
+            if (TDim == 1)
+            {
+                BaseType::mFunctionIds[NURBSIndexingUtility::Index1D(this->Number(0), this->Number(0))] = func_indices[0];
+            }
+            else if (TDim == 2)
+            {
+                for (std::size_t j = 0; j < this->Number(1); ++j)
+                    BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(this->Number(0), j+1, this->Number(0), this->Number(1))]
+                        = func_indices[NURBSIndexingUtility::Index1D(j+1, this->Number(1))];
+            }
+            else if (TDim == 3)
+            {
+                for (std::size_t j = 0; j < this->Number(1); ++j)
+                    for (std::size_t k = 0; k < this->Number(2); ++k)
+                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(this->Number(0), j+1, k+1, this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[NURBSIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))];
+            }
+        }
+        else if (side == _FRONT_)
+        {
+            if (TDim == 2)
+            {
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(i+1, 0, this->Number(0), this->Number(1))]
+                        = func_indices[NURBSIndexingUtility::Index1D(i+1, this->Number(0))];
+            }
+            else if (TDim == 3)
+            {
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    for (std::size_t k = 0; k < this->Number(2); ++k)
+                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, 0, k+1, this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[NURBSIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))];
+            }
+        }
+        else if (side == _BACK_)
+        {
+            if (TDim == 2)
+            {
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                        BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(i+1, this->Number(1), this->Number(0), this->Number(1))]
+                            = func_indices[NURBSIndexingUtility::Index1D(i+1, this->Number(0))];
+            }
+            else if (TDim == 3)
+            {
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    for (std::size_t k = 0; k < this->Number(2); ++k)
+                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, this->Number(1), k+1, this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[NURBSIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))];
+            }
+        }
+        else if (side == _BOTTOM_)
+        {
+            if (TDim == 3)
+            {
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    for (std::size_t j = 0; j < this->Number(1); ++j)
+                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, j+1, 0, this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[NURBSIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))];
+            }
+        }
+        else if (side == _TOP_)
+        {
+            if (TDim == 3)
+            {
+                for (std::size_t i = 0; i < this->Number(0); ++i)
+                    for (std::size_t j = 0; j < this->Number(1); ++j)
+                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, j+1, this->Number(2), this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[NURBSIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))];
+            }
+        }
     }
 
     /// Construct the boundary patch based on side
@@ -250,9 +461,40 @@ public:
         for (std::size_t i = 0; i < TDim; ++i)
         {
             rOStream << " knot vector " << i << ":";
-            for (std::size_t j = 0; j < mpKnotVectors[i].size(); ++j)
-                rOStream << " " << mpKnotVectors[i].pKnotAt(j)->Value();
+            for (std::size_t j = 0; j < mKnotVectors[i].size(); ++j)
+                rOStream << " " << mKnotVectors[i].pKnotAt(j)->Value();
             rOStream << std::endl;
+        }
+        if (BaseType::mFunctionIds.size() == this->TotalNumber())
+        {
+            rOStream << " Function Indices:";
+            if (TDim == 1)
+            {
+                for (std::size_t i = 0; i < BaseType::mFunctionIds.size(); ++i)
+                    rOStream << " " << BaseType::mFunctionIds[i];
+            }
+            else if (TDim == 2)
+            {
+                for (std::size_t j = 0; j < this->Number(1); ++j)
+                {
+                    for (std::size_t i = 0; i < this->Number(0); ++i)
+                        rOStream << " " << BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))];
+                    rOStream << std::endl;
+                }
+            }
+            else if (TDim == 3)
+            {
+                for (std::size_t k = 0; k < this->Number(2); ++k)
+                {
+                    for (std::size_t j = 0; j < this->Number(1); ++j)
+                    {
+                        for (std::size_t i = 0; i < this->Number(0); ++i)
+                            rOStream << " " << BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, j+1, k+1, this->Number(0), this->Number(1), this->Number(2))];
+                        rOStream << std::endl;
+                    }
+                    rOStream << std::endl;
+                }
+            }
         }
     }
 
@@ -263,7 +505,7 @@ private:
      */
     boost::array<std::size_t, TDim> mOrders;
     boost::array<std::size_t, TDim> mNumbers;
-    boost::array<knot_container_t, TDim> mpKnotVectors;
+    boost::array<knot_container_t, TDim> mKnotVectors;
 };
 
 /**
@@ -342,6 +584,7 @@ inline std::ostream& operator <<(std::ostream& rOStream, const NURBSFESpace<TDim
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
     rThis.PrintData(rOStream);
+    rOStream << std::endl;
     rOStream << "-------------End NURBSFESpace Info-------------" << std::endl;
     return rOStream;
 }

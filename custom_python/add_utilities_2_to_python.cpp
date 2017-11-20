@@ -172,7 +172,7 @@ NURBSFESpace<3>::Pointer NURBSFESpaceLibrary_CreateCubicFESpace(NURBSFESpaceLibr
 template<int TDim, typename TDataType>
 typename FESpace<TDim>::Pointer GridFunction_GetFESpace(GridFunction<TDim, TDataType>& rDummy)
 {
-    return rDummy.FESpace();
+    return rDummy.pFESpace();
 }
 
 template<int TDim, typename TDataType>
@@ -184,7 +184,7 @@ void GridFunction_SetFESpace(GridFunction<TDim, TDataType>& rDummy, typename FES
 template<int TDim, typename TDataType>
 typename ControlGrid<TDataType>::Pointer GridFunction_GetControlGrid(GridFunction<TDim, TDataType>& rDummy)
 {
-    return rDummy.ControlGrid();
+    return rDummy.pControlGrid();
 }
 
 template<int TDim, typename TDataType>
@@ -212,6 +212,21 @@ void MultiPatch_MakeNeighbor(MultiPatch<TDim>& rDummy, typename Patch<TDim>::Poi
            typename Patch<TDim>::Pointer pPatch2, BoundarySide side2)
 {
    rDummy.MakeNeighbor(pPatch1, side1, pPatch2, side2);
+}
+
+template<int TDim>
+std::size_t MultiPatch_Enumerate(MultiPatch<TDim>& rDummy)
+{
+    std::size_t system_size;
+    std::set<std::size_t> enumerated_patches;
+
+    for (typename MultiPatch<TDim>::PatchContainerType::iterator it = rDummy.begin(); it != rDummy.end(); ++it)
+        it->pFESpace()->ResetFunctionIndices();
+
+    rDummy.Enumerate(system_size, enumerated_patches);
+    KRATOS_WATCH(system_size)
+
+    return system_size;
 }
 
 template<int TDim>
@@ -513,6 +528,7 @@ void IsogeometricApplication_AddPatchesToPython()
     .def("AddPatch", &MultiPatch<TDim>::AddPatch)
     .def("GetPatch", &MultiPatch<TDim>::GetPatch)
     .def("MakeNeighbor", &MultiPatch_MakeNeighbor<TDim>)
+    .def("Enumerate", &MultiPatch_Enumerate<TDim>)
     .def("PrintAddress", &MultiPatch<TDim>::PrintAddress)
     .def(self_ns::str(self))
     ;

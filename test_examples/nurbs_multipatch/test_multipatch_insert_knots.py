@@ -52,8 +52,11 @@ multipatch_refine_util.InsertKnots(patch1_ptr, [[0.5], [0.5]])
 #patch1 = patch1_ptr.GetReference()
 #patch2 = patch2_ptr.GetReference()
 #print("############RESULTS###############")
-print(mpatch)
 multipatch_util.ExportGlvis(mpatch, "mpatch.mesh")
+
+system_size = mpatch.Enumerate()
+print("system_size:", system_size)
+print(mpatch)
 
 #################RESULTS#####################(Validated with Matlab)
 ##>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<

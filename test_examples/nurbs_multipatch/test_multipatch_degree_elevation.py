@@ -58,6 +58,7 @@ multipatch_refine_util.DegreeElevate(patch1_ptr, [1, 1])
 
 #print("############RESULTS###############")
 print(mpatch)
+multipatch_util.ExportGlvis(mpatch, "mpatch.mesh")
 
 
 

@@ -57,10 +57,10 @@ public:
         std::ofstream outfile;
         outfile.open(filename, std::ios::out);
 
-        if (pPatch->FESpace()->Type() != NURBSFESpace<TDim>::StaticType())
+        if (pPatch->pFESpace()->Type() != NURBSFESpace<TDim>::StaticType())
             KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "does not support non-NURBS patch")
 
-        typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(pPatch->FESpace());
+        typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(pPatch->pFESpace());
 
         outfile << "# nurbs mesh v.0.6\n";
         outfile << "#\n";
@@ -95,7 +95,7 @@ public:
         std::cout << pPatch->Type() << " " << pPatch->Id() << " is exported to " << filename << " successfully" << std::endl;
     }
 
-    /// Export the multipatch to Glvis for visualization
+    /// Export the multipatch to GLVis for visualization
     template<int TDim>
     void ExportGlvis(typename MultiPatch<TDim>::Pointer pPatch, const std::string& filename) const
     {
@@ -117,9 +117,48 @@ public:
         std::size_t nvertices;
         std::vector<std::vector<std::size_t> > elements;
         std::vector<std::vector<std::size_t> > boundary;
-        std::vector<std::size_t> boundary_attr;
-        std::vector<std::size_t> edges_knotv;
-        // pPatch->GenerateCornerTopology(nvertices, elements, boundary, boundary_attr, edges, edges_knotv);
+        std::vector<std::tuple<std::size_t, std::size_t, std::size_t, int> > edges;
+        std::map<std::size_t, std::vector<double> > knotvec;
+        pPatch->GenerateCornerTopology(nvertices, elements, boundary, edges, knotvec);
+
+        outfile << "elements\n" << elements.size() << "\n";
+        for (std::size_t i = 0; i < elements.size(); ++i)
+        {
+            outfile << "1";
+            if (elements[i].size() == 4)
+                outfile << " 3";
+            else if (elements[i].size() == 8)
+                outfile << " 5";
+            else
+                KRATOS_THROW_ERROR(std::logic_error, "Invalid number of nodes for an element:", elements[i].size())
+
+            for (std::size_t j = 0; j < elements[i].size(); ++j)
+                outfile << " " << elements[i][j];
+            outfile << "\n";
+        }
+        outfile << "\n";
+
+        std::size_t nboundary = 0;
+        for (std::size_t i = 0; i < edges.size(); ++i)
+            if (std::get<3>(edges[i]) != 0)
+                ++nboundary;
+        outfile << "boundary\n" << nboundary << "\n";
+        for (std::size_t i = 0; i < edges.size(); ++i)
+        {
+            if (std::get<3>(edges[i]) != 0)
+                outfile << "1 1 " << std::get<0>(edges[i]) << " " << std::get<1>(edges[i]) << "\n";
+        }
+        outfile << "\n\n";
+
+        outfile << "edges\n" << edges.size() << "\n";
+        for (std::size_t i = 0; i < edges.size(); ++i)
+        {
+            outfile << std::get<2>(edges[i]) << " "
+                    << std::get<0>(edges[i]) << " " << std::get<1>(edges[i]) << "\n";
+        }
+        outfile << "\n\n";
+
+        outfile << "vertices\n" << nvertices << "\n\n";
 
         outfile << "patches\n\n";
         for (typename MultiPatch<TDim>::PatchContainerType::iterator it = pPatch->begin(); it != pPatch->end(); ++it)
@@ -127,10 +166,10 @@ public:
             outfile << "# patch " << it->Id() << "\n\n";
             outfile << "knotvectors\n" << TDim << "\n";
 
-            if (it->FESpace()->Type() != NURBSFESpace<TDim>::StaticType())
+            if (it->pFESpace()->Type() != NURBSFESpace<TDim>::StaticType())
                 KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "does not support non-NURBS patch")
 
-            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(it->FESpace());
+            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(it->pFESpace());
             for (std::size_t dim = 0; dim < TDim; ++dim)
             {
                 outfile << pFESpace->Order(dim) << " " << pFESpace->Number(dim);
@@ -142,7 +181,7 @@ public:
 
             outfile << "dimension\n" << TDim << "\n\n";
 
-            typename ControlGrid<ControlPoint<double> >::Pointer pControlGrid = it->ControlPointGridFunction()->ControlGrid();
+            typename ControlGrid<ControlPoint<double> >::Pointer pControlGrid = it->ControlPointGridFunction()->pControlGrid();
             outfile << "controlpoints\n";
             for (std::size_t i = 0; i < pControlGrid->size(); ++i)
             {
@@ -185,7 +224,7 @@ void MultiPatchUtility::WriteControlPoints<1>(std::ostream& rOStream, Patch<1>::
 {
     typedef Patch<1>::ControlPointType ControlPointType;
     typename RegularControlGrid<1, ControlPointType>::ConstPointer pControlPointGrid
-        = boost::dynamic_pointer_cast<const RegularControlGrid<1, ControlPointType> >(pPatch->ControlPointGridFunction()->ControlGrid());
+        = boost::dynamic_pointer_cast<const RegularControlGrid<1, ControlPointType> >(pPatch->ControlPointGridFunction()->pControlGrid());
 
     rOStream << "#u\n";
     for (std::size_t dim = 0; dim < 3; ++dim)
@@ -203,7 +242,7 @@ void MultiPatchUtility::WriteControlPoints<2>(std::ostream& rOStream, Patch<2>::
 {
     typedef Patch<2>::ControlPointType ControlPointType;
     typename RegularControlGrid<2, ControlPointType>::ConstPointer pControlPointGrid
-        = boost::dynamic_pointer_cast<const RegularControlGrid<2, ControlPointType> >(pPatch->ControlPointGridFunction()->ControlGrid());
+        = boost::dynamic_pointer_cast<const RegularControlGrid<2, ControlPointType> >(pPatch->ControlPointGridFunction()->pControlGrid());
 
     rOStream << "#u v\n";
     for (std::size_t dim = 0; dim < 2; ++dim)
@@ -223,7 +262,7 @@ void MultiPatchUtility::WriteControlPoints<3>(std::ostream& rOStream, Patch<3>::
 {
     typedef Patch<3>::ControlPointType ControlPointType;
     typename RegularControlGrid<3, ControlPointType>::ConstPointer pControlPointGrid
-        = boost::dynamic_pointer_cast<const RegularControlGrid<3, ControlPointType> >(pPatch->ControlPointGridFunction()->ControlGrid());
+        = boost::dynamic_pointer_cast<const RegularControlGrid<3, ControlPointType> >(pPatch->ControlPointGridFunction()->pControlGrid());
 
     rOStream << "#u v w\n";
     for (std::size_t dim = 0; dim < 3; ++dim)

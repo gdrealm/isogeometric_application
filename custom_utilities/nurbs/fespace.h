@@ -83,10 +83,11 @@ public:
     }
 
     /// Reset all the dof numbers for each grid function to -1
-    void ResetIds()
+    void ResetFunctionIndices()
     {
-        for (std::size_t i = 0; i < mFunctionIds.size(); ++i)
-            mFunctionIds[i] = -1;
+        if (mFunctionIds.size() != this->TotalNumber())
+            mFunctionIds.resize(this->TotalNumber());
+        std::fill(mFunctionIds.begin(), mFunctionIds.end(), -1);
     }
 
     /// Enumerate the dofs of each grid function. The enumeration algorithm is pretty straightforward.
@@ -95,12 +96,15 @@ public:
     {
         for (std::size_t i = 0; i < mFunctionIds.size(); ++i)
         {
-            if (mFunctionIds[i] != -1)
+            if (mFunctionIds[i] == -1)
                 mFunctionIds[i] = start++;
         }
 
         return start;
     }
+
+    /// Access the function indices
+    const std::vector<std::size_t>& FunctionIndices() const {return mFunctionIds;}
 
     /// Check the compatibility between boundaries of two FESpacees
     virtual bool CheckBoundaryCompatibility(const FESpace<TDim>& rFESpace1, const BoundarySide& side1,
@@ -120,11 +124,22 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /// Extract the index of the functions on the boundary
+    virtual std::vector<std::size_t> ExtractBoundaryFunctionIndices(const BoundarySide& side) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+    }
+
+    /// Assign the index for the functions on the boundary
+    virtual void AssignBoundaryFunctionIndices(const BoundarySide& side, const std::vector<std::size_t>& func_indices)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+    }
+
     /// Construct the boundary FESpace based on side
     virtual typename FESpace<TDim-1>::Pointer ConstructBoundaryFESpace(const BoundarySide& side) const
     {
-        // TODO
-        return NULL;
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,14 +166,19 @@ public:
 
     virtual void PrintData(std::ostream& rOStream) const
     {
+        rOStream << " Function Indices:";
+        for (std::size_t i = 0; i < mFunctionIds.size(); ++i)
+            rOStream << " " << mFunctionIds[i];
     }
 
-private:
+protected:
 
     /**
      * data for grid function interpolation
      */
     std::vector<std::size_t> mFunctionIds; // this is to store a unique number of the shape function over the forest of FESpace(s).
+
+private:
 
     /// Serializer
     friend class Serializer;
@@ -413,6 +433,7 @@ inline std::ostream& operator <<(std::ostream& rOStream, const FESpace<TDim>& rT
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
     rThis.PrintData(rOStream);
+    rOStream << std::endl;
     rOStream << "-------------End FESpaceInfo-------------";
     return rOStream;
 }

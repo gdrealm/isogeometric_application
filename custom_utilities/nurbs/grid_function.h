@@ -45,20 +45,20 @@ public:
     /// Set the FESpace
     void SetFESpace(typename FESpace<TDim>::Pointer pNewFESpace) {mpFESpace = pNewFESpace;} // use this with care
 
-    /// Get the FESpace
-    typename FESpace<TDim>::Pointer FESpace() {return mpFESpace;}
+    /// Get the FESpace pointer
+    typename FESpace<TDim>::Pointer pFESpace() {return mpFESpace;}
 
-    /// Get the FESpace
-    typename FESpace<TDim>::ConstPointer FESpace() const {return mpFESpace;}
+    /// Get the FESpace pointer
+    typename FESpace<TDim>::ConstPointer pFESpace() const {return mpFESpace;}
 
     /// Set the control grid
     void SetControlGrid(typename ControlGrid<TDataType>::Pointer pNewControlGrid) {mpControlGrid = pNewControlGrid;} // use this with care
 
-    /// Get the control grid
-    typename ControlGrid<TDataType>::Pointer ControlGrid() {return mpControlGrid;}
+    /// Get the control grid pointer
+    typename ControlGrid<TDataType>::Pointer pControlGrid() {return mpControlGrid;}
 
-    /// Get the control grid
-    typename ControlGrid<TDataType>::ConstPointer ControlGrid() const {return mpControlGrid;}
+    /// Get the control grid pointer
+    typename ControlGrid<TDataType>::ConstPointer pControlGrid() const {return mpControlGrid;}
 
     /// Check the compatibility between the underlying control grid and fe space.
     bool Validate() const
