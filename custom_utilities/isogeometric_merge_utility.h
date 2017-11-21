@@ -91,8 +91,8 @@ private:
 
 
 /// Short class definition.
-/*** Detail class definition.
- * This utility class supports for handling multipatch isogeometric analysis
+/**
+ * A utility to combine multiple model_part into one model_part and skipping the coincident nodes. It is useful to combine multiple FEM model_part arised from Bezier mesh in multipatch isogeometric analysis.
  */
 class IsogeometricMergeUtility
 {

@@ -21,8 +21,7 @@
 #include "includes/define.h"
 #include "includes/serializer.h"
 #include "containers/array_1d.h"
-#include "custom_utilities/nurbs/knot_array_1d.h"
-#include "custom_utilities/nurbs/grid_function.h"
+#include "custom_utilities/grid_function.h"
 
 
 #define DEBUG_DESTROY
@@ -36,7 +35,7 @@ template<int TDim> class Patch;
 template<int TDim> class MultiPatch;
 
 /**
-This class represents an isogeometric patch in parametric coordinates. An isogeometric patch can be a NURBS patch, a hierarchical NURBS patch, or a T-Splines patch.
+This class represents an isogeometric patch in parametric coordinates. An isogeometric patch can be a NURBS patch, a hierarchical BSplines patch, or a T-Splines patch.
  */
 template<int TDim>
 class Patch : public boost::enable_shared_from_this<Patch<TDim> >
@@ -143,15 +142,21 @@ public:
     }
 
     /// Get the control point grid function
-    typename GridFunction<TDim, ControlPointType>::Pointer ControlPointGridFunction() {return mpControlPointGridFunc;}
+    GridFunction<TDim, ControlPointType>& ControlPointGridFunction() {return *mpControlPointGridFunc;}
+
+    /// Get the control point grid function
+    const GridFunction<TDim, ControlPointType>& ControlPointGridFunction() const {return *mpControlPointGridFunc;}
+
+    /// Get the control point grid function pointer
+    typename GridFunction<TDim, ControlPointType>::Pointer pControlPointGridFunction() {return mpControlPointGridFunc;}
 
     /// Get the control point grid
-    typename GridFunction<TDim, ControlPointType>::ConstPointer ControlPointGridFunction() const {return mpControlPointGridFunc;}
+    typename GridFunction<TDim, ControlPointType>::ConstPointer pControlPointGridFunction() const {return mpControlPointGridFunc;}
 
     /// Get the control point weights vector
     std::vector<double> GetControlWeights() const
     {
-        const typename GridFunction<TDim, ControlPointType>::DataContainerType& GridData = ControlPointGridFunction()->pControlGrid()->Data();
+        const typename GridFunction<TDim, ControlPointType>::DataContainerType& GridData = pControlPointGridFunction()->pControlGrid()->Data();
         std::vector<double> Weights(GridData.size());
         for (std::size_t i = 0; i < GridData.size(); ++i)
             Weights[i] = GridData[i].W();
@@ -253,104 +258,32 @@ public:
         }
 
         // check the compatibility between patch
-        if (pNeighbor(_LEFT_) != NULL)
+        for (int i = _LEFT_; i <= _BACK_; ++i)
         {
-            if (this->Type() != pNeighbor(_LEFT_)->Type())
-            {
-                KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and left neighbor is incompatible", "")
-            }
-            else
-            {
-                bool check = CheckBoundaryCompatibility(*this, _LEFT_, *pNeighbor(_LEFT_), _RIGHT_);
-                if (!check)
-                {
-                    KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and left neighbor is incompatible", "")
-                    return false;
-                }
-            }
-        }
+            BoundarySide side = static_cast<BoundarySide>(i);
 
-        if (pNeighbor(_RIGHT_) != NULL)
-        {
-            if (this->Type() != pNeighbor(_RIGHT_)->Type())
+            if (this->pNeighbor(side) != NULL)
             {
-                KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and right neighbor is incompatible", "")
-            }
-            else
-            {
-                bool check = CheckBoundaryCompatibility(*this, _RIGHT_, *pNeighbor(_LEFT_), _LEFT_);
-                if (!check)
+                if (this->Type() != this->pNeighbor(side)->Type())
                 {
-                    KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and right neighbor is incompatible", "")
-                    return false;
+                    KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and the neighbor is incompatible", "")
                 }
-            }
-        }
-
-        if (pNeighbor(_TOP_) != NULL)
-        {
-            if (this->Type() != pNeighbor(_TOP_)->Type())
-            {
-                KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and right neighbor is incompatible", "")
-            }
-            else
-            {
-                bool check = CheckBoundaryCompatibility(*this, _TOP_, *pNeighbor(_TOP_), _BOTTOM_);
-                if (!check)
+                else
                 {
-                    KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and top neighbor is incompatible", "")
-                    return false;
-                }
-            }
-        }
+                    // find the side of the other neighbor
+                    BoundarySide other_side = this->pNeighbor(side)->FindBoundarySide(this->shared_from_this());
 
-        if (pNeighbor(_BOTTOM_) != NULL)
-        {
-            if (this->Type() != pNeighbor(_BOTTOM_)->Type())
-            {
-                KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and bottom neighbor is incompatible", "")
-            }
-            else
-            {
-                bool check = CheckBoundaryCompatibility(*this, _BOTTOM_, *pNeighbor(_TOP_), _TOP_);
-                if (!check)
-                {
-                    KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and bottom neighbor is incompatible", "")
-                    return false;
-                }
-            }
-        }
+                    if (other_side == _NUMBER_OF_BOUNDARY_SIDE)
+                        KRATOS_THROW_ERROR(std::logic_error, "No neighbor of the neighbor is the same as this. Error setting the neighbor.", "")
 
-        if (pNeighbor(_FRONT_) != NULL)
-        {
-            if (this->Type() != pNeighbor(_FRONT_)->Type())
-            {
-                KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and front neighbor is incompatible", "")
-            }
-            else
-            {
-                bool check = CheckBoundaryCompatibility(*this, _FRONT_, *pNeighbor(_FRONT_), _BACK_);
-                if (!check)
-                {
-                    KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and front neighbor is incompatible", "")
-                    return false;
-                }
-            }
-        }
-
-        if (pNeighbor(_BACK_) != NULL)
-        {
-            if (this->Type() != pNeighbor(_BACK_)->Type())
-            {
-                KRATOS_THROW_ERROR(std::logic_error, "The patch type between this and back neighbor is incompatible", "")
-            }
-            else
-            {
-                bool check = CheckBoundaryCompatibility(*this, _BACK_, *pNeighbor(_BACK_), _FRONT_);
-                if (!check)
-                {
-                    KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and back neighbor is incompatible", "")
-                    return false;
+                    bool check = CheckBoundaryCompatibility(*this, side, *(this->pNeighbor(side)), other_side);
+                    if (!check)
+                    {
+                        KRATOS_WATCH(side)
+                        KRATOS_WATCH(other_side)
+                        KRATOS_THROW_ERROR(std::logic_error, "The boundary between this and the neighbor is incompatible", "")
+                        return false;
+                    }
                 }
             }
         }
@@ -392,6 +325,7 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /// Get/Set the neighbor
     void pSetNeighbor(const BoundarySide& side, typename Patch<TDim>::Pointer pNeighbor) {mpNeighbors[side] = pNeighbor->shared_from_this();}
     Patch<TDim>& Neighbor(const BoundarySide& side) {return *pNeighbor(side);}
     const Patch<TDim>& Neighbor(const BoundarySide& side) const {return *pNeighbor(side);}
@@ -408,6 +342,18 @@ public:
             return mpNeighbors[side].lock();
         else
             return NULL;
+    }
+
+    /// Find the boundary side of the neighbor
+    BoundarySide FindBoundarySide(typename Patch<TDim>::ConstPointer pPatch) const
+    {
+        for (int i = _LEFT_; i <= _BACK_; ++i)
+        {
+            BoundarySide side = static_cast<BoundarySide>(i);
+            if (this->pNeighbor(side) == pPatch)
+                return side;
+        }
+        return _NUMBER_OF_BOUNDARY_SIDE;
     }
 
     /// Get/Set the parent multipatch
@@ -568,8 +514,8 @@ public:
     {
         if (pFESpace() != NULL)
             rOStream << *pFESpace() << std::endl;
-        if (ControlPointGridFunction() != NULL)
-            rOStream << *(ControlPointGridFunction()->pControlGrid());
+        if (pControlPointGridFunction() != NULL)
+            rOStream << *(pControlPointGridFunction()->pControlGrid());
         rOStream << "Neighbors = ";
         if (TDim == 2)
         {
@@ -931,7 +877,7 @@ inline std::ostream& operator <<(std::ostream& rOStream, const Patch<TDim>& rThi
 
 
 /**
-This class represents an isogeometric multipatch in parametric coordinates. An isogeometric multipatch comprises a list of similar type patches, i.e NURBS patch, a hierarchical NURBS patch, or a T-Splines patch.
+This class represents an isogeometric multipatch in parametric coordinates. An isogeometric multipatch comprises a list of similar type patches, i.e NURBS patch, a hierarchical BSplines patch, or a T-Splines patch.
  */
 template<int TDim>
 class MultiPatch : public boost::enable_shared_from_this<MultiPatch<TDim> >
@@ -985,14 +931,8 @@ public:
         return true;
     }
 
-    /// iterators
-    typename PatchContainerType::iterator begin() {return mpPatches.begin();}
-    typename PatchContainerType::const_iterator begin() const {return mpPatches.begin();}
-    typename PatchContainerType::iterator end() {return mpPatches.end();}
-    typename PatchContainerType::const_iterator end() const {return mpPatches.end();}
-
     /// Get the patch with specific Id
-    typename PatchType::Pointer GetPatch(const std::size_t& Id) {return mpPatches(Id);}
+    typename PatchType::Pointer pGetPatch(const std::size_t& Id) {return mpPatches(Id);}
 
     /// Access the underlying list of patches
     /// WARNING!!! be careful with this routine
@@ -1000,6 +940,12 @@ public:
 
     /// Access the underlying list of patches
     const PatchContainerType& Patches() const {return mpPatches;}
+
+    /// iterators
+    typename PatchContainerType::iterator begin() {return mpPatches.begin();}
+    typename PatchContainerType::const_iterator begin() const {return mpPatches.begin();}
+    typename PatchContainerType::iterator end() {return mpPatches.end();}
+    typename PatchContainerType::const_iterator end() const {return mpPatches.end();}
 
     /// Get the number of patches
     const std::size_t& size() const {return mpPatches.size();}
@@ -1009,97 +955,40 @@ public:
     {
         // secondly enumerate each patch
         EquationSystemSize = 0;
-        for (typename PatchContainerType::iterator it = begin(); it != end(); ++it)
+        for (typename PatchContainerType::ptr_iterator it = Patches().ptr_begin(); it != Patches().ptr_end(); ++it)
         {
             // enumerate the patch and remember
-            if ( std::find(enumerated_patches.begin(), enumerated_patches.end(), it->Id()) == enumerated_patches.end() )
+            if ( std::find(enumerated_patches.begin(), enumerated_patches.end(), (*it)->Id()) == enumerated_patches.end() )
             {
-                EquationSystemSize = it->pFESpace()->Enumerate(EquationSystemSize);
-                enumerated_patches.insert(it->Id());
+                EquationSystemSize = (*it)->pFESpace()->Enumerate(EquationSystemSize);
+                enumerated_patches.insert((*it)->Id());
                 // KRATOS_WATCH(EquationSystemSize)
 
                 // find the neighbors and enumerate the boundary of the neighbors
-                if (it->pNeighbor(_LEFT_) != NULL)
+                for (int i = _LEFT_; i <= _BACK_; ++i)
                 {
-                    // check the boundary compatibility again
-                    if (!it->CheckBoundaryCompatibility(_LEFT_, *(it->pNeighbor(_LEFT_)), _RIGHT_))
-                    {
-                        KRATOS_THROW_ERROR(std::logic_error, "The boundary compatibility with LEFT neighbor is not satisfied", "")
-                    }
-                    else
-                    {
-                        std::vector<std::size_t> func_indices = it->pFESpace()->ExtractBoundaryFunctionIndices(_LEFT_);
-                        it->pNeighbor(_LEFT_)->pFESpace()->AssignBoundaryFunctionIndices(_RIGHT_, func_indices);
-                    }
-                }
+                    BoundarySide side = static_cast<BoundarySide>(i);
 
-                if (it->pNeighbor(_RIGHT_) != NULL)
-                {
-                    // check the boundary compatibility again
-                    if (!it->CheckBoundaryCompatibility(_RIGHT_, *(it->pNeighbor(_RIGHT_)), _LEFT_))
+                    if ((*it)->pNeighbor(side) != NULL)
                     {
-                        KRATOS_THROW_ERROR(std::logic_error, "The boundary compatibility with RIGHT neighbor is not satisfied", "")
-                    }
-                    else
-                    {
-                        std::vector<std::size_t> func_indices = it->pFESpace()->ExtractBoundaryFunctionIndices(_RIGHT_);
-                        it->pNeighbor(_RIGHT_)->pFESpace()->AssignBoundaryFunctionIndices(_LEFT_, func_indices);
-                    }
-                }
+                        // find the side of the other neighbor
+                        BoundarySide other_side = (*it)->pNeighbor(side)->FindBoundarySide(*it);
 
-                if (it->pNeighbor(_TOP_) != NULL)
-                {
-                    // check the boundary compatibility again
-                    if (!it->CheckBoundaryCompatibility(_TOP_, *(it->pNeighbor(_TOP_)), _BOTTOM_))
-                    {
-                        KRATOS_THROW_ERROR(std::logic_error, "The boundary compatibility with RIGHT neighbor is not satisfied", "")
-                    }
-                    else
-                    {
-                        std::vector<std::size_t> func_indices = it->pFESpace()->ExtractBoundaryFunctionIndices(_TOP_);
-                        it->pNeighbor(_TOP_)->pFESpace()->AssignBoundaryFunctionIndices(_BOTTOM_, func_indices);
-                    }
-                }
+                        if (other_side == _NUMBER_OF_BOUNDARY_SIDE)
+                            KRATOS_THROW_ERROR(std::logic_error, "No neighbor of the neighbor is the same as this. Error setting the neighbor.", "")
 
-                if (it->pNeighbor(_BOTTOM_) != NULL)
-                {
-                    // check the boundary compatibility again
-                    if (!it->CheckBoundaryCompatibility(_BOTTOM_, *(it->pNeighbor(_BOTTOM_)), _TOP_))
-                    {
-                        KRATOS_THROW_ERROR(std::logic_error, "The boundary compatibility with RIGHT neighbor is not satisfied", "")
-                    }
-                    else
-                    {
-                        std::vector<std::size_t> func_indices = it->pFESpace()->ExtractBoundaryFunctionIndices(_BOTTOM_);
-                        it->pNeighbor(_BOTTOM_)->pFESpace()->AssignBoundaryFunctionIndices(_TOP_, func_indices);
-                    }
-                }
-
-                if (it->pNeighbor(_FRONT_) != NULL)
-                {
-                    // check the boundary compatibility again
-                    if (!it->CheckBoundaryCompatibility(_FRONT_, *(it->pNeighbor(_FRONT_)), _BACK_))
-                    {
-                        KRATOS_THROW_ERROR(std::logic_error, "The boundary compatibility with RIGHT neighbor is not satisfied", "")
-                    }
-                    else
-                    {
-                        std::vector<std::size_t> func_indices = it->pFESpace()->ExtractBoundaryFunctionIndices(_FRONT_);
-                        it->pNeighbor(_FRONT_)->pFESpace()->AssignBoundaryFunctionIndices(_BACK_, func_indices);
-                    }
-                }
-
-                if (it->pNeighbor(_BACK_) != NULL)
-                {
-                    // check the boundary compatibility again
-                    if (!it->CheckBoundaryCompatibility(_BACK_, *(it->pNeighbor(_BACK_)), _FRONT_))
-                    {
-                        KRATOS_THROW_ERROR(std::logic_error, "The boundary compatibility with RIGHT neighbor is not satisfied", "")
-                    }
-                    else
-                    {
-                        std::vector<std::size_t> func_indices = it->pFESpace()->ExtractBoundaryFunctionIndices(_BACK_);
-                        it->pNeighbor(_BACK_)->pFESpace()->AssignBoundaryFunctionIndices(_FRONT_, func_indices);
+                        // check the boundary compatibility again
+                        if (!(*it)->CheckBoundaryCompatibility(side, *((*it)->pNeighbor(side)), other_side))
+                        {
+                            KRATOS_WATCH(side)
+                            KRATOS_WATCH(other_side)
+                            KRATOS_THROW_ERROR(std::logic_error, "The boundary compatibility with the neighbor is not satisfied", "")
+                        }
+                        else
+                        {
+                            std::vector<std::size_t> func_indices = (*it)->pFESpace()->ExtractBoundaryFunctionIndices(side);
+                            (*it)->pNeighbor(side)->pFESpace()->AssignBoundaryFunctionIndices(other_side, func_indices);
+                        }
                     }
                 }
             }
@@ -1132,319 +1021,6 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "The two patch's boundaries are not conformed", "")
     }
 
-    /// Generate the multipatch topology that can be read in GLVis
-    void GenerateCornerTopology(std::size_t& nvertices,
-        std::vector<std::vector<std::size_t> >& elements,
-        std::vector<std::vector<std::size_t> >& boundary,
-        std::vector<std::tuple<std::size_t, std::size_t, std::size_t, int> >& edges,
-        std::map<std::size_t, std::vector<double> >& knotvecs) const
-    {
-        std::map<std::size_t, std::vector<vertex_t> > patch_vertices;
-        std::map<std::size_t, std::vector<edge_t> > patch_edges;
-        std::map<std::size_t, std::vector<face_t> > patch_faces;
-        std::map<std::size_t, std::vector<volume_t> > patch_volumes;
-        std::map<std::size_t, std::vector<std::size_t> > patch_knotv;
-
-        // generate vertices, edges, faces for all the patches
-        std::size_t start_vertex_id = 0;
-        std::size_t start_knotv_id = 0;
-        std::map<std::size_t, std::vector<double> > all_knotvec;
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-            it->GenerateTopolgyData(start_vertex_id, patch_vertices[id], patch_edges[id], patch_faces[id], patch_volumes[id], start_knotv_id, patch_knotv[id]);
-
-            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(it->pFESpace());
-
-            // collect the knot vector in respective dimension
-            for (std::size_t i = 0; i < TDim; ++i)
-            {
-                for (std::size_t j = 0; j < pFESpace->KnotVector(i).size(); ++j)
-                    all_knotvec[patch_knotv[id][i]].push_back(pFESpace->KnotVector(i)[j]);
-            }
-        }
-
-        #ifdef DEBUG_GLVIS_EXPORT
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-
-            std::cout << "edge (p1) for patch " << id << std::endl;
-            for (std::size_t i = 0; i < patch_edges[id].size(); ++i)
-            {
-                std::cout << std::get<2>(patch_edges[id][i])
-                          << " " << std::get<0>(patch_edges[id][i])
-                          << " " << std::get<1>(patch_edges[id][i])
-                          << " " << std::get<3>(patch_edges[id][i])
-                          << std::endl;
-            }
-        }
-        #endif
-
-        // for all patch, account for the corners and then renumbering the vertex and edge
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-
-            if (it->pNeighbor(_LEFT_) != NULL)
-            {
-                const std::size_t& other_id = it->pNeighbor(_LEFT_)->Id();
-                SynchronizeVertices(_LEFT_, patch_vertices[id], patch_vertices[other_id], patch_edges[other_id], patch_faces[other_id], patch_volumes[other_id]);
-                if (TDim == 2)
-                {
-                    patch_knotv[other_id][1] = patch_knotv[id][1];
-                    std::get<2>(patch_edges[other_id][0]) = patch_knotv[id][1]; // change the knot index vector
-                    std::get<2>(patch_edges[other_id][1]) = patch_knotv[id][1];
-                    std::get<3>(patch_edges[other_id][1]) = 0; // disable the boundary flag
-                    std::get<3>(patch_edges[id][0]) = 0; // disable the boundary flag
-                }
-                else if (TDim == 3)
-                {
-                    patch_knotv[other_id][1] = patch_knotv[id][1];
-                    patch_knotv[other_id][2] = patch_knotv[id][2];
-                    // TODO change knot vector index for edge
-                    // TODO disable the boundary flag for edges and faces
-                }
-            }
-
-            if (it->pNeighbor(_RIGHT_) != NULL)
-            {
-                const std::size_t& other_id = it->pNeighbor(_RIGHT_)->Id();
-                SynchronizeVertices(_RIGHT_, patch_vertices[id], patch_vertices[other_id], patch_edges[other_id], patch_faces[other_id], patch_volumes[other_id]);
-                if (TDim == 2)
-                {
-                    patch_knotv[other_id][1] = patch_knotv[id][1];
-                    std::get<2>(patch_edges[other_id][0]) = patch_knotv[id][1];
-                    std::get<2>(patch_edges[other_id][1]) = patch_knotv[id][1];
-                    std::get<3>(patch_edges[other_id][0]) = 0; // disable the boundary flag
-                    std::get<3>(patch_edges[id][1]) = 0; // disable the boundary flag
-                }
-                else if (TDim == 3)
-                {
-                    patch_knotv[other_id][1] = patch_knotv[id][1];
-                    patch_knotv[other_id][2] = patch_knotv[id][2];
-                    // TODO change knot vector index for edge
-                    // TODO disable the boundary flag for edges and faces
-                }
-            }
-
-            if (it->pNeighbor(_TOP_) != NULL)
-            {
-                const std::size_t& other_id = it->pNeighbor(_TOP_)->Id();
-                SynchronizeVertices(_TOP_, patch_vertices[id], patch_vertices[other_id], patch_edges[other_id], patch_faces[other_id], patch_volumes[other_id]);
-                if (TDim == 2)
-                {
-                    patch_knotv[other_id][0] = patch_knotv[id][0];
-                    std::get<2>(patch_edges[other_id][2]) = patch_knotv[id][0];
-                    std::get<2>(patch_edges[other_id][3]) = patch_knotv[id][0];
-                    std::get<3>(patch_edges[other_id][2]) = 0; // disable the boundary flag
-                    std::get<3>(patch_edges[id][3]) = 0; // disable the boundary flag
-                }
-                else if (TDim == 3)
-                {
-                    patch_knotv[other_id][0] = patch_knotv[id][0];
-                    patch_knotv[other_id][1] = patch_knotv[id][1];
-                    // TODO change knot vector index for edge
-                    // TODO disable the boundary flag for edges and faces
-                }
-            }
-
-            if (it->pNeighbor(_BOTTOM_) != NULL)
-            {
-                const std::size_t& other_id = it->pNeighbor(_BOTTOM_)->Id();
-                SynchronizeVertices(_BOTTOM_, patch_vertices[id], patch_vertices[other_id], patch_edges[other_id], patch_faces[other_id], patch_volumes[other_id]);
-                if (TDim == 2)
-                {
-                    patch_knotv[other_id][0] = patch_knotv[id][0];
-                    std::get<2>(patch_edges[other_id][2]) = patch_knotv[id][0];
-                    std::get<2>(patch_edges[other_id][3]) = patch_knotv[id][0];
-                    std::get<3>(patch_edges[other_id][3]) = 0; // disable the boundary flag
-                    std::get<3>(patch_edges[id][2]) = 0; // disable the boundary flag
-                }
-                else if (TDim == 3)
-                {
-                    patch_knotv[other_id][0] = patch_knotv[id][0];
-                    patch_knotv[other_id][1] = patch_knotv[id][1];
-                    // TODO change knot vector index for edge
-                    // TODO disable the boundary flag for edges and faces
-                }
-            }
-
-            if (it->pNeighbor(_FRONT_) != NULL)
-            {
-                const std::size_t& other_id = it->pNeighbor(_FRONT_)->Id();
-                SynchronizeVertices(_FRONT_, patch_vertices[id], patch_vertices[other_id], patch_edges[other_id], patch_faces[other_id], patch_volumes[other_id]);
-                patch_knotv[other_id][0] = patch_knotv[id][0];
-                patch_knotv[other_id][2] = patch_knotv[id][2];
-                // TODO change knot vector index for edge
-                // TODO disable the boundary flag for edges and faces
-            }
-
-            if (it->pNeighbor(_BACK_) != NULL)
-            {
-                const std::size_t& other_id = it->pNeighbor(_BACK_)->Id();
-                SynchronizeVertices(_BACK_, patch_vertices[id], patch_vertices[other_id], patch_edges[other_id], patch_faces[other_id], patch_volumes[other_id]);
-                patch_knotv[other_id][0] = patch_knotv[id][0];
-                patch_knotv[other_id][2] = patch_knotv[id][2];
-                // TODO change knot vector index for edge
-                // TODO disable the boundary flag for edges and faces
-            }
-        }
-
-        #ifdef DEBUG_GLVIS_EXPORT
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-
-            std::cout << "edge (p2) for patch " << id << std::endl;
-            for (std::size_t i = 0; i < patch_edges[id].size(); ++i)
-            {
-                std::cout << std::get<2>(patch_edges[id][i])
-                          << " " << std::get<0>(patch_edges[id][i])
-                          << " " << std::get<1>(patch_edges[id][i])
-                          << " " << std::get<3>(patch_edges[id][i])
-                          << std::endl;
-            }
-        }
-        #endif
-
-        // collect all the vertices in the multipatch
-        std::set<vertex_t> all_vertices;
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-            all_vertices.insert(patch_vertices[id].begin(), patch_vertices[id].end());
-        }
-
-        // reassign each id a new index
-        std::map<vertex_t, vertex_t> old_to_new;
-        start_vertex_id = 0;
-        for (typename std::set<vertex_t>::iterator it = all_vertices.begin(); it != all_vertices.end(); ++it)
-            old_to_new[*it] = start_vertex_id++;
-
-        // finally reassign the new id for all patches
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-
-            for (std::size_t i = 0; i < patch_vertices[id].size(); ++i)
-            {
-                patch_vertices[id][i] = old_to_new[patch_vertices[id][i]];
-            }
-
-            for (std::size_t i = 0; i < patch_edges[id].size(); ++i)
-            {
-                std::get<0>(patch_edges[id][i]) = old_to_new[std::get<0>(patch_edges[id][i])];
-                std::get<1>(patch_edges[id][i]) = old_to_new[std::get<1>(patch_edges[id][i])];
-            }
-
-            for (std::size_t i = 0; i < patch_faces[id].size(); ++i)
-            {
-                std::get<0>(patch_faces[id][i]) = old_to_new[std::get<0>(patch_faces[id][i])];
-                std::get<1>(patch_faces[id][i]) = old_to_new[std::get<1>(patch_faces[id][i])];
-                std::get<2>(patch_faces[id][i]) = old_to_new[std::get<2>(patch_faces[id][i])];
-                std::get<3>(patch_faces[id][i]) = old_to_new[std::get<3>(patch_faces[id][i])];
-            }
-
-            for (std::size_t i = 0; i < patch_volumes[id].size(); ++i)
-            {
-                std::get<0>(patch_volumes[id][i]) = old_to_new[std::get<0>(patch_volumes[id][i])];
-                std::get<1>(patch_volumes[id][i]) = old_to_new[std::get<1>(patch_volumes[id][i])];
-                std::get<2>(patch_volumes[id][i]) = old_to_new[std::get<2>(patch_volumes[id][i])];
-                std::get<3>(patch_volumes[id][i]) = old_to_new[std::get<3>(patch_volumes[id][i])];
-                std::get<4>(patch_volumes[id][i]) = old_to_new[std::get<4>(patch_volumes[id][i])];
-                std::get<5>(patch_volumes[id][i]) = old_to_new[std::get<5>(patch_volumes[id][i])];
-                std::get<6>(patch_volumes[id][i]) = old_to_new[std::get<6>(patch_volumes[id][i])];
-                std::get<7>(patch_volumes[id][i]) = old_to_new[std::get<7>(patch_volumes[id][i])];
-            }
-        }
-
-        // collect all the knot vector index in all the patches
-        std::set<std::size_t> all_knotvs;
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-            for (std::size_t i = 0; i < TDim; ++i)
-                all_knotvs.insert(patch_knotv[id][i]);
-        }
-
-        #ifdef DEBUG_GLVIS_EXPORT
-        std::cout << "all_knotvs:";
-        for (std::set<std::size_t>::iterator it = all_knotvs.begin(); it != all_knotvs.end(); ++it)
-            std::cout << " " << *it;
-        std::cout << std::endl;
-        #endif
-
-        // reassign each knot vector a new index
-        std::map<std::size_t, std::size_t> old_to_new_knotv;
-        start_knotv_id = 0;
-        for (std::set<std::size_t>::iterator it = all_knotvs.begin(); it != all_knotvs.end(); ++it)
-            old_to_new_knotv[*it] = start_knotv_id++;
-
-        // finally reassign the new id for all patches
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-            for (std::size_t i = 0; i < TDim; ++i)
-                patch_knotv[id][i] = old_to_new_knotv[patch_knotv[id][i]];
-        }
-
-        // reassign the knot vector index in each edge
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-            for (std::size_t i = 0; i < patch_edges[id].size(); ++i)
-            {
-                std::get<2>(patch_edges[id][i]) = old_to_new_knotv[std::get<2>(patch_edges[id][i])];
-            }
-        }
-
-        // assign the knot vector accordingly
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-            for (std::size_t i = 0; i < TDim; ++i)
-                knotvecs[ old_to_new_knotv[patch_knotv[id][i]] ] = all_knotvec[ patch_knotv[id][i] ];
-        }
-
-        // collect all the edges in all the patches
-        std::set<edge_t> all_edges;
-        for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-        {
-            const std::size_t& id = it->Id();
-            for (std::size_t i = 0; i < patch_edges[id].size(); ++i)
-            {
-                all_edges.insert(patch_edges[id][i]);
-            }
-        }
-        edges.assign(all_edges.begin(), all_edges.end());
-
-        ///////////////////////////////////////////////////
-
-        // export the information
-        nvertices = all_vertices.size();
-
-        if (TDim == 2)
-        {
-            for (typename PatchContainerType::const_iterator it = this->begin(); it != this->end(); ++it)
-            {
-                const std::size_t& id = it->Id();
-
-                std::vector<std::size_t> elem(4);
-                elem[0] = std::get<0>(patch_faces[id][0]);
-                elem[1] = std::get<1>(patch_faces[id][0]);
-                elem[2] = std::get<3>(patch_faces[id][0]); // here we switch the role of the vertex because GLVis only accepts the sequence 0-1-3-2 for quadrilateral
-                elem[3] = std::get<2>(patch_faces[id][0]);
-
-                elements.push_back(elem);
-            }
-        }
-        else if (TDim == 3)
-        {
-
-        }
-    }
-
     /// Information
     void PrintAddress(typename PatchType::Pointer pPatch)
     {
@@ -1467,69 +1043,6 @@ private:
 
     PatchContainerType mpPatches; // container for all the patches
 
-    /// Synchronize from 1->2
-    void SynchronizeVertices( const BoundarySide& side1,
-        std::vector<vertex_t>& vertices1,
-        std::vector<vertex_t>& vertices2,
-        std::vector<edge_t>& edges2,
-        std::vector<face_t>& faces2,
-        std::vector<volume_t>& volumes2 ) const
-    {
-        if (vertices1.size() != vertices2.size())
-            KRATOS_THROW_ERROR(std::logic_error, "The number of vertices is not compatible", "")
-
-        std::vector<int> map = GetJointMapping(TDim, side1);
-
-        std::map<std::size_t, std::size_t> old_to_new;
-        for (std::size_t i = 0; i < vertices2.size(); ++i)
-            old_to_new[vertices2[i]] = vertices2[i];
-        for (std::size_t i = 0; i < map.size()/2; ++i)
-        {
-            old_to_new[vertices2[map[i*2+1]]] = vertices1[map[i*2]];
-            vertices2[map[i*2+1]] = vertices1[map[i*2]];
-        }
-
-        for (std::size_t i = 0; i < edges2.size(); ++i)
-        {
-            std::get<0>(edges2[i]) = old_to_new[std::get<0>(edges2[i])];
-            std::get<1>(edges2[i]) = old_to_new[std::get<1>(edges2[i])];
-        }
-
-        for (std::size_t i = 0; i < faces2.size(); ++i)
-        {
-            std::get<0>(faces2[i]) = old_to_new[std::get<0>(faces2[i])];
-            std::get<1>(faces2[i]) = old_to_new[std::get<1>(faces2[i])];
-            std::get<2>(faces2[i]) = old_to_new[std::get<2>(faces2[i])];
-            std::get<3>(faces2[i]) = old_to_new[std::get<3>(faces2[i])];
-        }
-
-        for (std::size_t i = 0; i < volumes2.size(); ++i)
-        {
-            std::get<0>(volumes2[i]) = old_to_new[std::get<0>(volumes2[i])];
-            std::get<1>(volumes2[i]) = old_to_new[std::get<1>(volumes2[i])];
-            std::get<2>(volumes2[i]) = old_to_new[std::get<2>(volumes2[i])];
-            std::get<3>(volumes2[i]) = old_to_new[std::get<3>(volumes2[i])];
-            std::get<4>(volumes2[i]) = old_to_new[std::get<4>(volumes2[i])];
-            std::get<5>(volumes2[i]) = old_to_new[std::get<5>(volumes2[i])];
-            std::get<6>(volumes2[i]) = old_to_new[std::get<6>(volumes2[i])];
-            std::get<7>(volumes2[i]) = old_to_new[std::get<7>(volumes2[i])];
-        }
-    }
-
-    std::vector<int> GetJointMapping(const int& dim, const BoundarySide& side) const
-    {
-        if (dim == 2)
-        {
-            if (side == _LEFT_)        return std::vector<int>{ 0, 1, /**/ 2, 3 };
-            else if (side == _RIGHT_)  return std::vector<int>{ 1, 0, /**/ 3, 2 };
-            else if (side == _TOP_)    return std::vector<int>{ 2, 0, /**/ 3, 1 };
-            else if (side == _BOTTOM_) return std::vector<int>{ 0, 2, /**/ 1, 3 };
-        }
-        else if (dim == 3)
-        {
-            // TODO
-        }
-    }
 };
 
 /// output stream function

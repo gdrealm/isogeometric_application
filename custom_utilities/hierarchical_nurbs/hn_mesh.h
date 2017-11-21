@@ -37,7 +37,7 @@
 #include "custom_utilities/nurbs/cell_manager.h"
 #include "custom_utilities/nurbs/domain_manager_2d.h"
 #include "custom_utilities/nurbs/domain_manager_3d.h"
-#include "custom_utilities/nurbs/patch.h"
+#include "custom_utilities/patch.h"
 #include "custom_utilities/hierarchical_nurbs/basis_function_manager.h"
 #include "custom_utilities/hierarchical_nurbs/hn_basis_function.h"
 

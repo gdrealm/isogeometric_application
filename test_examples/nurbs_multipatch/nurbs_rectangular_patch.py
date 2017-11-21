@@ -19,7 +19,7 @@ from KratosMultiphysics import *
 from KratosMultiphysics.IsogeometricApplication import *
 kernel = Kernel()   #defining kernel
 
-nurbs_fespace_library = NURBSFESpaceLibrary()
+nurbs_fespace_library = BSplinesFESpaceLibrary()
 grid_util = ControlGridUtility()
 
 fes1 = nurbs_fespace_library.CreateRectangularFESpace(3, 3)

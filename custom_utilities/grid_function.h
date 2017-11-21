@@ -16,8 +16,8 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_utilities/nurbs/fespace.h"
-#include "custom_utilities/nurbs/control_grid.h"
+#include "custom_utilities/fespace.h"
+#include "custom_utilities/control_grid.h"
 
 namespace Kratos
 {
@@ -59,6 +59,22 @@ public:
 
     /// Get the control grid pointer
     typename ControlGrid<TDataType>::ConstPointer pControlGrid() const {return mpControlGrid;}
+
+    /// Get the value of the grid at specific local coordinates
+    TDataType GetValue(const std::vector<double>& xi) const
+    {
+        // firstly get the values of all the basis functions
+        std::vector<double> f_values = pFESpace()->GetValue(xi);
+
+        // then interpolate the value at local coordinates using the control values
+        const ControlGrid<TDataType>& r_control_grid = *pControlGrid();
+        TDataType v(0.0);
+        for (std::size_t i = 0; i < r_control_grid.size(); ++i)
+            v += f_values[i] * r_control_grid.GetData(i);
+
+        return v;
+    }
+
 
     /// Check the compatibility between the underlying control grid and fe space.
     bool Validate() const

@@ -25,15 +25,16 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "custom_python/add_utilities_to_python.h"
 #include "custom_utilities/nurbs/domain_manager.h"
 #include "custom_utilities/nurbs/domain_manager_2d.h"
-#include "custom_utilities/nurbs/control_point.h"
-#include "custom_utilities/nurbs/control_grid.h"
-#include "custom_utilities/nurbs/control_grid_utility.h"
-#include "custom_utilities/nurbs/fespace.h"
-#include "custom_utilities/nurbs/nurbs_fespace.h"
-#include "custom_utilities/nurbs/nurbs_fespace_library.h"
-#include "custom_utilities/nurbs/patch.h"
-#include "custom_utilities/nurbs/multipatch_utility.h"
-#include "custom_utilities/nurbs/multipatch_refinement_utility.h"
+#include "custom_utilities/control_point.h"
+#include "custom_utilities/control_grid.h"
+#include "custom_utilities/nurbs/regular_control_grid.h"
+#include "custom_utilities/control_grid_utility.h"
+#include "custom_utilities/fespace.h"
+#include "custom_utilities/nurbs/bsplines_fespace.h"
+#include "custom_utilities/nurbs/bsplines_fespace_library.h"
+#include "custom_utilities/patch.h"
+#include "custom_utilities/multipatch_utility.h"
+#include "custom_utilities/multipatch_refinement_utility.h"
 //#include "custom_utilities/tsplines/tsmesh_2d.h"
 //#include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
 
@@ -143,14 +144,14 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateCubicContro
 
 ////////////////////////////////////////
 
-NURBSFESpace<1>::Pointer NURBSFESpaceLibrary_CreateLinearFESpace(NURBSFESpaceLibrary& rDummy, const std::size_t& order_u)
+BSplinesFESpace<1>::Pointer BSplinesFESpaceLibrary_CreateLinearFESpace(BSplinesFESpaceLibrary& rDummy, const std::size_t& order_u)
 {
     std::vector<std::size_t> orders(1);
     orders[0] = order_u;
     return rDummy.CreateRegularFESpace<1>(orders);
 }
 
-NURBSFESpace<2>::Pointer NURBSFESpaceLibrary_CreateRectangularFESpace(NURBSFESpaceLibrary& rDummy, const std::size_t& order_u, const std::size_t& order_v)
+BSplinesFESpace<2>::Pointer BSplinesFESpaceLibrary_CreateRectangularFESpace(BSplinesFESpaceLibrary& rDummy, const std::size_t& order_u, const std::size_t& order_v)
 {
     std::vector<std::size_t> orders(2);
     orders[0] = order_u;
@@ -158,7 +159,7 @@ NURBSFESpace<2>::Pointer NURBSFESpaceLibrary_CreateRectangularFESpace(NURBSFESpa
     return rDummy.CreateRegularFESpace<2>(orders);
 }
 
-NURBSFESpace<3>::Pointer NURBSFESpaceLibrary_CreateCubicFESpace(NURBSFESpaceLibrary& rDummy, const std::size_t& order_u, const std::size_t& order_v, const std::size_t& order_w)
+BSplinesFESpace<3>::Pointer BSplinesFESpaceLibrary_CreateCubicFESpace(BSplinesFESpaceLibrary& rDummy, const std::size_t& order_u, const std::size_t& order_v, const std::size_t& order_w)
 {
     std::vector<std::size_t> orders(3);
     orders[0] = order_u;
@@ -402,10 +403,10 @@ void IsogeometricApplication_AddFESpacesToPython()
     ;
 
     ss.str(std::string());
-    ss << "NURBSFESpace" << TDim << "D";
-    class_<NURBSFESpace<TDim>, typename NURBSFESpace<TDim>::Pointer, bases<FESpace<TDim> >, boost::noncopyable>
+    ss << "BSplinesFESpace" << TDim << "D";
+    class_<BSplinesFESpace<TDim>, typename BSplinesFESpace<TDim>::Pointer, bases<FESpace<TDim> >, boost::noncopyable>
     (ss.str().c_str(), init<>())
-    .def("Number", &NURBSFESpace<TDim>::Number)
+    .def("Number", &BSplinesFESpace<TDim>::Number)
     .def(self_ns::str(self))
     ;
 }
@@ -526,7 +527,7 @@ void IsogeometricApplication_AddPatchesToPython()
     (ss.str().c_str(), init<>())
     .def("ResetId", &MultiPatch<TDim>::ResetId)
     .def("AddPatch", &MultiPatch<TDim>::AddPatch)
-    .def("GetPatch", &MultiPatch<TDim>::GetPatch)
+    .def("GetPatch", &MultiPatch<TDim>::pGetPatch)
     .def("MakeNeighbor", &MultiPatch_MakeNeighbor<TDim>)
     .def("Enumerate", &MultiPatch_Enumerate<TDim>)
     .def("PrintAddress", &MultiPatch<TDim>::PrintAddress)
@@ -537,7 +538,7 @@ void IsogeometricApplication_AddPatchesToPython()
 void IsogeometricApplication_AddCustomUtilities2ToPython()
 {
     /////////////////////////////////////////////////////////////////
-    ///////////////////////NURBS/////////////////////////////////////
+    ///////////////////////SUPPORT DOMAIN////////////////////////////
     /////////////////////////////////////////////////////////////////
 
     class_<DomainManager, DomainManager::Pointer, boost::noncopyable>
@@ -580,11 +581,11 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     IsogeometricApplication_AddFESpacesToPython<2>();
     IsogeometricApplication_AddFESpacesToPython<3>();
 
-    class_<NURBSFESpaceLibrary, NURBSFESpaceLibrary::Pointer, boost::noncopyable>
-    ("NURBSFESpaceLibrary", init<>())
-    .def("CreateLinearFESpace", &NURBSFESpaceLibrary_CreateLinearFESpace)
-    .def("CreateRectangularFESpace", &NURBSFESpaceLibrary_CreateRectangularFESpace)
-    .def("CreateCubicFESpace", &NURBSFESpaceLibrary_CreateCubicFESpace)
+    class_<BSplinesFESpaceLibrary, BSplinesFESpaceLibrary::Pointer, boost::noncopyable>
+    ("BSplinesFESpaceLibrary", init<>())
+    .def("CreateLinearFESpace", &BSplinesFESpaceLibrary_CreateLinearFESpace)
+    .def("CreateRectangularFESpace", &BSplinesFESpaceLibrary_CreateRectangularFESpace)
+    .def("CreateCubicFESpace", &BSplinesFESpaceLibrary_CreateCubicFESpace)
     ;
 
     /////////////////////////////////////////////////////////////////
@@ -620,7 +621,7 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
 //    ;
 
 //    /////////////////////////////////////////////////////////////////
-//    ///////////////////////HIERARCHICAL NURBS////////////////////////
+//    ///////////////////////HIERARCHICAL BSplines/////////////////////
 //    /////////////////////////////////////////////////////////////////
 
 //    enum_<HN_ECHO_FLAGS>("HN_ECHO_FLAGS")

@@ -6,8 +6,8 @@
 //
 //
 
-#if !defined(KRATOS_ISOGEOMETRIC_POST_UTILITY_H_INCLUDED )
-#define  KRATOS_ISOGEOMETRIC_POST_UTILITY_H_INCLUDED
+#if !defined(KRATOS_BEZIER_POST_UTILITY_H_INCLUDED )
+#define  KRATOS_BEZIER_POST_UTILITY_H_INCLUDED
 
 // System includes
 #include <string>
@@ -69,9 +69,11 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/*** Detail class definition.
+/**
+An advanced utility to export directly the FEM mesh out from isogeometric Bezier mesh. Each Bezier element will generate its own set of FEM elements. Therefore a large amount of nodes and elements may be generated.
+One shall carefully use this utility for large problem. Previously, this class is named IsogeometricPostUtility.
  */
-class IsogeometricPostUtility
+class BezierPostUtility
 {
 public:
     ///@name Type Definitions
@@ -107,20 +109,20 @@ public:
     
     typedef std::size_t IndexType;
     
-    /// Pointer definition of IsogeometricPostUtility
-    KRATOS_CLASS_POINTER_DEFINITION(IsogeometricPostUtility);
+    /// Pointer definition of BezierPostUtility
+    KRATOS_CLASS_POINTER_DEFINITION(BezierPostUtility);
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    IsogeometricPostUtility()
+    BezierPostUtility()
     {
     }
 
     /// Destructor.
-    virtual ~IsogeometricPostUtility()
+    virtual ~BezierPostUtility()
     {
     }
 
@@ -243,14 +245,14 @@ public:
     virtual std::string Info() const
     {
         std::stringstream buffer;
-        buffer << "IsogeometricPostUtility";
+        buffer << "BezierPostUtility";
         return buffer.str();
     }
 
     /// Print information about this object.
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "IsogeometricPostUtility";
+        rOStream << "BezierPostUtility";
     }
 
     /// Print object's data.
@@ -491,19 +493,19 @@ private:
     ///@{
 
     /// Assignment operator.
-    IsogeometricPostUtility& operator=(IsogeometricPostUtility const& rOther)
+    BezierPostUtility& operator=(BezierPostUtility const& rOther)
     {
         return *this;
     }
 
     /// Copy constructor.
-    IsogeometricPostUtility(IsogeometricPostUtility const& rOther)
+    BezierPostUtility(BezierPostUtility const& rOther)
     {
     }
 
     ///@}
 
-}; // Class IsogeometricPostUtility
+}; // Class BezierPostUtility
 
 ///@}
 
@@ -515,14 +517,14 @@ private:
 ///@{
 
 /// input stream function
-inline std::istream& operator >>(std::istream& rIStream, IsogeometricPostUtility& rThis)
+inline std::istream& operator >>(std::istream& rIStream, BezierPostUtility& rThis)
 {
     return rIStream;
 }
 
 /// output stream function
 inline std::ostream& operator <<(std::ostream& rOStream,
-        const IsogeometricPostUtility& rThis)
+        const BezierPostUtility& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

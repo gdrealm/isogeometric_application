@@ -42,6 +42,7 @@ BOOST_PYTHON_MODULE(KratosIsogeometricApplication)
 
     IsogeometricApplication_AddCustomUtilities1ToPython();
     IsogeometricApplication_AddCustomUtilities2ToPython();
+    IsogeometricApplication_AddCustomUtilities3ToPython();
     IsogeometricApplication_AddProcessesToPython();
     IsogeometricApplication_AddIOToPython();
 

@@ -56,8 +56,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "includes/model_part.h"
 #include "custom_python/add_utilities_to_python.h"
 #include "custom_utilities/bspline_utils.h"
-#include "custom_utilities/isogeometric_classical_post_utility.h"
-#include "custom_utilities/isogeometric_post_utility.h"
+#include "custom_utilities/bezier_classical_post_utility.h"
+#include "custom_utilities/bezier_post_utility.h"
 #include "custom_utilities/nurbs_test_utils.h"
 #include "custom_utilities/bezier_test_utils.h"
 #include "custom_utilities/isogeometric_merge_utility.h"
@@ -83,7 +83,7 @@ int BSplineUtils_FindSpan(
     const int rN,
     const int rP,
     const double rXi,
-    const BSplineUtils::ValuesContainerType& rU
+    const Vector& rU
 )
 {
     return dummy.FindSpan(rN, rP, rXi, rU);
@@ -91,11 +91,11 @@ int BSplineUtils_FindSpan(
 
 void BSplineUtils_BasisFuns(
     BSplineUtils& dummy,
-    BSplineUtils::ValuesContainerType& rS,
+    Vector& rS,
     const int rI,
     const double rXi,
     const int rP,
-    const BSplineUtils::ValuesContainerType& rU
+    const Vector& rU
 )
 {
     dummy.BasisFuns(rS, rI, rXi, rP, rU);
@@ -225,12 +225,12 @@ void NURBSTestUtils_ProbeJacobian3(
     dummy.ProbeJacobian(pElement, X, Y, Z);
 }
 
-void IsogeometricClassicalPostUtility_GenerateModelPart2WithCondition(IsogeometricClassicalPostUtility& dummy, ModelPart::Pointer pModelPartPost)
+void BezierClassicalPostUtility_GenerateModelPart2WithCondition(BezierClassicalPostUtility& dummy, ModelPart::Pointer pModelPartPost)
 {
     dummy.GenerateModelPart2(pModelPartPost, true);
 }
 
-void IsogeometricClassicalPostUtility_GenerateModelPart2(IsogeometricClassicalPostUtility& dummy, ModelPart::Pointer pModelPartPost, const bool& generate_for_condition)
+void BezierClassicalPostUtility_GenerateModelPart2(BezierClassicalPostUtility& dummy, ModelPart::Pointer pModelPartPost, const bool& generate_for_condition)
 {
     dummy.GenerateModelPart2(pModelPartPost, generate_for_condition);
 }
@@ -262,32 +262,32 @@ void IsogeometricApplication_AddCustomUtilities1ToPython()
     .def("test_bezier_extraction_local_1d", &BezierUtils::test_bezier_extraction_local_1d)
     ;
 
-    class_<IsogeometricClassicalPostUtility, IsogeometricClassicalPostUtility::Pointer, boost::noncopyable>("IsogeometricClassicalPostUtility", init<ModelPart::Pointer>())
-    .def("GenerateModelPart", &IsogeometricClassicalPostUtility::GenerateModelPart)
-    .def("GenerateModelPart2", &IsogeometricClassicalPostUtility_GenerateModelPart2WithCondition)
-    .def("GenerateModelPart2", &IsogeometricClassicalPostUtility_GenerateModelPart2)
-    .def("GenerateModelPart2AutoCollapse", &IsogeometricClassicalPostUtility::GenerateModelPart2AutoCollapse)
-    .def("TransferNodalResults", &IsogeometricClassicalPostUtility::TransferNodalResults<Variable<double> >)
-    .def("TransferNodalResults", &IsogeometricClassicalPostUtility::TransferNodalResults<Variable<Vector> >)
-    .def("TransferNodalResults", &IsogeometricClassicalPostUtility::TransferNodalResults<Variable<array_1d<double, 3> > >)
-    .def("TransferIntegrationPointResults", &IsogeometricClassicalPostUtility::TransferIntegrationPointResults<Variable<double> >)
-    .def("TransferIntegrationPointResults", &IsogeometricClassicalPostUtility::TransferIntegrationPointResults<Variable<Vector> >)
-    .def("SynchronizeActivation", &IsogeometricClassicalPostUtility::SynchronizeActivation)
-    .def("TransferElementalData", &IsogeometricClassicalPostUtility::TransferElementalData<Variable<bool> >)
-    .def("TransferConditionalData", &IsogeometricClassicalPostUtility::TransferConditionalData<Variable<bool> >)
-    .def("TransferVariablesToNodes", &IsogeometricClassicalPostUtility::TransferVariablesToNodes<Variable<double> >)
-    .def("TransferVariablesToNodes", &IsogeometricClassicalPostUtility::TransferVariablesToNodes<Variable<Vector> >)
-    .def("GlobalNodalRenumbering", &IsogeometricClassicalPostUtility::GlobalNodalRenumbering)
+    class_<BezierClassicalPostUtility, BezierClassicalPostUtility::Pointer, boost::noncopyable>("BezierClassicalPostUtility", init<ModelPart::Pointer>())
+    .def("GenerateModelPart", &BezierClassicalPostUtility::GenerateModelPart)
+    .def("GenerateModelPart2", &BezierClassicalPostUtility_GenerateModelPart2WithCondition)
+    .def("GenerateModelPart2", &BezierClassicalPostUtility_GenerateModelPart2)
+    .def("GenerateModelPart2AutoCollapse", &BezierClassicalPostUtility::GenerateModelPart2AutoCollapse)
+    .def("TransferNodalResults", &BezierClassicalPostUtility::TransferNodalResults<Variable<double> >)
+    .def("TransferNodalResults", &BezierClassicalPostUtility::TransferNodalResults<Variable<Vector> >)
+    .def("TransferNodalResults", &BezierClassicalPostUtility::TransferNodalResults<Variable<array_1d<double, 3> > >)
+    .def("TransferIntegrationPointResults", &BezierClassicalPostUtility::TransferIntegrationPointResults<Variable<double> >)
+    .def("TransferIntegrationPointResults", &BezierClassicalPostUtility::TransferIntegrationPointResults<Variable<Vector> >)
+    .def("SynchronizeActivation", &BezierClassicalPostUtility::SynchronizeActivation)
+    .def("TransferElementalData", &BezierClassicalPostUtility::TransferElementalData<Variable<bool> >)
+    .def("TransferConditionalData", &BezierClassicalPostUtility::TransferConditionalData<Variable<bool> >)
+    .def("TransferVariablesToNodes", &BezierClassicalPostUtility::TransferVariablesToNodes<Variable<double> >)
+    .def("TransferVariablesToNodes", &BezierClassicalPostUtility::TransferVariablesToNodes<Variable<Vector> >)
+    .def("GlobalNodalRenumbering", &BezierClassicalPostUtility::GlobalNodalRenumbering)
     ;
 
-    class_<IsogeometricPostUtility, IsogeometricPostUtility::Pointer, boost::noncopyable>("IsogeometricPostUtility", init<>())
-    .def("TransferNodalResults", &IsogeometricPostUtility::TransferNodalResults<Variable<double> >)
-    .def("TransferNodalResults", &IsogeometricPostUtility::TransferNodalResults<Variable<Vector> >)
-    .def("TransferNodalResults", &IsogeometricPostUtility::TransferNodalResults<Variable<array_1d<double, 3> > >)
-    .def("TransferIntegrationPointResults", &IsogeometricPostUtility::TransferIntegrationPointResults<Variable<double> >)
-    .def("TransferIntegrationPointResults", &IsogeometricPostUtility::TransferIntegrationPointResults<Variable<Vector> >)
-    .def("TransferVariablesToNodes", &IsogeometricPostUtility::TransferVariablesToNodes<Variable<double> >)
-    .def("TransferVariablesToNodes", &IsogeometricPostUtility::TransferVariablesToNodes<Variable<Vector> >)
+    class_<BezierPostUtility, BezierPostUtility::Pointer, boost::noncopyable>("BezierPostUtility", init<>())
+    .def("TransferNodalResults", &BezierPostUtility::TransferNodalResults<Variable<double> >)
+    .def("TransferNodalResults", &BezierPostUtility::TransferNodalResults<Variable<Vector> >)
+    .def("TransferNodalResults", &BezierPostUtility::TransferNodalResults<Variable<array_1d<double, 3> > >)
+    .def("TransferIntegrationPointResults", &BezierPostUtility::TransferIntegrationPointResults<Variable<double> >)
+    .def("TransferIntegrationPointResults", &BezierPostUtility::TransferIntegrationPointResults<Variable<Vector> >)
+    .def("TransferVariablesToNodes", &BezierPostUtility::TransferVariablesToNodes<Variable<double> >)
+    .def("TransferVariablesToNodes", &BezierPostUtility::TransferVariablesToNodes<Variable<Vector> >)
     ;
 
     #ifdef ISOGEOMETRIC_USE_HDF5

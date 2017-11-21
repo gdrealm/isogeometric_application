@@ -17,30 +17,43 @@ kratos_root_path=os.environ['KRATOS_ROOT_PATH']
 #importing Kratos modules
 from KratosMultiphysics import *
 from KratosMultiphysics.IsogeometricApplication import *
+from KratosMultiphysics.StructuralApplication import *
 kernel = Kernel()   #defining kernel
 
 nurbs_fespace_library = BSplinesFESpaceLibrary()
 grid_util = ControlGridUtility()
 multipatch_util = MultiPatchUtility()
-mpatch = MultiPatch2D()
 
-fes1 = nurbs_fespace_library.CreateRectangularFESpace(1, 1)
-ctrl_grid_1 = grid_util.CreateRectangularControlPointGrid(0.0, 0.0, fes1.Number(0), fes1.Number(1), 1.0, 1.0)
-patch1_ptr = multipatch_util.CreatePatchPointer(1, fes1)
-patch1 = patch1_ptr.GetReference()
-patch1.CreateControlPointGridFunction(ctrl_grid_1)
-#print(patch1)
+import test_multipatch_insert_knots
 
-mpatch.AddPatch(patch1)
-mpatch.ResetId()
+######################################################################
 
-print("############REFINEMENT###############")
-multipatch_refine_util = MultiPatchRefinementUtility()
-#multipatch_refine_util.InsertKnots(patch1_ptr, [[0.5], [0.5]])
-multipatch_refine_util.DegreeElevate(patch1_ptr, [0, 1])
+mpatch = test_multipatch_insert_knots.CreateMultiPatch()
 print(mpatch)
-#patch1 = patch1_ptr.GetReference()
-#patch2 = patch2_ptr.GetReference()
-#print("############RESULTS###############")
-multipatch_util.ExportGlvis(mpatch, "mpatch.mesh")
+
+iga_mesh = NonConformingMultipatchLagrangeMesh2D(mpatch)
+iga_mesh.SetBaseElementName("KinematicLinear")
+iga_mesh.SetLastNodeId(1)
+iga_mesh.SetLastElemId(1)
+iga_mesh.SetLastPropId(1)
+iga_mesh.SetUniformDivision(10)
+
+model_part = ModelPart("iga mesh")
+iga_mesh.WriteModelPart(model_part)
+
+print(model_part)
+
+#######WRITE TO GID
+write_deformed_flag = WriteDeformedMeshFlag.WriteUndeformed
+write_elements = WriteConditionsFlag.WriteConditions
+#write_elements = WriteConditionsFlag.WriteElementsOnly
+post_mode = GiDPostMode.GiD_PostAscii
+multi_file_flag = MultiFileFlag.MultipleFiles
+gid_io = StructuralGidIO( "iga_mesh", post_mode, multi_file_flag, write_deformed_flag, write_elements )
+gid_io.InitializeMesh( 0.0 )
+mesh = model_part.GetMesh()
+#self.gid_io.WriteNodeMesh( mesh )
+gid_io.WriteMesh( mesh )
+print("mesh written...")
+gid_io.FinalizeMesh()
 

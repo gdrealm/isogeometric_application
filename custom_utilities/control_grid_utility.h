@@ -17,8 +17,8 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_utilities/nurbs/control_point.h"
-#include "custom_utilities/nurbs/control_grid.h"
+#include "custom_utilities/control_point.h"
+#include "custom_utilities/control_grid.h"
 
 namespace Kratos
 {

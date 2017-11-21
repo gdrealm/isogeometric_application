@@ -30,7 +30,7 @@
 #include "includes/ublas_interface.h"
 #include "custom_utilities/bezier_utils.h"
 #include "custom_utilities/nurbs/knot.h"
-#include "custom_utilities/nurbs/control_point.h"
+#include "custom_utilities/control_point.h"
 #include "custom_utilities/hierarchical_nurbs/hn_cell.h"
 
 namespace Kratos

@@ -1174,7 +1174,7 @@ public:
             {
                 for(k = Start3; k <= Span3; ++k)
                 {
-                    Index = (i * mNumber2 + j) * mNumber3 + k;
+                    Index = (i * mNumber2 + j) * mNumber3 + k; // TODO check this again. I'm skeptical.
 
                     W = mCtrlWeights[Index];
                     N1 = ShapeFunctionValues1(i - Start1);

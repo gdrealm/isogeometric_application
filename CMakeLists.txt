@@ -56,18 +56,13 @@ endif()
 
 ## generate variables with the sources
 set( KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/isogeometric_application.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_1_to_python.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_2_to_python.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_processes_to_python.cpp
 #    ${PROJECT_SOURCE_DIR}/kratos/sources/io.cpp
 #    ${PROJECT_SOURCE_DIR}/kratos/sources/model_part_io.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_io/bezier_model_part_io.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_io_to_python.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/isogeometric_python_application.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/bezier_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/bspline_utils.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isogeometric_post_utility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/bezier_post_utility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/nurbs/bsplines_fespace.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/nurbs/cell_manager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/nurbs/domain_manager_2d.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/nurbs/domain_manager_3d.cpp
@@ -75,6 +70,13 @@ set( KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/hierarchical_nurbs/hn_cell.cpp
 #    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/hierarchical_nurbs/hn_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/tsplines/tsmesh_2d.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/isogeometric_application.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_io_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_processes_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_1_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_2_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_3_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/isogeometric_python_application.cpp
 )
 
 ###############################################################
@@ -100,7 +102,7 @@ set_target_properties(KratosIsogeometricApplication PROPERTIES PREFIX "")
 install(TARGETS KratosIsogeometricApplication DESTINATION libs )
 
 
-# changing the .dll suffix to .pyd 
+# changing the .dll suffix to .pyd
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set_target_properties(KratosIsogeometricApplication PROPERTIES SUFFIX .pyd)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")

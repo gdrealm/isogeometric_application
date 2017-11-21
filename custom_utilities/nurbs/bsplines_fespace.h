@@ -6,8 +6,8 @@
 //
 //
 
-#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_NURBS_FESPACE_H_INCLUDED )
-#define  KRATOS_ISOGEOMETRIC_APPLICATION_NURBS_FESPACE_H_INCLUDED
+#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_BSPLINES_FESPACE_H_INCLUDED )
+#define  KRATOS_ISOGEOMETRIC_APPLICATION_BSPLINES_FESPACE_H_INCLUDED
 
 // System includes
 #include <vector>
@@ -18,22 +18,23 @@
 // Project includes
 #include "includes/define.h"
 #include "containers/array_1d.h"
+#include "custom_utilities/bspline_utils.h"
+#include "custom_utilities/fespace.h"
 #include "custom_utilities/nurbs/knot_array_1d.h"
-#include "custom_utilities/nurbs/nurbs_indexing_utility.h"
-#include "custom_utilities/nurbs/fespace.h"
+#include "custom_utilities/nurbs/bsplines_indexing_utility.h"
 
 namespace Kratos
 {
 
 /**
-This class represents the FESpace for a single NURBS patch defined over parametric domain.
+This class represents the FESpace for a single BSplines patch defined over parametric domain.
  */
 template<int TDim>
-class NURBSFESpace : public FESpace<TDim>
+class BSplinesFESpace : public FESpace<TDim>
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(NURBSFESpace);
+    KRATOS_CLASS_POINTER_DEFINITION(BSplinesFESpace);
 
     /// Type definition
     typedef FESpace<TDim> BaseType;
@@ -41,18 +42,18 @@ public:
     typedef typename knot_container_t::knot_t knot_t;
 
     /// Default constructor
-    NURBSFESpace() : BaseType() {}
+    BSplinesFESpace() : BaseType() {}
 
     /// Destructor
-    virtual ~NURBSFESpace() {}
+    virtual ~BSplinesFESpace() {}
 
-    /// Get the order of the NURBS patch in specific direction
+    /// Get the order of the BSplines patch in specific direction
     virtual const std::size_t Order(const std::size_t& i) const {return mOrders[i];}
 
-    /// Get the number of control points of the NURBSFESpace in specific direction
+    /// Get the number of control points of the BSplinesFESpace in specific direction
     const std::size_t Number(const std::size_t& i) const {return mNumbers[i];}
 
-    /// Get the number of basis functions defined over the NURBS NURBSFESpace
+    /// Get the number of basis functions defined over the BSplines BSplinesFESpace
     virtual const std::size_t TotalNumber() const
     {
         std::size_t Number = 1;
@@ -71,7 +72,7 @@ public:
     static std::string StaticType()
     {
         std::stringstream ss;
-        ss << "NURBSFESpace" << TDim << "D";
+        ss << "BSplinesFESpace" << TDim << "D";
         return ss.str();
     }
 
@@ -98,14 +99,14 @@ public:
     /// Get the knot vector in i-direction
     const knot_container_t& KnotVector(const std::size_t& i) const {return mKnotVectors[i];}
 
-    /// Set the NURBS information in the direction i
+    /// Set the BSplines information in the direction i
     void SetInfo(const std::size_t& i, const std::size_t& Number, const std::size_t& Order)
     {
         mOrders[i] = Order;
         mNumbers[i] = Number;
     }
 
-    /// Validate the NURBSFESpace
+    /// Validate the BSplinesFESpace
     virtual bool Validate() const
     {
         for (std::size_t i = 0; i < TDim; ++i)
@@ -120,7 +121,19 @@ public:
         return BaseType::Validate();
     }
 
-    /// Compare between two NURBS patches in terms of parametric information
+    /// Get the values of the basis function i at point xi
+    virtual double GetValue(const std::size_t& i, const std::vector<double>& xi) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "GetValue is not implemented for dimension", TDim)
+    }
+
+    /// Get the values of the basis functions at point xi
+    virtual std::vector<double> GetValue(const std::vector<double>& xi) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "GetValue is not implemented for dimension", TDim)
+    }
+
+    /// Compare between two BSplines patches in terms of parametric information
     virtual bool IsCompatible(const FESpace<TDim>& rOtherFESpace) const
     {
         if (rOtherFESpace.Type() != Type())
@@ -131,16 +144,16 @@ public:
             return false;
         }
 
-        const NURBSFESpace<TDim>& rOtherNURBSFESpace = dynamic_cast<const NURBSFESpace<TDim>&>(rOtherFESpace);
+        const BSplinesFESpace<TDim>& rOtherBSplinesFESpace = dynamic_cast<const BSplinesFESpace<TDim>&>(rOtherFESpace);
 
         // compare the knot vectors and order information
         for (std::size_t i = 0; i < TDim; ++i)
         {
-            if (!(this->Number(i)) == rOtherNURBSFESpace.Number(i))
+            if (!(this->Number(i)) == rOtherBSplinesFESpace.Number(i))
                 return false;
-            if (!(this->Order(i)) == rOtherNURBSFESpace.Order(i))
+            if (!(this->Order(i)) == rOtherBSplinesFESpace.Order(i))
                 return false;
-            if (!(this->KnotVector(i) == rOtherNURBSFESpace.KnotVector(i)))
+            if (!(this->KnotVector(i) == rOtherBSplinesFESpace.KnotVector(i)))
                 return false;
         }
 
@@ -157,22 +170,22 @@ public:
             if (TDim == 1)
             {
                 func_indices.resize(1);
-                func_indices[0] = BaseType::mFunctionIds[NURBSIndexingUtility::Index1D(1, this->Number(0))];
+                func_indices[0] = BaseType::mFunctionIds[BSplinesIndexingUtility::Index1D(1, this->Number(0))];
             }
             else if (TDim == 2)
             {
                 func_indices.resize(this->Number(1));
                 for (std::size_t j = 0; j < this->Number(1); ++j)
-                    func_indices[NURBSIndexingUtility::Index1D(j+1, this->Number(1))]
-                        = BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(1, j+1, this->Number(0), this->Number(1))];
+                    func_indices[BSplinesIndexingUtility::Index1D(j+1, this->Number(1))]
+                        = BaseType::mFunctionIds[BSplinesIndexingUtility::Index2D(1, j+1, this->Number(0), this->Number(1))];
             }
             else if (TDim == 3)
             {
                 func_indices.resize(this->Number(1)*this->Number(2));
                 for (std::size_t j = 0; j < this->Number(1); ++j)
                     for (std::size_t k = 0; k < this->Number(2); ++k)
-                        func_indices[NURBSIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))]
-                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(1, j+1, k+1, this->Number(0), this->Number(1), this->Number(2))];
+                        func_indices[BSplinesIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))]
+                            = BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(1, j+1, k+1, this->Number(0), this->Number(1), this->Number(2))];
             }
         }
         else if (side == _RIGHT_)
@@ -180,22 +193,22 @@ public:
             if (TDim == 1)
             {
                 func_indices.resize(1);
-                func_indices[0] = BaseType::mFunctionIds[NURBSIndexingUtility::Index1D(this->Number(0), this->Number(0))];
+                func_indices[0] = BaseType::mFunctionIds[BSplinesIndexingUtility::Index1D(this->Number(0), this->Number(0))];
             }
             else if (TDim == 2)
             {
                 func_indices.resize(this->Number(1));
                 for (std::size_t j = 0; j < this->Number(1); ++j)
-                    func_indices[NURBSIndexingUtility::Index1D(j+1, this->Number(1))]
-                        = BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(this->Number(0), j+1, this->Number(0), this->Number(1))];
+                    func_indices[BSplinesIndexingUtility::Index1D(j+1, this->Number(1))]
+                        = BaseType::mFunctionIds[BSplinesIndexingUtility::Index2D(this->Number(0), j+1, this->Number(0), this->Number(1))];
             }
             else if (TDim == 3)
             {
                 func_indices.resize(this->Number(1)*this->Number(2));
                 for (std::size_t j = 0; j < this->Number(1); ++j)
                     for (std::size_t k = 0; k < this->Number(2); ++k)
-                        func_indices[NURBSIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))]
-                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(this->Number(0), j+1, k+1, this->Number(0), this->Number(1), this->Number(2))];
+                        func_indices[BSplinesIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))]
+                            = BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(this->Number(0), j+1, k+1, this->Number(0), this->Number(1), this->Number(2))];
             }
         }
         else if (side == _FRONT_)
@@ -204,16 +217,16 @@ public:
             {
                 func_indices.resize(this->Number(0));
                 for (std::size_t i = 0; i < this->Number(0); ++i)
-                    func_indices[NURBSIndexingUtility::Index1D(i+1, this->Number(0))]
-                        = BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(i+1, 0, this->Number(0), this->Number(1))];
+                    func_indices[BSplinesIndexingUtility::Index1D(i+1, this->Number(0))]
+                        = BaseType::mFunctionIds[BSplinesIndexingUtility::Index2D(i+1, 0, this->Number(0), this->Number(1))];
             }
             else if (TDim == 3)
             {
                 func_indices.resize(this->Number(0)*this->Number(2));
                 for (std::size_t i = 0; i < this->Number(0); ++i)
                     for (std::size_t k = 0; k < this->Number(2); ++k)
-                        func_indices[NURBSIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))]
-                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, 0, k+1, this->Number(0), this->Number(1), this->Number(2))];
+                        func_indices[BSplinesIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))]
+                            = BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(i+1, 0, k+1, this->Number(0), this->Number(1), this->Number(2))];
             }
         }
         else if (side == _BACK_)
@@ -222,16 +235,16 @@ public:
             {
                 func_indices.resize(this->Number(0));
                 for (std::size_t i = 0; i < this->Number(0); ++i)
-                    func_indices[NURBSIndexingUtility::Index1D(i+1, this->Number(0))]
-                        = BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(i+1, this->Number(1), this->Number(0), this->Number(1))];
+                    func_indices[BSplinesIndexingUtility::Index1D(i+1, this->Number(0))]
+                        = BaseType::mFunctionIds[BSplinesIndexingUtility::Index2D(i+1, this->Number(1), this->Number(0), this->Number(1))];
             }
             else if (TDim == 3)
             {
                 func_indices.resize(this->Number(0)*this->Number(2));
                 for (std::size_t i = 0; i < this->Number(0); ++i)
                     for (std::size_t k = 0; k < this->Number(2); ++k)
-                        func_indices[NURBSIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))]
-                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, this->Number(1), k+1, this->Number(0), this->Number(1), this->Number(2))];
+                        func_indices[BSplinesIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))]
+                            = BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(i+1, this->Number(1), k+1, this->Number(0), this->Number(1), this->Number(2))];
             }
         }
         else if (side == _BOTTOM_)
@@ -241,8 +254,8 @@ public:
                 func_indices.resize(this->Number(0)*this->Number(1));
                 for (std::size_t i = 0; i < this->Number(0); ++i)
                     for (std::size_t j = 0; j < this->Number(1); ++j)
-                        func_indices[NURBSIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))]
-                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, j+1, 0, this->Number(0), this->Number(1), this->Number(2))];
+                        func_indices[BSplinesIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))]
+                            = BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(i+1, j+1, 0, this->Number(0), this->Number(1), this->Number(2))];
             }
         }
         else if (side == _TOP_)
@@ -252,8 +265,8 @@ public:
                 func_indices.resize(this->Number(0)*this->Number(1));
                 for (std::size_t i = 0; i < this->Number(0); ++i)
                     for (std::size_t j = 0; j < this->Number(1); ++j)
-                        func_indices[NURBSIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))]
-                            = BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, j+1, this->Number(2), this->Number(0), this->Number(1), this->Number(2))];
+                        func_indices[BSplinesIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))]
+                            = BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(i+1, j+1, this->Number(2), this->Number(0), this->Number(1), this->Number(2))];
             }
         }
 
@@ -267,40 +280,40 @@ public:
         {
             if (TDim == 1)
             {
-                BaseType::mFunctionIds[NURBSIndexingUtility::Index1D(1, this->Number(0))] = func_indices[0];
+                BaseType::mFunctionIds[BSplinesIndexingUtility::Index1D(1, this->Number(0))] = func_indices[0];
             }
             else if (TDim == 2)
             {
                 for (std::size_t j = 0; j < this->Number(1); ++j)
-                    BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(1, j+1, this->Number(0), this->Number(1))]
-                        = func_indices[NURBSIndexingUtility::Index1D(j+1, this->Number(1))];
+                    BaseType::mFunctionIds[BSplinesIndexingUtility::Index2D(1, j+1, this->Number(0), this->Number(1))]
+                        = func_indices[BSplinesIndexingUtility::Index1D(j+1, this->Number(1))];
             }
             else if (TDim == 3)
             {
                 for (std::size_t j = 0; j < this->Number(1); ++j)
                     for (std::size_t k = 0; k < this->Number(2); ++k)
-                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(1, j+1, k+1, this->Number(0), this->Number(1), this->Number(2))]
-                            = func_indices[NURBSIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))];
+                        BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(1, j+1, k+1, this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[BSplinesIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))];
             }
         }
         else if (side == _RIGHT_)
         {
             if (TDim == 1)
             {
-                BaseType::mFunctionIds[NURBSIndexingUtility::Index1D(this->Number(0), this->Number(0))] = func_indices[0];
+                BaseType::mFunctionIds[BSplinesIndexingUtility::Index1D(this->Number(0), this->Number(0))] = func_indices[0];
             }
             else if (TDim == 2)
             {
                 for (std::size_t j = 0; j < this->Number(1); ++j)
-                    BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(this->Number(0), j+1, this->Number(0), this->Number(1))]
-                        = func_indices[NURBSIndexingUtility::Index1D(j+1, this->Number(1))];
+                    BaseType::mFunctionIds[BSplinesIndexingUtility::Index2D(this->Number(0), j+1, this->Number(0), this->Number(1))]
+                        = func_indices[BSplinesIndexingUtility::Index1D(j+1, this->Number(1))];
             }
             else if (TDim == 3)
             {
                 for (std::size_t j = 0; j < this->Number(1); ++j)
                     for (std::size_t k = 0; k < this->Number(2); ++k)
-                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(this->Number(0), j+1, k+1, this->Number(0), this->Number(1), this->Number(2))]
-                            = func_indices[NURBSIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))];
+                        BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(this->Number(0), j+1, k+1, this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[BSplinesIndexingUtility::Index2D(j+1, k+1, this->Number(1), this->Number(2))];
             }
         }
         else if (side == _FRONT_)
@@ -308,15 +321,15 @@ public:
             if (TDim == 2)
             {
                 for (std::size_t i = 0; i < this->Number(0); ++i)
-                    BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(i+1, 0, this->Number(0), this->Number(1))]
-                        = func_indices[NURBSIndexingUtility::Index1D(i+1, this->Number(0))];
+                    BaseType::mFunctionIds[BSplinesIndexingUtility::Index2D(i+1, 0, this->Number(0), this->Number(1))]
+                        = func_indices[BSplinesIndexingUtility::Index1D(i+1, this->Number(0))];
             }
             else if (TDim == 3)
             {
                 for (std::size_t i = 0; i < this->Number(0); ++i)
                     for (std::size_t k = 0; k < this->Number(2); ++k)
-                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, 0, k+1, this->Number(0), this->Number(1), this->Number(2))]
-                            = func_indices[NURBSIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))];
+                        BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(i+1, 0, k+1, this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[BSplinesIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))];
             }
         }
         else if (side == _BACK_)
@@ -324,15 +337,15 @@ public:
             if (TDim == 2)
             {
                 for (std::size_t i = 0; i < this->Number(0); ++i)
-                        BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(i+1, this->Number(1), this->Number(0), this->Number(1))]
-                            = func_indices[NURBSIndexingUtility::Index1D(i+1, this->Number(0))];
+                        BaseType::mFunctionIds[BSplinesIndexingUtility::Index2D(i+1, this->Number(1), this->Number(0), this->Number(1))]
+                            = func_indices[BSplinesIndexingUtility::Index1D(i+1, this->Number(0))];
             }
             else if (TDim == 3)
             {
                 for (std::size_t i = 0; i < this->Number(0); ++i)
                     for (std::size_t k = 0; k < this->Number(2); ++k)
-                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, this->Number(1), k+1, this->Number(0), this->Number(1), this->Number(2))]
-                            = func_indices[NURBSIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))];
+                        BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(i+1, this->Number(1), k+1, this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[BSplinesIndexingUtility::Index2D(i+1, k+1, this->Number(0), this->Number(2))];
             }
         }
         else if (side == _BOTTOM_)
@@ -341,8 +354,8 @@ public:
             {
                 for (std::size_t i = 0; i < this->Number(0); ++i)
                     for (std::size_t j = 0; j < this->Number(1); ++j)
-                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, j+1, 0, this->Number(0), this->Number(1), this->Number(2))]
-                            = func_indices[NURBSIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))];
+                        BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(i+1, j+1, 0, this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[BSplinesIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))];
             }
         }
         else if (side == _TOP_)
@@ -351,8 +364,8 @@ public:
             {
                 for (std::size_t i = 0; i < this->Number(0); ++i)
                     for (std::size_t j = 0; j < this->Number(1); ++j)
-                        BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, j+1, this->Number(2), this->Number(0), this->Number(1), this->Number(2))]
-                            = func_indices[NURBSIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))];
+                        BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(i+1, j+1, this->Number(2), this->Number(0), this->Number(1), this->Number(2))]
+                            = func_indices[BSplinesIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))];
             }
         }
     }
@@ -360,7 +373,7 @@ public:
     /// Construct the boundary patch based on side
     virtual typename FESpace<TDim-1>::Pointer ConstructBoundaryFESpace(const BoundarySide& side) const
     {
-        typename NURBSFESpace<TDim-1>::Pointer pBFESpace = typename NURBSFESpace<TDim-1>::Pointer(new NURBSFESpace<TDim-1>());
+        typename BSplinesFESpace<TDim-1>::Pointer pBFESpace = typename BSplinesFESpace<TDim-1>::Pointer(new BSplinesFESpace<TDim-1>());
 
         if (TDim == 2)
         {
@@ -478,7 +491,7 @@ public:
                 for (std::size_t j = 0; j < this->Number(1); ++j)
                 {
                     for (std::size_t i = 0; i < this->Number(0); ++i)
-                        rOStream << " " << BaseType::mFunctionIds[NURBSIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))];
+                        rOStream << " " << BaseType::mFunctionIds[BSplinesIndexingUtility::Index2D(i+1, j+1, this->Number(0), this->Number(1))];
                     rOStream << std::endl;
                 }
             }
@@ -489,7 +502,7 @@ public:
                     for (std::size_t j = 0; j < this->Number(1); ++j)
                     {
                         for (std::size_t i = 0; i < this->Number(0); ++i)
-                            rOStream << " " << BaseType::mFunctionIds[NURBSIndexingUtility::Index3D(i+1, j+1, k+1, this->Number(0), this->Number(1), this->Number(2))];
+                            rOStream << " " << BaseType::mFunctionIds[BSplinesIndexingUtility::Index3D(i+1, j+1, k+1, this->Number(0), this->Number(1), this->Number(2))];
                         rOStream << std::endl;
                     }
                     rOStream << std::endl;
@@ -501,7 +514,7 @@ public:
 private:
 
     /**
-     * internal data to construct the shape functions on the NURBS
+     * internal data to construct the shape functions on the BSplines
      */
     boost::array<std::size_t, TDim> mOrders;
     boost::array<std::size_t, TDim> mNumbers;
@@ -509,14 +522,14 @@ private:
 };
 
 /**
- * Template specific instantiation for null-D NURBS patch to terminate the compilation
+ * Template specific instantiation for null-D BSplines patch to terminate the compilation
  */
 template<>
-class NURBSFESpace<0> : public FESpace<0>
+class BSplinesFESpace<0> : public FESpace<0>
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(NURBSFESpace);
+    KRATOS_CLASS_POINTER_DEFINITION(BSplinesFESpace);
 
     /// Type definition
     typedef FESpace<0> BaseType;
@@ -524,15 +537,15 @@ public:
     typedef typename knot_container_t::knot_t knot_t;
 
     /// Default constructor
-    NURBSFESpace() : BaseType() {}
+    BSplinesFESpace() : BaseType() {}
 
     /// Destructor
-    virtual ~NURBSFESpace() {}
+    virtual ~BSplinesFESpace() {}
 
-    /// Get the order of the NURBS patch in specific direction
+    /// Get the order of the BSplines patch in specific direction
     virtual const std::size_t Order(const std::size_t& i) const {return 0;}
 
-    /// Get the number of basis functions defined over the NURBS NURBSFESpace
+    /// Get the number of basis functions defined over the BSplines BSplinesFESpace
     virtual const std::size_t Number() const {return 0;}
 
     /// Get the string describing the type of the patch
@@ -544,24 +557,24 @@ public:
     /// Get the string describing the type of the patch
     static std::string StaticType()
     {
-        return "NURBSFESpace0D";
+        return "BSplinesFESpace0D";
     }
 
     /// Set the knot vector in direction i.
     void SetKnotVector(const std::size_t& i, const knot_container_t& p_knot_vector)
     {}
 
-    /// Set the NURBS information in the direction i
+    /// Set the BSplines information in the direction i
     void SetInfo(const std::size_t& i, const std::size_t& Number, const std::size_t& Order)
     {}
 
-    /// Validate the NURBSFESpace before using
+    /// Validate the BSplinesFESpace before using
     virtual bool Validate() const
     {
         return BaseType::Validate();
     }
 
-    /// Compare between two NURBS patches in terms of parametric information
+    /// Compare between two BSplines patches in terms of parametric information
     virtual bool IsCompatible(const FESpace<0>& rOtherFESpace) const
     {
         if (rOtherFESpace.Type() != Type())
@@ -578,18 +591,18 @@ public:
 
 /// output stream function
 template<int TDim>
-inline std::ostream& operator <<(std::ostream& rOStream, const NURBSFESpace<TDim>& rThis)
+inline std::ostream& operator <<(std::ostream& rOStream, const BSplinesFESpace<TDim>& rThis)
 {
-    rOStream << "-------------Begin NURBSFESpace Info-------------" << std::endl;
+    rOStream << "-------------Begin BSplinesFESpace Info-------------" << std::endl;
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
     rThis.PrintData(rOStream);
     rOStream << std::endl;
-    rOStream << "-------------End NURBSFESpace Info-------------" << std::endl;
+    rOStream << "-------------End BSplinesFESpace Info-------------" << std::endl;
     return rOStream;
 }
 
 } // namespace Kratos.
 
-#endif // KRATOS_ISOGEOMETRIC_APPLICATION_NURBS_FESPACE_H_INCLUDED defined
+#endif // KRATOS_ISOGEOMETRIC_APPLICATION_BSPLINES_FESPACE_H_INCLUDED defined
 

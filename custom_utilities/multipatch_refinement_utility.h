@@ -20,9 +20,9 @@
 #include "containers/array_1d.h"
 #include "custom_utilities/bspline_utils.h"
 #include "custom_utilities/nurbs/knot_array_1d.h"
-#include "custom_utilities/nurbs/control_point.h"
-#include "custom_utilities/nurbs/grid_function.h"
-#include "custom_utilities/nurbs/patch.h"
+#include "custom_utilities/control_point.h"
+#include "custom_utilities/grid_function.h"
+#include "custom_utilities/patch.h"
 // #include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
 
 namespace Kratos
@@ -59,7 +59,7 @@ public:
     template<int TDim>
     void InsertKnots(typename Patch<TDim>::Pointer& pPatch, std::set<std::size_t>& refined_patches, const std::vector<std::vector<double> >& ins_knots)
     {
-        if (pPatch->pFESpace()->Type() != NURBSFESpace<TDim>::StaticType())
+        if (pPatch->pFESpace()->Type() != BSplinesFESpace<TDim>::StaticType())
             KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "only support the NURBS patch")
 
         if (std::find(refined_patches.begin(), refined_patches.end(), pPatch->Id()) == refined_patches.end())
@@ -76,8 +76,8 @@ public:
             std::vector<double> new_weights;
             std::vector<double> weights = pPatch->GetControlWeights();
 
-            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(pPatch->pFESpace());
-            typename NURBSFESpace<TDim>::Pointer pNewFESpace = typename NURBSFESpace<TDim>::Pointer(new NURBSFESpace<TDim>());
+            typename BSplinesFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<BSplinesFESpace<TDim> >(pPatch->pFESpace());
+            typename BSplinesFESpace<TDim>::Pointer pNewFESpace = typename BSplinesFESpace<TDim>::Pointer(new BSplinesFESpace<TDim>());
 
             std::vector<std::size_t> new_size(TDim);
 
@@ -97,8 +97,8 @@ public:
 
             // transform and transfer the control points
             typename ControlGrid<ControlPoint<double> >::Pointer pNewControlPoints = typename ControlGrid<ControlPoint<double> >::Pointer (new RegularControlGrid<TDim, ControlPoint<double> >(new_size));
-            ControlGridUtility::Transform<ControlPoint<double>, Matrix>(T, *(pPatch->ControlPointGridFunction()->pControlGrid()), *pNewControlPoints);
-            pNewControlPoints->SetName(pPatch->ControlPointGridFunction()->pControlGrid()->Name());
+            ControlGridUtility::Transform<ControlPoint<double>, Matrix>(T, *(pPatch->pControlPointGridFunction()->pControlGrid()), *pNewControlPoints);
+            pNewControlPoints->SetName(pPatch->pControlPointGridFunction()->pControlGrid()->Name());
             pNewPatch->CreateControlPointGridFunction(pNewControlPoints);
 
             // transfer the grid function
@@ -137,7 +137,7 @@ public:
 
             if (pPatch->pNeighbor(_LEFT_) != NULL)
             {
-                if (pPatch->pNeighbor(_LEFT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_LEFT_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_LEFT_, pPatch->pNeighbor(_LEFT_));
                     pPatch->pNeighbor(_LEFT_)->pSetNeighbor(_RIGHT_, pNewPatch);
@@ -163,7 +163,7 @@ public:
 
             if (pPatch->pNeighbor(_RIGHT_) != NULL)
             {
-                if (pPatch->pNeighbor(_RIGHT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_RIGHT_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_RIGHT_, pPatch->pNeighbor(_RIGHT_));
                     pPatch->pNeighbor(_RIGHT_)->pSetNeighbor(_LEFT_, pNewPatch);
@@ -189,7 +189,7 @@ public:
 
             if (pPatch->pNeighbor(_TOP_) != NULL)
             {
-                if (pPatch->pNeighbor(_TOP_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_TOP_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_TOP_, pPatch->pNeighbor(_TOP_));
                     pPatch->pNeighbor(_TOP_)->pSetNeighbor(_BOTTOM_, pNewPatch);
@@ -215,7 +215,7 @@ public:
 
             if (pPatch->pNeighbor(_BOTTOM_) != NULL)
             {
-                if (pPatch->pNeighbor(_BOTTOM_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_BOTTOM_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_BOTTOM_, pPatch->pNeighbor(_BOTTOM_));
                     pPatch->pNeighbor(_BOTTOM_)->pSetNeighbor(_TOP_, pNewPatch);
@@ -241,7 +241,7 @@ public:
 
             if (pPatch->pNeighbor(_FRONT_) != NULL)
             {
-                if (pPatch->pNeighbor(_FRONT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_FRONT_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_FRONT_, pPatch->pNeighbor(_FRONT_));
                     pPatch->pNeighbor(_FRONT_)->pSetNeighbor(_BACK_, pNewPatch);
@@ -260,7 +260,7 @@ public:
 
             if (pPatch->pNeighbor(_BACK_) != NULL)
             {
-                if (pPatch->pNeighbor(_BACK_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_BACK_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_BACK_, pPatch->pNeighbor(_BACK_));
                     pPatch->pNeighbor(_BACK_)->pSetNeighbor(_FRONT_, pNewPatch);
@@ -313,8 +313,8 @@ public:
             typename Patch<TDim>::Pointer pNewPatch = typename Patch<TDim>::Pointer(new Patch<TDim>(pPatch->Id()));
 
             // elevate the degree and initialize new patch
-            typename NURBSFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<NURBSFESpace<TDim> >(pPatch->pFESpace());
-            typename NURBSFESpace<TDim>::Pointer pNewFESpace = typename NURBSFESpace<TDim>::Pointer(new NURBSFESpace<TDim>());
+            typename BSplinesFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<BSplinesFESpace<TDim> >(pPatch->pFESpace());
+            typename BSplinesFESpace<TDim>::Pointer pNewFESpace = typename BSplinesFESpace<TDim>::Pointer(new BSplinesFESpace<TDim>());
 
             std::vector<std::vector<double> > new_knots(TDim);
 
@@ -323,7 +323,7 @@ public:
                 new_size[i] = pFESpace->Number(i);
 
             typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer pControlPoints
-                = boost::dynamic_pointer_cast<RegularControlGrid<TDim, ControlPoint<double> > >(pPatch->ControlPointGridFunction()->pControlGrid());
+                = boost::dynamic_pointer_cast<RegularControlGrid<TDim, ControlPoint<double> > >(pPatch->pControlPointGridFunction()->pControlGrid());
 
             typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer pNewControlPoints
                 = typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer(new RegularControlGrid<TDim, ControlPoint<double> >(new_size)); // note here that the size is just temporary, it will be raised later on.
@@ -337,7 +337,7 @@ public:
                 pNewFESpace->SetInfo(dim, new_size[dim], pFESpace->Order(dim) + order_increment[dim]);
             }
 
-            pNewControlPoints->SetName(pPatch->ControlPointGridFunction()->pControlGrid()->Name());
+            pNewControlPoints->SetName(pPatch->pControlPointGridFunction()->pControlGrid()->Name());
             pNewPatch->SetFESpace(pNewFESpace);
             pNewPatch->CreateControlPointGridFunction(pNewControlPoints);
 
@@ -349,7 +349,7 @@ public:
 
             if (pPatch->pNeighbor(_LEFT_) != NULL)
             {
-                if (pPatch->pNeighbor(_LEFT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_LEFT_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_LEFT_, pPatch->pNeighbor(_LEFT_));
                     pPatch->pNeighbor(_LEFT_)->pSetNeighbor(_RIGHT_, pNewPatch);
@@ -379,7 +379,7 @@ public:
 
             if (pPatch->pNeighbor(_RIGHT_) != NULL)
             {
-                if (pPatch->pNeighbor(_RIGHT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_RIGHT_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_RIGHT_, pPatch->pNeighbor(_RIGHT_));
                     pPatch->pNeighbor(_RIGHT_)->pSetNeighbor(_LEFT_, pNewPatch);
@@ -409,7 +409,7 @@ public:
 
             if (pPatch->pNeighbor(_TOP_) != NULL)
             {
-                if (pPatch->pNeighbor(_TOP_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_TOP_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_TOP_, pPatch->pNeighbor(_TOP_));
                     pPatch->pNeighbor(_TOP_)->pSetNeighbor(_BOTTOM_, pNewPatch);
@@ -435,7 +435,7 @@ public:
 
             if (pPatch->pNeighbor(_BOTTOM_) != NULL)
             {
-                if (pPatch->pNeighbor(_BOTTOM_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_BOTTOM_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_BOTTOM_, pPatch->pNeighbor(_BOTTOM_));
                     pPatch->pNeighbor(_BOTTOM_)->pSetNeighbor(_TOP_, pNewPatch);
@@ -461,7 +461,7 @@ public:
 
             if (pPatch->pNeighbor(_FRONT_) != NULL)
             {
-                if (pPatch->pNeighbor(_FRONT_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_FRONT_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_FRONT_, pPatch->pNeighbor(_FRONT_));
                     pPatch->pNeighbor(_FRONT_)->pSetNeighbor(_BACK_, pNewPatch);
@@ -480,7 +480,7 @@ public:
 
             if (pPatch->pNeighbor(_BACK_) != NULL)
             {
-                if (pPatch->pNeighbor(_BACK_)->pFESpace()->Type() == NURBSFESpace<TDim>::StaticType())
+                if (pPatch->pNeighbor(_BACK_)->pFESpace()->Type() == BSplinesFESpace<TDim>::StaticType())
                 {
                     pNewPatch->pSetNeighbor(_BACK_, pPatch->pNeighbor(_BACK_));
                     pPatch->pNeighbor(_BACK_)->pSetNeighbor(_FRONT_, pNewPatch);
@@ -527,7 +527,7 @@ private:
         Matrix& T,
         std::vector<std::vector<double> >& new_knots,
         std::vector<double>& new_weights,
-        typename NURBSFESpace<TDim>::Pointer& pFESpace,
+        typename BSplinesFESpace<TDim>::Pointer& pFESpace,
         const std::vector<std::vector<double> >& ins_knots,
         const std::vector<double>& weights) const
     {
@@ -539,7 +539,7 @@ private:
     template<int TDim>
     void ComputeBsplinesDegreeElevation(
         const RegularControlGrid<TDim, ControlPoint<double> >& ControlPoints,
-        const NURBSFESpace<TDim>& rFESpace,
+        const BSplinesFESpace<TDim>& rFESpace,
         const std::vector<std::size_t>& order_increment,
         RegularControlGrid<TDim, ControlPoint<double> >& NewControlPoints,
         std::vector<std::vector<double> >& new_knots) const
@@ -556,7 +556,7 @@ void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<1>(
     Matrix& T,
     std::vector<std::vector<double> >& new_knots,
     std::vector<double>& new_weights,
-    typename NURBSFESpace<1>::Pointer& pFESpace,
+    typename BSplinesFESpace<1>::Pointer& pFESpace,
     const std::vector<std::vector<double> >& ins_knots,
     const std::vector<double>& weights) const
 {
@@ -574,7 +574,7 @@ void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<2>(
     Matrix& T,
     std::vector<std::vector<double> >& new_knots,
     std::vector<double>& new_weights,
-    typename NURBSFESpace<2>::Pointer& pFESpace,
+    typename BSplinesFESpace<2>::Pointer& pFESpace,
     const std::vector<std::vector<double> >& ins_knots,
     const std::vector<double>& weights) const
 {
@@ -592,7 +592,7 @@ void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<3>(
     Matrix& T,
     std::vector<std::vector<double> >& new_knots,
     std::vector<double>& new_weights,
-    typename NURBSFESpace<3>::Pointer& pFESpace,
+    typename BSplinesFESpace<3>::Pointer& pFESpace,
     const std::vector<std::vector<double> >& ins_knots,
     const std::vector<double>& weights) const
 {
@@ -608,7 +608,7 @@ void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<3>(
 template<>
 void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<1>(
     const RegularControlGrid<1, ControlPoint<double> >& ControlPoints,
-    const NURBSFESpace<1>& rFESpace,
+    const BSplinesFESpace<1>& rFESpace,
     const std::vector<std::size_t>& order_increment,
     RegularControlGrid<1, ControlPoint<double> >& NewControlPoints,
     std::vector<std::vector<double> >& new_knots) const
@@ -627,7 +627,7 @@ void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<1>(
 template<>
 void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<2>(
     const RegularControlGrid<2, ControlPoint<double> >& ControlPoints,
-    const NURBSFESpace<2>& rFESpace,
+    const BSplinesFESpace<2>& rFESpace,
     const std::vector<std::size_t>& order_increment,
     RegularControlGrid<2, ControlPoint<double> >& NewControlPoints,
     std::vector<std::vector<double> >& new_knots) const
@@ -646,7 +646,7 @@ void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<2>(
 template<>
 void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<3>(
     const RegularControlGrid<3, ControlPoint<double> >& ControlPoints,
-    const NURBSFESpace<3>& rFESpace,
+    const BSplinesFESpace<3>& rFESpace,
     const std::vector<std::size_t>& order_increment,
     RegularControlGrid<3, ControlPoint<double> >& NewControlPoints,
     std::vector<std::vector<double> >& new_knots) const

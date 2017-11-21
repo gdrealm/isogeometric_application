@@ -57,9 +57,6 @@ public:
     ///@name Type Definitions
     ///@{
 
-    typedef boost::numeric::ublas::vector<double> ValuesContainerType;
-    typedef boost::numeric::ublas::matrix<double> ValuesArrayContainerType;
-
     /// Pointer definition of BSplineUtils
     KRATOS_CLASS_POINTER_DEFINITION(BSplineUtils);
 
@@ -220,12 +217,12 @@ public:
     //N = 100000000: 81.9643, 81.9494
 
     // This function works slightly faster than the above implementation
-    template<class ValuesContainerType>
-    static void BasisFuns(ValuesContainerType& rS,
+    template<class ValuesContainerType1, class ValuesContainerType2>
+    static void BasisFuns(ValuesContainerType1& rS,
                           const int& rI,
                           const double& rXi,
                           const int& rP,
-                          const ValuesContainerType& rU)
+                          const ValuesContainerType2& rU)
     {
         unsigned int j, r;
         double saved, temp;
@@ -261,12 +258,12 @@ public:
     /**
      * Computes b-spline function derivatives
      */
-    template<class ValuesArrayContainerType, class ValuesContainerType>
-    static void BasisFunsDer(ValuesArrayContainerType& rS,
+    template<class ValuesContainerType1, class ValuesContainerType2>
+    static void BasisFunsDer(ValuesContainerType1& rS,
                              int rI,
                              const double& rXi,
                              const int& rP,
-                             const ValuesContainerType& rU,
+                             const ValuesContainerType2& rU,
                              const int& rD)
     {
         int j, r, k, rk, pk, j1, j2, s1, s2;

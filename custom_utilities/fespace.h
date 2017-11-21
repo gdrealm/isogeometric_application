@@ -13,14 +13,11 @@
 #include <vector>
 
 // External includes
-#include <boost/array.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 // Project includes
 #include "includes/define.h"
 #include "includes/serializer.h"
-#include "containers/array_1d.h"
-#include "custom_utilities/nurbs/knot_array_1d.h"
 
 
 namespace Kratos
@@ -33,7 +30,8 @@ enum BoundarySide
     _TOP_    = 3,
     _BOTTOM_ = 2,
     _FRONT_  = 4,
-    _BACK_   = 5
+    _BACK_   = 5,
+    _NUMBER_OF_BOUNDARY_SIDE = 6
 };
 
 /**
@@ -81,6 +79,22 @@ public:
         ss << "FESpace" << TDim << "D";
         return ss.str();
     }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /// Get the values of the basis function i at point xi
+    virtual double GetValue(const std::size_t& i, const std::vector<double>& xi) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+    }
+
+    /// Get the values of the basis functions at point xi
+    virtual std::vector<double> GetValue(const std::vector<double>& xi) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /// Reset all the dof numbers for each grid function to -1
     void ResetFunctionIndices()
@@ -154,6 +168,21 @@ public:
     virtual bool operator==(const FESpace<TDim>& rOther) const
     {
         return this->IsCompatible(rOther);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /// Fast function to get the opposite boundary side
+    static BoundarySide OppositeBoundarySide(const BoundarySide& side)
+    {
+        if (side == _LEFT_) return _RIGHT_;
+        else if (side == _RIGHT_) return _LEFT_;
+        else if (side == _TOP_) return _BOTTOM_;
+        else if (side == _BOTTOM_) return _TOP_;
+        else if (side == _FRONT_) return _BACK_;
+        else if (side == _BACK_) return _FRONT_;
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "Invalid boundary side", side)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////

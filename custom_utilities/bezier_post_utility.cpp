@@ -1,11 +1,11 @@
 #include "includes/deprecated_variables.h"
-#include "isogeometric_post_utility.h"
+#include "custom_utilities/bezier_post_utility.h"
 
 #define DEBUG_MULTISOLVE
 
 namespace Kratos
 {
-    double IsogeometricPostUtility::CalculateOnPoint(
+    double BezierPostUtility::CalculateOnPoint(
         const Variable<double>& rVariable,
         double& rResult,
         Element::Pointer& pElement,
@@ -24,7 +24,7 @@ namespace Kratos
         return rResult;
     }
 
-    Vector& IsogeometricPostUtility::CalculateOnPoint(
+    Vector& BezierPostUtility::CalculateOnPoint(
         const Variable<Vector>& rVariable,
         Vector& rResult,
         Element::Pointer& pElement,
@@ -50,7 +50,7 @@ namespace Kratos
         return rResult;
     }
     
-    array_1d<double, 3>& IsogeometricPostUtility::CalculateOnPoint(
+    array_1d<double, 3>& BezierPostUtility::CalculateOnPoint(
         const Variable<array_1d<double, 3> >& rVariable,
         array_1d<double, 3>& rResult,
         Element::Pointer& pElement,
@@ -72,7 +72,7 @@ namespace Kratos
         return rResult;
     }
     
-    void IsogeometricPostUtility::TransferVariablesToNodes(LinearSolverType::Pointer& pSolver,
+    void BezierPostUtility::TransferVariablesToNodes(LinearSolverType::Pointer& pSolver,
                                                            ModelPart& r_model_part,
                                                            const Variable<double>& rThisVariable)
     {
@@ -210,7 +210,7 @@ namespace Kratos
         std::cout << "Transfer variable to node for " << rThisVariable.Name() << " completed" << std::endl;
     }
 
-    void IsogeometricPostUtility::TransferVariablesToNodes(LinearSolverType::Pointer& pSolver,
+    void BezierPostUtility::TransferVariablesToNodes(LinearSolverType::Pointer& pSolver,
                                                            ModelPart& r_model_part,
                                                            const Variable<Vector>& rThisVariable)
     {
