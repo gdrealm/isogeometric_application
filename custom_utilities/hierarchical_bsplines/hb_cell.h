@@ -6,8 +6,8 @@
 //
 //
 
-#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_HN_CELL_H_INCLUDED )
-#define  KRATOS_ISOGEOMETRIC_APPLICATION_HN_CELL_H_INCLUDED
+#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_HB_CELL_H_INCLUDED )
+#define  KRATOS_ISOGEOMETRIC_APPLICATION_HB_CELL_H_INCLUDED
 
 // System includes
 #include <cmath>
@@ -27,37 +27,38 @@
 namespace Kratos
 {
 
-class HnBasisFunction;
+// forward declaration
+class HBBasisFunction;
 
 /**
-    Represent a HnCell in hierarchical NURBS topology
+    Represent a cell in hierarchical B-Splines topology
  */
-class HnCell : public Cell
+class HBCell : public Cell
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(HnCell);
+    KRATOS_CLASS_POINTER_DEFINITION(HBCell);
 
     /// Type definitions
     typedef Knot<double>::Pointer knot_t;
 
     typedef Cell BaseType;
 
-    typedef boost::shared_ptr<HnBasisFunction> bf_t;
+    typedef boost::shared_ptr<HBBasisFunction> bf_t;
     typedef std::set<bf_t> bf_container_t;
     typedef bf_container_t::iterator bf_iterator;
 
     /// Default constructor
-    HnCell(std::size_t Id, unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
+    HBCell(std::size_t Id, unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
     : BaseType(Id, pLeft, pRight, pDown, pUp), mLevel(Level)
     {}
 
-    HnCell(std::size_t Id, unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
+    HBCell(std::size_t Id, unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
     : BaseType(Id, pLeft, pRight, pDown, pUp, pBelow, pAbove), mLevel(Level)
     {}
 
     /// Destructor
-    virtual ~HnCell()
+    virtual ~HBCell()
     {}
 
     /// Get the level of this cell
@@ -94,7 +95,7 @@ public:
     std::size_t size() const {return mpBasisFuncs.size();}
 
     /// Check if this cell is coverred by another cell
-    bool IsCoverred(const HnCell::Pointer p_cell, const int Dim) const
+    bool IsCoverred(const HBCell::Pointer p_cell, const int Dim) const
     {
         return BaseType::IsCoverred(BaseType::Pointer(p_cell), Dim);
     }
@@ -110,7 +111,7 @@ private:
 };
 
 /// output stream function
-inline std::ostream& operator <<(std::ostream& rOStream, const HnCell& rThis)
+inline std::ostream& operator <<(std::ostream& rOStream, const HBCell& rThis)
 {
     rThis.PrintInfo(rOStream);
     rThis.PrintData(rOStream);
@@ -119,5 +120,5 @@ inline std::ostream& operator <<(std::ostream& rOStream, const HnCell& rThis)
 
 }// namespace Kratos.
 
-#endif // KRATOS_ISOGEOMETRIC_APPLICATION_HN_CELL_H_INCLUDED
+#endif // KRATOS_ISOGEOMETRIC_APPLICATION_HB_CELL_H_INCLUDED
 

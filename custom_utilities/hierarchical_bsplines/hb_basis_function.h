@@ -6,8 +6,8 @@
 //
 //
 
-#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_HN_BASIS_FUNCTION_H_INCLUDED )
-#define  KRATOS_ISOGEOMETRIC_APPLICATION_HN_BASIS_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_HB_BASIS_FUNCTION_H_INCLUDED )
+#define  KRATOS_ISOGEOMETRIC_APPLICATION_HB_BASIS_FUNCTION_H_INCLUDED
 
 // System includes
 #include <ctime>
@@ -31,41 +31,41 @@
 #include "custom_utilities/bezier_utils.h"
 #include "custom_utilities/nurbs/knot.h"
 #include "custom_utilities/control_point.h"
-#include "custom_utilities/hierarchical_nurbs/hn_cell.h"
+#include "custom_utilities/hierarchical_bsplines/hb_cell.h"
 
 namespace Kratos
 {
 
 /**
-    Class represents a basis function in Hierarchical NURBS mesh
+    Class represents a basis function in hierarchical B-Splines mesh
 */
-class HnBasisFunction
+class HBBasisFunction
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(HnBasisFunction);
+    KRATOS_CLASS_POINTER_DEFINITION(HBBasisFunction);
 
     /// Type definition
     typedef Knot<double> KnotType;
     typedef ControlPoint<double> ControlPointType;
     typedef KnotType::Pointer knot_t;
 
-    typedef HnBasisFunction::Pointer bf_t;
+    typedef HBBasisFunction::Pointer bf_t;
     typedef std::vector<bf_t> bf_container_t;
     typedef bf_container_t::iterator bf_iterator;
     typedef bf_container_t::const_iterator bf_const_iterator;
 
-    typedef HnCell::Pointer cell_t;
+    typedef HBCell::Pointer cell_t;
     typedef std::set<cell_t> cell_container_t;
     typedef cell_container_t::iterator cell_iterator;
     typedef cell_container_t::const_iterator cell_const_iterator;
 
     /// Default constructor
-    HnBasisFunction(std::size_t Id, unsigned int Level) : mId(Id), mLevel(Level)
+    HBBasisFunction(std::size_t Id, unsigned int Level) : mId(Id), mLevel(Level)
     {}
 
     /// Destructor
-    ~HnBasisFunction()
+    ~HBBasisFunction()
     {}
 
     /**************************************************************************
@@ -286,12 +286,12 @@ public:
     **************************************************************************/
 
     /// Implement relational operator for automatic arrangement in container
-    inline bool operator==(const HnBasisFunction& rA) const
+    inline bool operator==(const HBBasisFunction& rA) const
     {
         return this->Id() == rA.Id();
     }
 
-    inline bool operator<(const HnBasisFunction& rA) const
+    inline bool operator<(const HBBasisFunction& rA) const
     {
         return this->Id() < rA.Id();
     }
@@ -384,7 +384,7 @@ private:
 };
 
 /// output stream function
-inline std::ostream& operator <<(std::ostream& rOStream, const HnBasisFunction& rThis)
+inline std::ostream& operator <<(std::ostream& rOStream, const HBBasisFunction& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -394,5 +394,5 @@ inline std::ostream& operator <<(std::ostream& rOStream, const HnBasisFunction& 
 
 }// namespace Kratos.
 
-#endif // KRATOS_ISOGEOMETRIC_APPLICATION_HN_BASIS_FUNCTION_H_INCLUDED
+#endif // KRATOS_ISOGEOMETRIC_APPLICATION_HB_BASIS_FUNCTION_H_INCLUDED
 

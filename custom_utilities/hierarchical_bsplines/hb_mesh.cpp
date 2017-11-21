@@ -1,12 +1,11 @@
 #include <fstream>
 #include <algorithm>
 #include "utilities/openmp_utils.h"
-// #include "hn_cuboid.h" //unused
 #include "custom_utilities/bspline_utils.h"
 #include "custom_utilities/bezier_utils.h"
 #include "custom_utilities/nurbs/cell_manager_2d.h"
 #include "custom_utilities/nurbs/cell_manager_3d.h"
-#include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
+#include "custom_utilities/hierarchical_bsplines/hb_mesh.h"
 #include "custom_utilities/triangulation_utils.h"
 #include "custom_utilities/isogeometric_math_utils.h"
 #include "utilities/auto_collapse_spatial_binning.h"
@@ -25,25 +24,25 @@ namespace Kratos
 {
 
     template<int TDim>
-    HnMesh<TDim>::HnMesh(const std::size_t& Id, const std::string& Name)
-    : Patch<TDim>(Id), mName(Name), mEchoLevel(0), mLastLevel(0), mMaxLevels(10)
+    HBMesh<TDim>::HBMesh(const std::size_t& Id, const std::string& Name)
+    : BaseType(Id), mName(Name), mEchoLevel(0), mLastLevel(0), mMaxLevels(10)
     {
     }
 
     template<int TDim>
-    void HnMesh<TDim>::PrintInfo(std::ostream& rOStream) const
+    void HBMesh<TDim>::PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "Hierarchical NURBS mesh " << Name() << ", Id = " << BaseType::Id() << ", number of levels = " << mLastLevel;
+        rOStream << "hierarchical B-Splines mesh " << Name() << ", Id = " << BaseType::Id() << ", number of levels = " << mLastLevel;
     }
 
     template<int TDim>
-    void HnMesh<TDim>::PrintData(std::ostream& rOStream) const
+    void HBMesh<TDim>::PrintData(std::ostream& rOStream) const
     {
         BaseType::PrintData(rOStream);
     }
 
     template<int TDim>
-    void HnMesh<TDim>::PrintKnotVectors() const
+    void HBMesh<TDim>::PrintKnotVectors() const
     {
         std::cout << "###############Begin knot vectors################" << std::endl;
         std::cout << "knot vector 1:" << mKnots1 << std::endl;
@@ -53,7 +52,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::PrintCells(int level) const
+    void HBMesh<TDim>::PrintCells(int level) const
     {
         if(level > 0)
         {
@@ -75,7 +74,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::PrintBasisFuncs(int level) const
+    void HBMesh<TDim>::PrintBasisFuncs(int level) const
     {
         if(level > 0)
         {
@@ -97,7 +96,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::PrintRefinementHistory() const
+    void HBMesh<TDim>::PrintRefinementHistory() const
     {
         std::cout << "Refinement history:";
         for(std::size_t i = 0; i < mRefinementHistory.size(); ++i)
@@ -106,7 +105,7 @@ namespace Kratos
     }
 
     // template<int TDim>
-//    void HnMesh<TDim>::CheckNestedSpace()
+//    void HBMesh<TDim>::CheckNestedSpace()
 //    {
 //        std::cout << __FUNCTION__ << " starts" << std::endl;
 //        double Xmin, Xmax, Ymin, Ymax, Zmin, Zmax;
@@ -128,7 +127,7 @@ namespace Kratos
 //    }
 
     template<int TDim>
-    void HnMesh<TDim>::BuildNestedSpace(std::size_t level, std::map<std::size_t, std::set<std::size_t> >& rK)
+    void HBMesh<TDim>::BuildNestedSpace(std::size_t level, std::map<std::size_t, std::set<std::size_t> >& rK)
     {
         // check the first criteria
         if(level == 1)
@@ -168,7 +167,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::CheckNestedSpace()
+    void HBMesh<TDim>::CheckNestedSpace()
     {
         std::cout << __FUNCTION__ << " starts" << std::endl;
 
@@ -229,7 +228,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::ReadMesh(const std::string& fn)
+    void HBMesh<TDim>::ReadMesh(const std::string& fn)
     {
         std::ifstream infile(fn.c_str());
         if(!infile)
@@ -406,9 +405,9 @@ namespace Kratos
 
         // initialize the cell container
         if(TDim == 2)
-            mpCellManager = cell_container_t::Pointer(new CellManager2D<HnCell>());
+            mpCellManager = cell_container_t::Pointer(new CellManager2D<HBCell>());
         else if(TDim == 3)
-            mpCellManager = cell_container_t::Pointer(new CellManager3D<HnCell>());
+            mpCellManager = cell_container_t::Pointer(new CellManager3D<HBCell>());
 
         // create bfs for the first level
         unsigned int lastID = 0;
@@ -435,7 +434,7 @@ namespace Kratos
 
                     // create the basis function object
                     std::vector<knot_t> pLocalKnots3;
-                    HnBasisFunction::Pointer p_bf = mBasisFuncs.CreateBf(level, pLocalKnots1, pLocalKnots2, pLocalKnots3);
+                    HBBasisFunction::Pointer p_bf = mBasisFuncs.CreateBf(level, pLocalKnots1, pLocalKnots2, pLocalKnots3);
 
                     // assign the coordinates and weight
                     int ifunc = j * num1 + i;
@@ -491,7 +490,7 @@ namespace Kratos
                             pLocalKnots1.push_back(mKnots1.pKnotAt(i + k));
 
                         // create the basis function object
-                        HnBasisFunction::Pointer p_bf = mBasisFuncs.CreateBf(level, pLocalKnots1, pLocalKnots2, pLocalKnots3);
+                        HBBasisFunction::Pointer p_bf = mBasisFuncs.CreateBf(level, pLocalKnots1, pLocalKnots2, pLocalKnots3);
 
                         // assign the coordinates and weight
                         int ifunc = (l * num2 + j) * num1 + i;
@@ -532,7 +531,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::Refine(const std::size_t& Id)
+    void HBMesh<TDim>::Refine(const std::size_t& Id)
     {
         #ifdef ENABLE_PROFILING
         double start = OpenMPUtils::GetCurrentTime();
@@ -637,9 +636,9 @@ namespace Kratos
         double area_tol = 1.0e-6; // tolerance to accept the nonzero-area cell. We should parameterize it.
         typename cell_container_t::Pointer pnew_cells;
         if(TDim == 2)
-            pnew_cells = cell_container_t::Pointer(new CellManager2D<HnCell>());
+            pnew_cells = cell_container_t::Pointer(new CellManager2D<HBCell>());
         else if(TDim == 3)
-            pnew_cells = cell_container_t::Pointer(new CellManager3D<HnCell>());
+            pnew_cells = cell_container_t::Pointer(new CellManager3D<HBCell>());
         double father_weight = p_bf->GetControlPoint().W();
         double father_X = p_bf->GetControlPoint().X0();
         double father_Y = p_bf->GetControlPoint().Y0();
@@ -664,7 +663,7 @@ namespace Kratos
 
                     // create the basis function object
                     std::vector<knot_t> pLocalKnots3;
-                    HnBasisFunction::Pointer pnew_bf = mBasisFuncs.CreateBf(next_level, pLocalKnots1, pLocalKnots2, pLocalKnots3);
+                    HBBasisFunction::Pointer pnew_bf = mBasisFuncs.CreateBf(next_level, pLocalKnots1, pLocalKnots2, pLocalKnots3);
 
                     // update the coordinates
                     int ifunc = j * num1 + i;
@@ -722,7 +721,7 @@ namespace Kratos
                             pLocalKnots1.push_back(pnew_local_knots[0][i + k]);
 
                         // create the basis function object
-                        HnBasisFunction::Pointer pnew_bf = mBasisFuncs.CreateBf(next_level, pLocalKnots1, pLocalKnots2, pLocalKnots3); //#
+                        HBBasisFunction::Pointer pnew_bf = mBasisFuncs.CreateBf(next_level, pLocalKnots1, pLocalKnots2, pLocalKnots3); //#
 
                         // update the coordinates
                         int ifunc = (l * num2 + j) * num1 + i;
@@ -768,12 +767,12 @@ namespace Kratos
         /* remove the cells of the old basis function (remove only the cell in the current level) */
         typename cell_container_t::Pointer pcells_to_remove;
         if(TDim == 2)
-            pcells_to_remove = cell_container_t::Pointer(new CellManager2D<HnCell>());
+            pcells_to_remove = cell_container_t::Pointer(new CellManager2D<HBCell>());
         else if(TDim == 3)
-            pcells_to_remove = cell_container_t::Pointer(new CellManager3D<HnCell>());
+            pcells_to_remove = cell_container_t::Pointer(new CellManager3D<HBCell>());
 
         // firstly we check if the cell c of the current bf in the current level cover any sub-cells. Then the sub-cell includes all bfs of the cell c.
-        for(HnBasisFunction::cell_iterator it_cell = p_bf->cell_begin(); it_cell != p_bf->cell_end(); ++it_cell)
+        for(HBBasisFunction::cell_iterator it_cell = p_bf->cell_begin(); it_cell != p_bf->cell_end(); ++it_cell)
         {
             if((*it_cell)->Level() == p_bf->Level())
             {
@@ -781,7 +780,7 @@ namespace Kratos
                 {
                     if((*it_subcell)->IsCoverred(*it_cell, TDim))
                     {
-                        for(HnCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
+                        for(HBCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
                         {
                             (*it_subcell)->AddBf(*it_bf);
                             (*it_bf)->AddCell(*it_subcell);
@@ -811,7 +810,7 @@ namespace Kratos
                 pcells_to_remove->insert(*it_cell);
                 for(std::size_t i = 0; i < p_cells.size(); ++i)
                 {
-                    for(HnCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
+                    for(HBCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
                     {
                         p_cells[i]->AddBf(*it_bf);
                         (*it_bf)->AddCell(p_cells[i]);
@@ -844,7 +843,7 @@ namespace Kratos
         for(cell_container_t::iterator it_cell = mpCellManager->begin(); it_cell != mpCellManager->end(); ++it_cell)
         {
             std::cout << "cell " << (*it_cell)->Id() << " supports:";
-            for(typename HnCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
+            for(typename HBCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
                 std::cout << " " << (*it_bf)->Id();
             std::cout << std::endl;
         }
@@ -852,7 +851,7 @@ namespace Kratos
         for(bf_container_t::iterator it_bf = mBasisFuncs.begin(); it_bf != mBasisFuncs.end(); ++it_bf)
         {
             std::cout << "bf " << (*it_bf)->Id() << " contains cell:";
-            for(HnBasisFunction::cell_iterator it_cell = (*it_bf)->cell_begin(); it_cell != (*it_bf)->cell_end(); ++it_cell)
+            for(HBBasisFunction::cell_iterator it_cell = (*it_bf)->cell_begin(); it_cell != (*it_bf)->cell_end(); ++it_cell)
                 std::cout << " " << (*it_cell)->Id();
             std::cout << std::endl;
         }
@@ -873,7 +872,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::RefineNodes(boost::python::list& pyList)
+    void HBMesh<TDim>::RefineNodes(boost::python::list& pyList)
     {
         // extract the python list to std::set
         std::set<std::size_t> NodeIds;
@@ -901,7 +900,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::RefineWindow(const double& Xi_min, const double& Xi_max,
+    void HBMesh<TDim>::RefineWindow(const double& Xi_min, const double& Xi_max,
             const double& Eta_min, const double& Eta_max, const double& Zeta_min, const double& Zeta_max)
     {
         // search and mark all basis functions need to refine on all level (starting from the last level) which support is contained in the refining domain
@@ -937,7 +936,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::LinearDependencyRefine(const std::size_t& refine_cycle)
+    void HBMesh<TDim>::LinearDependencyRefine(const std::size_t& refine_cycle)
     {
         if(mLastLevel < 1)
             return;
@@ -956,7 +955,7 @@ namespace Kratos
             for(std::size_t next_level = level; next_level <= mLastLevel; ++next_level)
                 for(bf_container_t::iterator it_bf = mBasisFuncs.begin(); it_bf != mBasisFuncs.end(); ++it_bf)
                     if((*it_bf)->Level() == next_level)
-                        for(HnBasisFunction::cell_iterator it_cell = (*it_bf)->cell_begin(); it_cell != (*it_bf)->cell_end(); ++it_cell)
+                        for(HBBasisFunction::cell_iterator it_cell = (*it_bf)->cell_begin(); it_cell != (*it_bf)->cell_end(); ++it_cell)
                             if(TDim == 2)
                             {
                                 p_domain->AddXcoord((*it_cell)->LeftValue());
@@ -978,7 +977,7 @@ namespace Kratos
             for(std::size_t next_level = level; next_level <= mLastLevel; ++next_level)
                 for(bf_container_t::iterator it_bf = mBasisFuncs.begin(); it_bf != mBasisFuncs.end(); ++it_bf)
                     if((*it_bf)->Level() == next_level)
-                        for(HnBasisFunction::cell_iterator it_cell = (*it_bf)->cell_begin(); it_cell != (*it_bf)->cell_end(); ++it_cell)
+                        for(HBBasisFunction::cell_iterator it_cell = (*it_bf)->cell_begin(); it_cell != (*it_bf)->cell_end(); ++it_cell)
                             if(TDim == 2)
                                 p_domain->AddCell((*it_cell)->LeftValue(), (*it_cell)->RightValue(), (*it_cell)->DownValue(), (*it_cell)->UpValue());
                             else if(TDim == 3)
@@ -1039,13 +1038,13 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::BuildMesh()
+    void HBMesh<TDim>::BuildMesh()
     {
         Vector Crow;
         for(cell_container_t::iterator it_cell = mpCellManager->begin(); it_cell != mpCellManager->end(); ++it_cell)
         {
             (*it_cell)->Reset();
-            for(typename HnCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
+            for(typename HBCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
             {
                 if(TDim == 2)
                     (*it_bf)->ComputeExtractionOperator(*it_cell, Crow, mOrder1, mOrder2);
@@ -1058,22 +1057,22 @@ namespace Kratos
 
     /// Validate the patch
     template<int TDim>
-    bool HnMesh<TDim>::Validate() const
+    bool HBMesh<TDim>::Validate() const
     {
         // TODO
     }
 
     template<int TDim>
-    void HnMesh<TDim>::BuildBoundaryMesh(HnMesh<TDim>& rMesh, std::string boundary_mesh_type) const
+    void HBMesh<TDim>::BuildBoundaryMesh(HBMesh<TDim>& rMesh, std::string boundary_mesh_type) const
     {
        // TODO
     }
 
     template<int TDim>
-    void HnMesh<TDim>::ExportCellTopology(std::string fn, bool cell_numbering) const
+    void HBMesh<TDim>::ExportCellTopology(std::string fn, bool cell_numbering) const
     {
         std::ofstream outfile(fn.c_str());
-        outfile << "%% Cell topology generated from hierarchical NURBS mesh, (c) Hoang Giang Bui, 2015\n";
+        outfile << "%% Cell topology generated from hierarchical B-Splines mesh, (c) Hoang Giang Bui, 2018\n";
         outfile << "clc\n";
         outfile << "close all\n";
         outfile << "hold on\n";
@@ -1132,7 +1131,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::ExportCellGeology(std::string fn)
+    void HBMesh<TDim>::ExportCellGeology(std::string fn)
     {
         // generate cell geology
         std::vector<unsigned int> point_list;
@@ -1148,7 +1147,7 @@ namespace Kratos
 
         // create file handler
         std::ofstream outfile(fn.c_str());
-        outfile << "%% Hierarchical NURBS mesh cell geology, (c) Hoang Giang Bui, 2015\n";
+        outfile << "%% hierarchical B-Splines mesh cell geology, (c) Hoang Giang Bui, 2018\n";
         outfile << "clc\n";
         outfile << "close all\n";
         outfile << "hold on\n";
@@ -1229,10 +1228,10 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::ExportSupportDomain(std::string fn, double distance)
+    void HBMesh<TDim>::ExportSupportDomain(std::string fn, double distance)
     {
         std::ofstream outfile(fn.c_str());
-        outfile << "%% Support domain topology generated from hierarchical NURBS mesh, (c) Hoang Giang Bui, 2015\n";
+        outfile << "%% Support domain topology generated from hierarchical B-Splines mesh, (c) Hoang Giang Bui, 2018\n";
         outfile << "clc\n";
 //        outfile << "close all\n";
         outfile << "hold on\n";
@@ -1254,10 +1253,10 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::ExportMatlab(std::string fn) const
+    void HBMesh<TDim>::ExportMatlab(std::string fn) const
     {
         std::ofstream outfile(fn.c_str());
-        outfile << "%% Hierarchical NURBS mesh information, (c) Hoang Giang Bui, 2015\n";
+        outfile << "%% hierarchical B-Splines mesh information, (c) Hoang Giang Bui, 2018\n";
         outfile << "clc\n";
         outfile << "clear\n";
         outfile << "close all\n";
@@ -1368,13 +1367,13 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::ExportMDPA(std::string fn) const
+    void HBMesh<TDim>::ExportMDPA(std::string fn) const
     {
         std::ofstream outfile(fn.c_str());
 
         // write header
-        outfile << "//KRATOS isogeometric application data file for hierarchical NURBS\n";
-        outfile << "//(c) 2015 Hoang Giang Bui, Ruhr-University Bochum\n";
+        outfile << "//KRATOS isogeometric application data file for hierarchical B-Splines\n";
+        outfile << "//(c) 2018 Hoang Giang Bui, Ruhr-University Bochum\n";
 
         IsogeometricMathUtils::timestamp(outfile);
 
@@ -1578,13 +1577,13 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::ExportMDPA2(std::string fn) const
+    void HBMesh<TDim>::ExportMDPA2(std::string fn) const
     {
         std::ofstream outfile(fn.c_str());
 
         // write header
-        outfile << "//KRATOS isogeometric application data file for hierarchical NURBS\n";
-        outfile << "//(c) 2015 Hoang Giang Bui, Ruhr-University Bochum\n";
+        outfile << "//KRATOS isogeometric application data file for hierarchical B-Splines\n";
+        outfile << "//(c) 2018 Hoang Giang Bui, Ruhr-University Bochum\n";
 
         IsogeometricMathUtils::timestamp(outfile);
 
@@ -1701,7 +1700,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::ExportPostMDPA(std::string fn, int NumDivision1, int NumDivision2, int NumDivision3)
+    void HBMesh<TDim>::ExportPostMDPA(std::string fn, int NumDivision1, int NumDivision2, int NumDivision3)
     {
         // create a vector of sampling knots in each direction
         std::vector<double> SamplingKnots1;
@@ -1761,6 +1760,7 @@ namespace Kratos
                             // compute the Bernstein basis function on the local coordinates
                             Vector B((mOrder1 + 1) * (mOrder2 + 1));
                             for(unsigned int k = 0; k < mOrder1 + 1; ++k)
+                            {
                                 for(unsigned int l = 0; l < mOrder2 + 1; ++l)
                                 {
                                     unsigned int num = k * (mOrder2 + 1) + l;
@@ -1768,6 +1768,7 @@ namespace Kratos
                                     double B2 = BezierUtils::bernstein2(l, mOrder2, local_eta);
                                     B(num) = B1 * B2;
                                 }
+                            }
 
                             // get the extraction operator on this cell
                             Matrix C = (*it_cell)->GetExtractionOperator();
@@ -1962,7 +1963,7 @@ namespace Kratos
 
         // write header
         outfile << "//KRATOS isogeometric application data file for post processing of Bezier-based discretization\n";
-        outfile << "//(c) 2015 Hoang Giang Bui, Ruhr-University Bochum\n";
+        outfile << "//(c) 2018 Hoang Giang Bui, Ruhr-University Bochum\n";
 
         IsogeometricMathUtils::timestamp(outfile);
 
@@ -2016,7 +2017,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::ExportCellGeologyAsPostMDPA(std::string fn)
+    void HBMesh<TDim>::ExportCellGeologyAsPostMDPA(std::string fn)
     {
         // generate cell geology
         std::vector<unsigned int> point_list;
@@ -2035,7 +2036,7 @@ namespace Kratos
 
         // write header
         outfile << "//KRATOS isogeometric application data file for post processing of Bezier-based discretization\n";
-        outfile << "//(c) 2015 Hoang Giang Bui, Ruhr-University Bochum\n";
+        outfile << "//(c) 2018 Hoang Giang Bui, Ruhr-University Bochum\n";
 
         IsogeometricMathUtils::timestamp(outfile);
 
@@ -2137,7 +2138,7 @@ namespace Kratos
     }
 
     template<int TDim>
-    void HnMesh<TDim>::GenerateCellGeology(std::vector<unsigned int>& point_list,
+    void HBMesh<TDim>::GenerateCellGeology(std::vector<unsigned int>& point_list,
                                      std::map<unsigned int, double>& X_list,
                                      std::map<unsigned int, double>& Y_list,
                                      std::map<unsigned int, double>& Z_list,
@@ -2481,10 +2482,10 @@ namespace Kratos
     /**
      * template instantiation
      */
-    template class HnMesh<0>;
-    template class HnMesh<1>;
-    template class HnMesh<2>;
-    template class HnMesh<3>;
+    template class HBMesh<0>;
+    template class HBMesh<1>;
+    template class HBMesh<2>;
+    template class HBMesh<3>;
 
 } // end namespace Kratos
 

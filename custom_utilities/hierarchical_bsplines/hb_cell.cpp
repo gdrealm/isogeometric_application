@@ -1,15 +1,15 @@
-#include "custom_utilities/hierarchical_nurbs/hn_cell.h"
-#include "custom_utilities/hierarchical_nurbs/hn_basis_function.h"
+#include "custom_utilities/hierarchical_bsplines/hb_cell.h"
+#include "custom_utilities/hierarchical_bsplines/hb_basis_function.h"
 
 namespace Kratos
 {
 
-    void HnCell::PrintInfo(std::ostream& rOStream) const
+    void HBCell::PrintInfo(std::ostream& rOStream) const
     {
         BaseType::PrintInfo(rOStream);
     }
 
-    void HnCell::PrintData(std::ostream& rOStream) const
+    void HBCell::PrintData(std::ostream& rOStream) const
     {
         rOStream << ", supporting basis functions: (";
         for(bf_iterator it = bf_begin(); it != bf_end(); ++it)

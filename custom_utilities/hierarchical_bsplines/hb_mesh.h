@@ -38,8 +38,8 @@
 #include "custom_utilities/nurbs/domain_manager_2d.h"
 #include "custom_utilities/nurbs/domain_manager_3d.h"
 #include "custom_utilities/patch.h"
-#include "custom_utilities/hierarchical_nurbs/basis_function_manager.h"
-#include "custom_utilities/hierarchical_nurbs/hn_basis_function.h"
+#include "custom_utilities/hierarchical_bsplines/basis_function_manager.h"
+#include "custom_utilities/hierarchical_bsplines/hb_basis_function.h"
 
 namespace Kratos
 {
@@ -50,10 +50,10 @@ enum HN_ECHO_FLAGS
 };
 
 /**
-Hierarchical NURBS mesh and refinement
+Hierarchical B-Splines mesh and refinement
 */
 template<int TDim>
-class HnMesh : public Patch<TDim>
+class HBMesh : public Patch<TDim>
 {
 private:
     template<class data_type>
@@ -127,7 +127,7 @@ public:
 //    static const int ECHO_REFIMENT      = 0b0000000000001000;
 
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(HnMesh);
+    KRATOS_CLASS_POINTER_DEFINITION(HBMesh);
 
     /// Type definition
     typedef Patch<TDim> BaseType;
@@ -135,11 +135,11 @@ public:
     typedef KnotArray1D<double> knot_container_t;
     typedef typename knot_container_t::knot_t knot_t;
 
-    typedef HnCell::Pointer cell_t;
-    typedef CellManager<HnCell> cell_container_t;
+    typedef HBCell::Pointer cell_t;
+    typedef CellManager<HBCell> cell_container_t;
 
-    typedef HnBasisFunction::Pointer bf_t;
-    typedef BasisFunctionManager<HnBasisFunction> bf_container_t;
+    typedef HBBasisFunction::Pointer bf_t;
+    typedef BasisFunctionManager<HBBasisFunction> bf_container_t;
 
     typedef DomainManager::Pointer domain_t;
     typedef std::map<std::size_t, domain_t> domain_container_t;
@@ -149,10 +149,10 @@ public:
     **************************************************************************/
 
     /// Default constructor
-    HnMesh(const std::size_t& Id, const std::string& Name);
+    HBMesh(const std::size_t& Id, const std::string& Name);
 
     /// Destructor
-    ~HnMesh() {}
+    ~HBMesh() {}
 
     /**************************************************************************
                            FUNDAMENTAL SUBROUTINES
@@ -266,7 +266,7 @@ public:
     virtual bool Validate() const;
 
     /// Build the hierarchical boundary mesh
-    void BuildBoundaryMesh(HnMesh& rMesh, std::string boundary_mesh_type) const;
+    void BuildBoundaryMesh(HBMesh& rMesh, std::string boundary_mesh_type) const;
 
     /**************************************************************************
                             MATLAB INTERFACE
@@ -303,6 +303,7 @@ public:
     **************************************************************************/
 
 private:
+
     std::string mName;
     unsigned int mEchoLevel;
 
@@ -358,19 +359,19 @@ private:
 };
 
 /**
- * Template specific instantiation for null-D hierarchical NURBS patch to terminate the compilation
+ * Template specific instantiation for null-D hierarchical B-Splines patch to terminate the compilation
  */
 template<>
-class HnMesh<0> : public Patch<0>
+class HBMesh<0> : public Patch<0>
 {
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(HnMesh);
+    KRATOS_CLASS_POINTER_DEFINITION(HBMesh);
 
     /// Default constructor
-    HnMesh(const std::size_t& Id, const std::string& Name) : Patch<0>(Id), mName(Name) {}
+    HBMesh(const std::size_t& Id, const std::string& Name) : Patch<0>(Id), mName(Name) {}
 
     /// Destructor
-    ~HnMesh() {}
+    ~HBMesh() {}
 
     /// Get the name of this hierarchical mesh
     const std::string& Name() const {return mName;}
@@ -393,7 +394,7 @@ private:
 
 /// output stream function
 template<int TDim>
-inline std::ostream& operator<<(std::ostream& rOStream, const HnMesh<TDim>& rThis)
+inline std::ostream& operator<<(std::ostream& rOStream, const HBMesh<TDim>& rThis)
 {
     rThis.PrintInfo(rOStream);
     return rOStream;
