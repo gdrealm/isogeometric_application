@@ -6,6 +6,11 @@ hold on;
 sizes = size(nurbs.coefs);
 u_dim = sizes(2);
 
+if nargin==1
+    params.label='off';
+    params.axis='off';
+end
+
 if ~isfield(params,'u_color')
     params.u_color = 'black';
 end

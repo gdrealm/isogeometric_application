@@ -9,6 +9,11 @@ function plot_ctrl_points_3d(nurbs,params)
 axis equal;
 hold on;
 
+if nargin==1
+    params.label='off';
+    params.axis='off';
+end
+
 sizes = size(nurbs.coefs);
 u_dim = sizes(2);
 v_dim = sizes(3);
