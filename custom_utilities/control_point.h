@@ -17,6 +17,7 @@
 
 // Project includes
 #include "includes/define.h"
+#include "custom_utilities/trans/transformation.h"
 
 namespace Kratos
 {
@@ -32,34 +33,34 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(ControlPoint);
 
     /// Default constructor
-    ControlPoint() : mX(0.0), mY(0.0), mZ(0.0), mW(1.0) {}
+    ControlPoint() : mWX(0.0), mWY(0.0), mWZ(0.0), mW(1.0) {}
 
     /// Constant constructor
-    ControlPoint(const double& v) : mX(v), mY(v), mZ(v), mW(v) {}
+    ControlPoint(const double& v) : mWX(v), mWY(v), mWZ(v), mW(v) {}
 
     /// Destructor
     virtual ~ControlPoint() {}
 
     /// homogeneous X-coordinate
-    TDataType& X() {return mX;}
-    const TDataType& X() const {return mX;}
+    TDataType& WX() {return mWX;}
+    const TDataType& WX() const {return mWX;}
 
     /// X-coordinate
-    const TDataType X0() const {return mX/mW;}
+    const TDataType X() const {return mWX/mW;}
 
     /// homogeneous Y-coordinate
-    TDataType& Y() {return mY;}
-    const TDataType& Y() const {return mY;}
+    TDataType& WY() {return mWY;}
+    const TDataType& WY() const {return mWY;}
 
     /// Y-coordinate
-    const TDataType Y0() const {return mY/mW;}
+    const TDataType Y() const {return mWY/mW;}
 
     /// homogeneous Z-coordinate
-    TDataType& Z() {return mZ;}
-    const TDataType& Z() const {return mZ;}
+    TDataType& WZ() {return mWZ;}
+    const TDataType& WZ() const {return mWZ;}
 
     /// Z-coordinate
-    const TDataType Z0() const {return mZ/mW;}
+    const TDataType Z() const {return mWZ/mW;}
 
     /// Weight
     TDataType& W() {return mW;}
@@ -68,53 +69,53 @@ public:
     /// Set the coordinate. The input is the physical coordinates in 3D space.
     void SetCoordinates(const TDataType& _X, const TDataType& _Y, const TDataType& _Z, const TDataType& _W)
     {
-        mX = _W*_X;
-        mY = _W*_Y;
-        mZ = _W*_Z;
-        mW = _W;
+        mWX = _W*_X;
+        mWY = _W*_Y;
+        mWZ = _W*_Z;
+        mW  = _W;
     }
 
     /// Add to the coordinate. The input is the increment of physical coordinates in 3D space.
     void AddCoordinates(const TDataType& _X, const TDataType& _Y, const TDataType& _Z, const TDataType& _W)
     {
-        mX += _W*_X;
-        mY += _W*_Y;
-        mZ += _W*_Z;
-        mW += _W;
+        mWX += _W*_X;
+        mWY += _W*_Y;
+        mWZ += _W*_Z;
+        mW  += _W;
     }
 
     // overload operator []
     TDataType& operator[] (const int& i)
     {
-        if (i == 0) return X();
-        else if (i == 1) return Y();
-        else if (i == 2) return Z();
+        if (i == 0) return WX();
+        else if (i == 1) return WY();
+        else if (i == 2) return WZ();
         else if (i == 3) return W();
     }
 
     const TDataType& operator[] (const int& i) const
     {
-        if (i == 0) return X();
-        else if (i == 1) return Y();
-        else if (i == 2) return Z();
+        if (i == 0) return WX();
+        else if (i == 1) return WY();
+        else if (i == 2) return WZ();
         else if (i == 3) return W();
     }
 
     // overload operator ()
     TDataType operator() (const int& i) const
     {
-        if (i == 0) return X0();
-        else if (i == 1) return Y0();
-        else if (i == 2) return Z0();
+        if (i == 0) return X();
+        else if (i == 1) return Y();
+        else if (i == 2) return Z();
         else if (i == 3) return W();
     }
 
     /// Assignment operator
     ControlPoint& operator=(const ControlPoint& rOther)
     {
-        this->mX = rOther.mX;
-        this->mY = rOther.mY;
-        this->mZ = rOther.mZ;
+        this->mWX = rOther.mWX;
+        this->mWY = rOther.mWY;
+        this->mWZ = rOther.mWZ;
         this->mW = rOther.mW;
         return *this;
     }
@@ -122,9 +123,9 @@ public:
     /// Addition operator
     ControlPoint& operator+=(const ControlPoint& rOther)
     {
-        this->mX += rOther.mX;
-        this->mY += rOther.mY;
-        this->mZ += rOther.mZ;
+        this->mWX += rOther.mWX;
+        this->mWY += rOther.mWY;
+        this->mWZ += rOther.mWZ;
         this->mW += rOther.mW;
         return *this;
     }
@@ -139,11 +140,20 @@ public:
     /// Multiplication operator
     ControlPoint& operator*=(const TDataType& alpha)
     {
-        this->mX *= alpha;
-        this->mY *= alpha;
-        this->mZ *= alpha;
+        this->mWX *= alpha;
+        this->mWY *= alpha;
+        this->mWZ *= alpha;
         this->mW *= alpha;
         return *this;
+    }
+
+    /// Apply the homogeneous transformation to the control point
+    void ApplyTransformation(const Transformation<TDataType>& trans)
+    {
+        TDataType res[4];
+        for (std::size_t i = 0; i < 4; ++i)
+            res[i] = trans(i, 0)*this->mWX + trans(i, 1)*this->mWY + trans(i, 2)*this->mWZ + trans(i, 3)*this->mW;
+        this->mWX = res[0]; this->mWY = res[1]; this->mWZ = res[2]; this->mW = res[3];
     }
 
     /// Multiplication operator
@@ -153,20 +163,27 @@ public:
         return c;
     }
 
+    /// Multiplication operator
+    friend ControlPoint operator*(const Transformation<TDataType>& trans, ControlPoint c)
+    {
+        c.ApplyTransformation(trans);
+        return c;
+    }
+
     /// Information
-    void PrintInfo(std::ostream& rOStream) const
+    virtual void PrintInfo(std::ostream& rOStream) const
     {
         rOStream << "Control Point";
     }
 
-    void PrintData(std::ostream& rOStream) const
+    virtual void PrintData(std::ostream& rOStream) const
     {
         // print the control point in homogeneous coordinates
-        rOStream << "(" << X() << ", " << Y() << ", " << Z() << ", " << W() << ")";
+        rOStream << "(" << WX() << ", " << WY() << ", " << WZ() << ", " << W() << ")";
     }
 
 private:
-    TDataType mX, mY, mZ, mW;
+    TDataType mWX, mWY, mWZ, mW;
 };
 
 /// output stream function

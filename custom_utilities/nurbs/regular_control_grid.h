@@ -58,6 +58,9 @@ public:
     /// Destructor
     virtual ~RegularControlGrid() {}
 
+    /// Create a new control grid pointer
+    static RegularControlGrid::Pointer Create(const std::vector<std::size_t>& sizes) {return RegularControlGrid::Pointer(new RegularControlGrid(sizes));}
+
     /// Get the size of underlying data
     std::size_t Size() const {return BaseType::Data().size();}
 
@@ -129,7 +132,7 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "Grid " << BaseType::Name() << "[" << mSize << "]";
+        rOStream << "RegularGrid<1> " << BaseType::Name() << "[" << mSize << "]";
     }
 
     virtual void PrintData(std::ostream& rOStream) const
@@ -172,6 +175,15 @@ public:
 
     /// Destructor
     virtual ~RegularControlGrid() {}
+
+    /// Create a new control grid pointer
+    static RegularControlGrid::Pointer Create(const std::vector<std::size_t>& sizes) {return RegularControlGrid::Pointer(new RegularControlGrid(sizes));}
+
+    /// resize the grid
+    void Resize(const std::size_t& new_size1, const std::size_t& new_size2)
+    {
+        resize(new_size1, new_size2);
+    }
 
     /// resize the grid
     void resize(const std::size_t& new_size1, const std::size_t& new_size2)
@@ -256,7 +268,7 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "Grid " << BaseType::Name() << ": [" << mSize[0] << ", " << mSize[1] << "]";
+        rOStream << "RegularGrid<2> " << BaseType::Name() << ": [" << mSize[0] << ", " << mSize[1] << "]";
     }
 
     virtual void PrintData(std::ostream& rOStream) const
@@ -306,6 +318,15 @@ public:
 
     /// Destructor
     virtual ~RegularControlGrid() {}
+
+    /// Create a new control grid pointer
+    static RegularControlGrid::Pointer Create(const std::vector<std::size_t>& sizes) {return RegularControlGrid::Pointer(new RegularControlGrid(sizes));}
+
+    /// resize the grid
+    void Resize(const std::size_t& new_size1, const std::size_t& new_size2, const std::size_t& new_size3)
+    {
+        resize(new_size1, new_size2, new_size3);
+    }
 
     /// resize the grid
     void resize(const std::size_t& new_size1, const std::size_t& new_size2, const std::size_t& new_size3)
@@ -401,7 +422,7 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "Grid " << BaseType::Name() << ": [" << mSize[0] << ", " << mSize[1] << ", " << mSize[2] << "]";
+        rOStream << "RegularGrid<3> " << BaseType::Name() << ": [" << mSize[0] << ", " << mSize[1] << ", " << mSize[2] << "]";
     }
 
     virtual void PrintData(std::ostream& rOStream) const

@@ -47,6 +47,12 @@ public:
     /// Destructor
     virtual ~BSplinesFESpace() {}
 
+    /// Helper to create new BSplinesFESpace pointer
+    static BSplinesFESpace<TDim>::Pointer Create()
+    {
+        return BSplinesFESpace<TDim>::Pointer(new BSplinesFESpace());
+    }
+
     /// Get the order of the BSplines patch in specific direction
     virtual const std::size_t Order(const std::size_t& i) const {return mOrders[i];}
 
@@ -455,6 +461,26 @@ public:
         }
 
         return pBFESpace;
+    }
+
+    /// Overload assignment operator
+    BSplinesFESpace<TDim>& operator=(const BSplinesFESpace<TDim>& rOther)
+    {
+        for (std::size_t dim = 0; dim < TDim; ++dim)
+        {
+            this->SetKnotVector(dim, rOther.KnotVector(dim));
+            this->SetInfo(dim, rOther.Number(dim), rOther.Order(dim));
+        }
+        BaseType::operator=(rOther);
+        return *this;
+    }
+
+    /// Clone this FESpace, this is a deep copy operation
+    virtual typename FESpace<TDim>::Pointer Clone() const
+    {
+        typename BSplinesFESpace<TDim>::Pointer pNewFESpace = typename BSplinesFESpace<TDim>::Pointer(new BSplinesFESpace<TDim>());
+        *pNewFESpace = *this;
+        return pNewFESpace;
     }
 
     /// Information

@@ -41,6 +41,18 @@ public:
     /// Destructor
     virtual ~BSplinesFESpaceLibrary() {}
 
+    /// Create the primitive open knot vector with order p
+    /// The primitive knot vector is the knot vector of only 0 and 1.
+    static knot_container_t CreatePrimitiveOpenKnotVector(const std::size_t& order)
+    {
+        knot_container_t knot_vector;
+        for (std::size_t i = 0; i < order+1; ++i)
+            knot_vector.pCreateKnot(0.0);
+        for (std::size_t i = 0; i < order+1; ++i)
+            knot_vector.pCreateKnot(1.0);
+        return knot_vector;
+    }
+
     /// Generate regular BSplines patch. For 2D, it's rectangle and for 3D it's a cube.
     /// The knot vector only contains 0 and 1, i.e [0 0 0 ... 1 1 1].
     /// All the weights are 1.
@@ -51,11 +63,7 @@ public:
 
         for (std::size_t dim = 0; dim < TDim; ++dim)
         {
-            knot_container_t knot_vector;
-            for (std::size_t i = 0; i < Orders[dim]+1; ++i)
-                knot_vector.pCreateKnot(0.0);
-            for (std::size_t i = 0; i < Orders[dim]+1; ++i)
-                knot_vector.pCreateKnot(1.0);
+            knot_container_t knot_vector = CreatePrimitiveOpenKnotVector(Orders[dim]);
             pFESpace->SetKnotVector(dim, knot_vector);
             pFESpace->SetInfo(dim, Orders[dim]+1, Orders[dim]);
         }

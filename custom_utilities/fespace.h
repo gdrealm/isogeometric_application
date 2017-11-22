@@ -54,6 +54,12 @@ public:
     {
     }
 
+    /// Helper to create new BSplinesFESpace pointer
+    static FESpace<TDim>::Pointer Create()
+    {
+        return FESpace<TDim>::Pointer(new FESpace());
+    }
+
     /// Get the number of basis functions defined over the FESpace
     virtual const std::size_t TotalNumber() const
     {
@@ -183,6 +189,23 @@ public:
         else if (side == _BACK_) return _FRONT_;
         else
             KRATOS_THROW_ERROR(std::logic_error, "Invalid boundary side", side)
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /// Overload assignment operator
+    FESpace<TDim>& operator=(const FESpace<TDim>& rOther)
+    {
+        this->mFunctionIds = rOther.mFunctionIds;
+        return *this;
+    }
+
+    /// Clone this FESpace, this is a deep copy operation
+    virtual typename FESpace<TDim>::Pointer Clone() const
+    {
+        typename FESpace<TDim>::Pointer pNewFESpace = typename FESpace<TDim>::Pointer(new FESpace<TDim>());
+        *pNewFESpace = *this;
+        return pNewFESpace;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////

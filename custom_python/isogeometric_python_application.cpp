@@ -1,3 +1,7 @@
+/*
+LICENSE: see isogeometric_application/LICENSE.txt
+*/
+
 //
 //   Project Name:        Kratos
 //   Last modified by:    $Author: hbui $

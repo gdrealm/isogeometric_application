@@ -23,7 +23,7 @@
 #include "custom_utilities/control_point.h"
 #include "custom_utilities/grid_function.h"
 #include "custom_utilities/patch.h"
-// #include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
+// #include "custom_utilities/hierarchical_bsplines/hb_mesh.h"
 
 namespace Kratos
 {
@@ -154,7 +154,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_LEFT_);
                     InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                // else if (pPatch->pNeighbor(_LEFT_)->pFESpace()->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_LEFT_)->pFESpace()->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -180,7 +180,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_RIGHT_);
                     InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                // else if (pPatch->pNeighbor(_RIGHT_)->pFESpace()->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_RIGHT_)->pFESpace()->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -206,7 +206,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_TOP_);
                     InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                // else if (pPatch->pNeighbor(_TOP_)->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_TOP_)->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -232,7 +232,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_BOTTOM_);
                     InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                // else if (pPatch->pNeighbor(_BOTTOM_)->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_BOTTOM_)->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -251,7 +251,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_FRONT_);
                     InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                // else if (pPatch->pNeighbor(_FRONT_)->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_FRONT_)->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -270,7 +270,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_BACK_);
                     InsertKnots<TDim>(pNeighbor, refined_patches, neib_ins_knots);
                 }
-                // else if (pPatch->pNeighbor(_BACK_)->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_BACK_)->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -370,7 +370,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_LEFT_);
                     DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
                 }
-                // else if (pPatch->pNeighbor(_LEFT_)->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_LEFT_)->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -400,7 +400,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_RIGHT_);
                     DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
                 }
-                // else if (pPatch->pNeighbor(_RIGHT_)->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_RIGHT_)->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -426,7 +426,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_TOP_);
                     DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
                 }
-                // else if (pPatch->pNeighbor(_TOP_)->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_TOP_)->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -452,7 +452,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_BOTTOM_);
                     DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
                 }
-                // else if (pPatch->pNeighbor(_BOTTOM_)->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_BOTTOM_)->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -471,7 +471,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_FRONT_);
                     DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
                 }
-                // else if (pPatch->pNeighbor(_FRONT_)->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_FRONT_)->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
@@ -490,7 +490,7 @@ public:
                     typename Patch<TDim>::Pointer pNeighbor = pPatch->pNeighbor(_BACK_);
                     DegreeElevate<TDim>(pNeighbor, refined_patches, neib_order_increment);
                 }
-                // else if (pPatch->pNeighbor(_BACK_)->Type() == HnMesh<TDim>::StaticType())
+                // else if (pPatch->pNeighbor(_BACK_)->Type() == HBMesh<TDim>::StaticType())
                 // {
                 //     //TODO
                 //     KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")

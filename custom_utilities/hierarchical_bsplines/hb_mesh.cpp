@@ -640,9 +640,9 @@ namespace Kratos
         else if(TDim == 3)
             pnew_cells = cell_container_t::Pointer(new CellManager3D<HBCell>());
         double father_weight = p_bf->GetControlPoint().W();
-        double father_X = p_bf->GetControlPoint().X0();
-        double father_Y = p_bf->GetControlPoint().Y0();
-        double father_Z = p_bf->GetControlPoint().Z0();
+        double father_X = p_bf->GetControlPoint().X();
+        double father_Y = p_bf->GetControlPoint().Y();
+        double father_Z = p_bf->GetControlPoint().Z();
         if(TDim == 2)
         {
             int num1 = pnew_local_knots[0].size() - mOrder1 - 1;
@@ -1325,7 +1325,7 @@ namespace Kratos
                 outfile << "];\n";
             }
 
-            outfile << "P(" << cnt << ",:) = [" << (*it_bf)->GetControlPoint().X0() << " " << (*it_bf)->GetControlPoint().Y0() << " " << (*it_bf)->GetControlPoint().Z0() << "];\n";
+            outfile << "P(" << cnt << ",:) = [" << (*it_bf)->GetControlPoint().X() << " " << (*it_bf)->GetControlPoint().Y() << " " << (*it_bf)->GetControlPoint().Z() << "];\n";
             outfile << "W(" << cnt << ") = " << (*it_bf)->GetControlPoint().W() << ";\n";
             outfile << "Id(" << cnt << ") = " << (*it_bf)->Id() << ";\n";
             outfile << std::endl;
@@ -1394,10 +1394,10 @@ namespace Kratos
         for(typename bf_container_t::iterator it_bf = mBasisFuncs.begin(); it_bf != mBasisFuncs.end(); ++it_bf)
         {
             #ifdef MDPA_NODE_RENUMBERING
-            outfile << ++BfId << "\t" << (*it_bf)->GetControlPoint().X0() << "\t" << (*it_bf)->GetControlPoint().Y0() << "\t" << (*it_bf)->GetControlPoint().Z0() << std::endl; // assign new basis function id
+            outfile << ++BfId << "\t" << (*it_bf)->GetControlPoint().X() << "\t" << (*it_bf)->GetControlPoint().Y() << "\t" << (*it_bf)->GetControlPoint().Z() << std::endl; // assign new basis function id
             OldToNewBfId[(*it_bf)->Id()] = BfId;
             #else
-            outfile << (*it_bf)->Id() << "\t" << (*it_bf)->GetControlPoint().X0() << "\t" << (*it_bf)->GetControlPoint().Y0() << "\t" << (*it_bf)->GetControlPoint().Z0() << std::endl; // assign new basis function id
+            outfile << (*it_bf)->Id() << "\t" << (*it_bf)->GetControlPoint().X() << "\t" << (*it_bf)->GetControlPoint().Y() << "\t" << (*it_bf)->GetControlPoint().Z() << std::endl; // assign new basis function id
             #endif
         }
         outfile << "End Nodes\n\n";
@@ -1604,10 +1604,10 @@ namespace Kratos
         for(typename bf_container_t::iterator it_bf = mBasisFuncs.begin(); it_bf != mBasisFuncs.end(); ++it_bf)
         {
             #ifdef MDPA_NODE_RENUMBERING
-            outfile << ++BfId << "\t" << (*it_bf)->GetControlPoint().X0() << "\t" << (*it_bf)->GetControlPoint().Y0() << "\t" << (*it_bf)->GetControlPoint().Z0() << std::endl; // assign new basis function id
+            outfile << ++BfId << "\t" << (*it_bf)->GetControlPoint().X() << "\t" << (*it_bf)->GetControlPoint().Y() << "\t" << (*it_bf)->GetControlPoint().Z() << std::endl; // assign new basis function id
             OldToNewBfId[(*it_bf)->Id()] = BfId;
             #else
-            outfile << (*it_bf)->Id() << "\t" << (*it_bf)->GetControlPoint().X0() << "\t" << (*it_bf)->GetControlPoint().Y0() << "\t" << (*it_bf)->GetControlPoint().Z0() << std::endl; // assign new basis function id
+            outfile << (*it_bf)->Id() << "\t" << (*it_bf)->GetControlPoint().X() << "\t" << (*it_bf)->GetControlPoint().Y() << "\t" << (*it_bf)->GetControlPoint().Z() << std::endl; // assign new basis function id
             #endif
         }
         outfile << "End Nodes\n\n";
@@ -1792,9 +1792,9 @@ namespace Kratos
                             for(std::size_t k = 0; k < (*it_cell)->NumberOfAnchors(); ++k)
                             {
                                 std::size_t func_id = static_cast<std::size_t>(bfs_id[k]);
-                                X += R(k) * mBasisFuncs[func_id]->GetControlPoint().X0();
-                                Y += R(k) * mBasisFuncs[func_id]->GetControlPoint().Y0();
-                                Z += R(k) * mBasisFuncs[func_id]->GetControlPoint().Z0();
+                                X += R(k) * mBasisFuncs[func_id]->GetControlPoint().X();
+                                Y += R(k) * mBasisFuncs[func_id]->GetControlPoint().Y();
+                                Z += R(k) * mBasisFuncs[func_id]->GetControlPoint().Z();
                             }
 
                             // add point to list
@@ -1901,9 +1901,9 @@ namespace Kratos
                                 for(std::size_t k = 0; k < (*it_cell)->NumberOfAnchors(); ++k)
                                 {
                                     std::size_t func_id = static_cast<std::size_t>(bfs_id[k]);
-                                    X += R(k) * mBasisFuncs[func_id]->GetControlPoint().X0();
-                                    Y += R(k) * mBasisFuncs[func_id]->GetControlPoint().Y0();
-                                    Z += R(k) * mBasisFuncs[func_id]->GetControlPoint().Z0();
+                                    X += R(k) * mBasisFuncs[func_id]->GetControlPoint().X();
+                                    Y += R(k) * mBasisFuncs[func_id]->GetControlPoint().Y();
+                                    Z += R(k) * mBasisFuncs[func_id]->GetControlPoint().Z();
                                 }
 
                                 // add point to list
@@ -2274,9 +2274,9 @@ namespace Kratos
             for(std::size_t k = 0; k < p_cell->NumberOfAnchors(); ++k)
             {
                 std::size_t func_id = static_cast<std::size_t>(bfs_id[k]);
-                X += R(k) * mBasisFuncs[func_id]->GetControlPoint().X0();
-                Y += R(k) * mBasisFuncs[func_id]->GetControlPoint().Y0();
-                Z += R(k) * mBasisFuncs[func_id]->GetControlPoint().Z0();
+                X += R(k) * mBasisFuncs[func_id]->GetControlPoint().X();
+                Y += R(k) * mBasisFuncs[func_id]->GetControlPoint().Y();
+                Z += R(k) * mBasisFuncs[func_id]->GetControlPoint().Z();
             }
 
             // add point to list

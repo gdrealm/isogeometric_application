@@ -47,6 +47,7 @@ public:
 
     /// Type definition
     typedef ControlPoint<double> ControlPointType;
+    typedef Transformation<double> TransformationType;
 
     typedef GridFunction<TDim, double> DoubleGridFunctionType;
     typedef std::vector<typename DoubleGridFunctionType::Pointer> DoubleGridFunctionContainterType;
@@ -87,6 +88,12 @@ public:
         #ifdef DEBUG_DESTROY
         std::cout << Type() << ", Id = " << Id() << ", Add = " << this << " is destroyed" << std::endl;
         #endif
+    }
+
+    /// Helper function to create new patch pointer
+    static typename Patch<TDim>::Pointer Create(const std::size_t& Id, typename FESpace<TDim>::Pointer pFESpace)
+    {
+        return typename Patch<TDim>::Pointer(new Patch<TDim>(Id, pFESpace));
     }
 
     /// Set the Id of this patch
@@ -162,6 +169,14 @@ public:
         for (std::size_t i = 0; i < GridData.size(); ++i)
             Weights[i] = GridData[i].W();
         return Weights;
+    }
+
+    /// Apply the homogeneous transformation to the patch
+    void ApplyTransformation(const TransformationType& trans)
+    {
+        typename GridFunction<TDim, ControlPointType>::DataContainerType& GridData = pControlPointGridFunction()->pControlGrid()->Data();
+        for (std::size_t i = 0; i < GridData.size(); ++i)
+            GridData[i].ApplyTransformation(trans);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -952,44 +967,39 @@ public:
     const std::size_t& size() const {return mpPatches.size();}
 
     /// Enumerate all the patches
-    void Enumerate(std::size_t& EquationSystemSize, std::set<std::size_t>& enumerated_patches)
+    void Enumerate(std::size_t& EquationSystemSize)
     {
         // secondly enumerate each patch
         EquationSystemSize = 0;
         for (typename PatchContainerType::ptr_iterator it = Patches().ptr_begin(); it != Patches().ptr_end(); ++it)
         {
-            // enumerate the patch and remember
-            if ( std::find(enumerated_patches.begin(), enumerated_patches.end(), (*it)->Id()) == enumerated_patches.end() )
+            EquationSystemSize = (*it)->pFESpace()->Enumerate(EquationSystemSize);
+            // KRATOS_WATCH(EquationSystemSize)
+
+            // transfer the enumeration to neighbor boundary
+            for (int i = _LEFT_; i <= _BACK_; ++i)
             {
-                EquationSystemSize = (*it)->pFESpace()->Enumerate(EquationSystemSize);
-                enumerated_patches.insert((*it)->Id());
-                // KRATOS_WATCH(EquationSystemSize)
+                BoundarySide side = static_cast<BoundarySide>(i);
 
-                // find the neighbors and enumerate the boundary of the neighbors
-                for (int i = _LEFT_; i <= _BACK_; ++i)
+                if ((*it)->pNeighbor(side) != NULL)
                 {
-                    BoundarySide side = static_cast<BoundarySide>(i);
+                    // find the side of the other neighbor
+                    BoundarySide other_side = (*it)->pNeighbor(side)->FindBoundarySide(*it);
 
-                    if ((*it)->pNeighbor(side) != NULL)
+                    if (other_side == _NUMBER_OF_BOUNDARY_SIDE)
+                        KRATOS_THROW_ERROR(std::logic_error, "No neighbor of the neighbor is the same as this. Error setting the neighbor.", "")
+
+                    // check the boundary compatibility again
+                    if (!(*it)->CheckBoundaryCompatibility(side, *((*it)->pNeighbor(side)), other_side))
                     {
-                        // find the side of the other neighbor
-                        BoundarySide other_side = (*it)->pNeighbor(side)->FindBoundarySide(*it);
-
-                        if (other_side == _NUMBER_OF_BOUNDARY_SIDE)
-                            KRATOS_THROW_ERROR(std::logic_error, "No neighbor of the neighbor is the same as this. Error setting the neighbor.", "")
-
-                        // check the boundary compatibility again
-                        if (!(*it)->CheckBoundaryCompatibility(side, *((*it)->pNeighbor(side)), other_side))
-                        {
-                            KRATOS_WATCH(side)
-                            KRATOS_WATCH(other_side)
-                            KRATOS_THROW_ERROR(std::logic_error, "The boundary compatibility with the neighbor is not satisfied", "")
-                        }
-                        else
-                        {
-                            std::vector<std::size_t> func_indices = (*it)->pFESpace()->ExtractBoundaryFunctionIndices(side);
-                            (*it)->pNeighbor(side)->pFESpace()->AssignBoundaryFunctionIndices(other_side, func_indices);
-                        }
+                        KRATOS_WATCH(side)
+                        KRATOS_WATCH(other_side)
+                        KRATOS_THROW_ERROR(std::logic_error, "The boundary compatibility with the neighbor is not satisfied", "")
+                    }
+                    else
+                    {
+                        std::vector<std::size_t> func_indices = (*it)->pFESpace()->ExtractBoundaryFunctionIndices(side);
+                        (*it)->pNeighbor(side)->pFESpace()->AssignBoundaryFunctionIndices(other_side, func_indices);
                     }
                 }
             }

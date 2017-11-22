@@ -22,33 +22,48 @@ kernel = Kernel()   #defining kernel
 nurbs_fespace_library = BSplinesFESpaceLibrary()
 grid_util = ControlGridUtility()
 multipatch_util = MultiPatchUtility()
-
-fes1 = nurbs_fespace_library.CreateLinearFESpace(3)
-ctrl_grid_1 = grid_util.CreateLinearControlPointGrid(0.0, 0.0, 0.0, fes1.Number(0), 1.0, 0.0, 0.0)
-#print(fes1)
-#print(ctrl_grid_1)
-
-patch1_ptr = multipatch_util.CreatePatchPointer(1, fes1)
-patch1 = patch1_ptr.GetReference()
-patch1.CreateControlPointGridFunction(ctrl_grid_1)
-print(patch1)
-
-print("######BEFORE REFINEMENT#######")
-print(patch1)
-multipatch_util.ExportGeo(patch1, "line.txt")
-
-print("######AFTER REFINEMENT#######")
-mpatch = MultiPatch1D()
-mpatch.AddPatch(patch1)
-mpatch.ResetId()
-
 multipatch_refine_util = MultiPatchRefinementUtility()
-multipatch_refine_util.InsertKnots(patch1_ptr, [[0.4, 0.5]])
-print(mpatch) # result is the same as matlab code below
-multipatch_util.ExportGlvis(mpatch, "line.mesh")
+bsplines_patch_util = BSplinesPatchUtility()
+mpatch_export = MultiNURBSPatchMatlabExporter()
 
-##lin = nrbdegelev(nrbline,2)
-##lin1 = nrbkntins(lin,[0.4 0.5])
-##lin1.coefs
+import geometry_factory
+
+####### create arc 1
+r1 = 1.0
+arc1_ptr = geometry_factory.CreateSmallArc([0.0, 0.0, 0.0], 'z', r1, 0.0, 45.0)
+arc1 = arc1_ptr.GetReference()
+
+# create line 1
+b1 = 4.0
+line1_ptr = geometry_factory.CreateLine([b1, 0.0, 0.0], [b1, b1, 0.0], arc1.Order(0))
+line1 = line1_ptr.GetReference()
+
+# create patch 1
+patch1_ptr = bsplines_patch_util.CreateConnectedPatch(arc1, line1)
+patch1 = patch1_ptr.GetReference()
+patch1.Id = 1
+
+####### create arc 2
+arc2_ptr = geometry_factory.CreateSmallArc([0.0, 0.0, 0.0], 'z', r1, 45.0, 90.0)
+arc2 = arc2_ptr.GetReference()
+
+# create line 2
+line2_ptr = geometry_factory.CreateLine([b1, b1, 0.0], [0.0, b1, 0.0], arc2.Order(0))
+line2 = line2_ptr.GetReference()
+
+# create patch 2
+patch2_ptr = bsplines_patch_util.CreateConnectedPatch(arc2, line2)
+patch2 = patch2_ptr.GetReference()
+patch2.Id = 2
+
+######create multipatch
+mpatch = MultiPatch2D()
+mpatch.AddPatch(patch1)
+mpatch.AddPatch(patch2)
+mpatch.MakeNeighbor(patch1, BoundarySide.Right, patch2, BoundarySide.Left)
+multipatch_refine_util.DegreeElevate(patch1_ptr, [1, 1])
+print(mpatch)
+
+mpatch_export.Export(mpatch, "plate_with_hole.m")
 
 

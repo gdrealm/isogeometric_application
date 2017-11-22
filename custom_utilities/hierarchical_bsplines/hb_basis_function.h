@@ -304,9 +304,9 @@ public:
     void PrintInfo(std::ostream& rOStream) const
     {
         rOStream << "Bf(id:" << Id()
-                 << ",(x:" << GetControlPoint().X0()
-                 << ",y:"  << GetControlPoint().Y0()
-                 << ",z:"  << GetControlPoint().Z0()
+                 << ",(x:" << GetControlPoint().X()
+                 << ",y:"  << GetControlPoint().Y()
+                 << ",z:"  << GetControlPoint().Z()
                  << ",w:"  << GetControlPoint().W()
                  << "))";
     }

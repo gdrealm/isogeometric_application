@@ -18,13 +18,16 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include <boost/foreach.hpp>
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
+#include <boost/python/operators.hpp>
 
 // Project includes
 #include "includes/define.h"
 #include "includes/model_part.h"
-#include "custom_python/add_utilities_to_python.h"
 #include "custom_utilities/nurbs/domain_manager.h"
 #include "custom_utilities/nurbs/domain_manager_2d.h"
+#include "custom_utilities/trans/transformation.h"
+#include "custom_utilities/trans/translation.h"
+#include "custom_utilities/trans/rotation.h"
 #include "custom_utilities/control_point.h"
 #include "custom_utilities/control_grid.h"
 #include "custom_utilities/nurbs/regular_control_grid.h"
@@ -32,11 +35,16 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "custom_utilities/fespace.h"
 #include "custom_utilities/nurbs/bsplines_fespace.h"
 #include "custom_utilities/nurbs/bsplines_fespace_library.h"
+#include "custom_utilities/nurbs/bsplines_patch_utility.h"
 #include "custom_utilities/patch.h"
 #include "custom_utilities/multipatch_utility.h"
 #include "custom_utilities/multipatch_refinement_utility.h"
-//#include "custom_utilities/tsplines/tsmesh_2d.h"
-//#include "custom_utilities/hierarchical_nurbs/hn_mesh.h"
+#include "custom_utilities/hierarchical_bsplines/hb_mesh.h"
+#include "custom_utilities/tsplines/tsmesh_2d.h"
+#include "custom_utilities/import_export/multi_nurbs_patch_geo_exporter.h"
+#include "custom_utilities/import_export/multi_nurbs_patch_matlab_exporter.h"
+#include "custom_utilities/import_export/multi_nurbs_patch_glvis_exporter.h"
+#include "custom_python/add_utilities_to_python.h"
 
 
 namespace Kratos
@@ -49,6 +57,36 @@ using namespace boost::python;
 
 ////////////////////////////////////////
 
+double ControlPoint_GetWX(ControlPoint<double>& rDummy)
+{
+    return rDummy.WX();
+}
+
+void ControlPoint_SetWX(ControlPoint<double>& rDummy, const double& newWX)
+{
+    rDummy.WX() = newWX;
+}
+
+double ControlPoint_GetWY(ControlPoint<double>& rDummy)
+{
+    return rDummy.WY();
+}
+
+void ControlPoint_SetWY(ControlPoint<double>& rDummy, const double& newWY)
+{
+    rDummy.WY() = newWY;
+}
+
+double ControlPoint_GetWZ(ControlPoint<double>& rDummy)
+{
+    return rDummy.WZ();
+}
+
+void ControlPoint_SetWZ(ControlPoint<double>& rDummy, const double& newWZ)
+{
+    rDummy.WZ() = newWZ;
+}
+
 double ControlPoint_GetW(ControlPoint<double>& rDummy)
 {
     return rDummy.W();
@@ -57,6 +95,11 @@ double ControlPoint_GetW(ControlPoint<double>& rDummy)
 void ControlPoint_SetW(ControlPoint<double>& rDummy, const double& newW)
 {
     rDummy.W() = newW;
+}
+
+void ControlPoint_ApplyTransformation(ControlPoint<double>& rDummy, const Transformation<double>& trans)
+{
+    rDummy.ApplyTransformation(trans);
 }
 
 ////////////////////////////////////////
@@ -97,7 +140,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateLinearContr
     return rDummy.CreateRegularControlPointGrid<1>(start, ngrid, end);
 }
 
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateRectangularControlPointGrid(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateRectangularControlPointGrid1(
         ControlGridUtility& rDummy,
         const double& start_x, const double& start_y,
         const std::size_t& n_points_u, const std::size_t& n_points_v,
@@ -118,7 +161,40 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateRectangular
     return rDummy.CreateRegularControlPointGrid<2>(start, ngrid, end);
 }
 
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateCubicControlPointGrid(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateRectangularControlPointGrid2(
+        ControlGridUtility& rDummy,
+        const double& start_x, const double& start_y, const double& start_z,
+        const std::size_t& n_points_u, const std::size_t& n_points_v,
+        const double& space1_x, const double& space1_y, const double& space1_z,
+        const double& space2_x, const double& space2_y, const double& space2_z)
+{
+    std::vector<double> start(3);
+    start[0] = start_x;
+    start[1] = start_y;
+    start[2] = start_z;
+
+    std::vector<std::size_t> ngrid(2);
+    ngrid[0] = n_points_u;
+    ngrid[1] = n_points_v;
+
+    std::vector<double> space1(3);
+    space1[0] = space1_x;
+    space1[1] = space1_y;
+    space1[2] = space1_z;
+
+    std::vector<double> space2(3);
+    space2[0] = space2_x;
+    space2[1] = space2_y;
+    space2[2] = space2_z;
+
+    std::vector<std::vector<double> > spacing_vectors(2);
+    spacing_vectors[0] = space1;
+    spacing_vectors[1] = space2;
+
+    return rDummy.CreateRegularControlPointGrid<2>(start, ngrid, spacing_vectors);
+}
+
+ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateCubicControlPointGrid1(
         ControlGridUtility& rDummy,
         const double& start_x, const double& start_y, const double& start_z,
         const std::size_t& n_points_u, const std::size_t& n_points_v, const std::size_t& n_points_w,
@@ -140,6 +216,39 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateCubicContro
     end[2] = end_z;
 
     return rDummy.CreateRegularControlPointGrid<3>(start, ngrid, end);
+}
+
+ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateCubicControlPointGrid2(
+        ControlGridUtility& rDummy,
+        const double& start_x, const double& start_y, const double& start_z,
+        const std::size_t& n_points_u, const std::size_t& n_points_v, const std::size_t& n_points_w,
+        boost::python::list spacing_vectors_data)
+{
+    std::vector<double> start(3);
+    start[0] = start_x;
+    start[1] = start_y;
+    start[2] = start_z;
+
+    std::vector<std::size_t> ngrid(3);
+    ngrid[0] = n_points_u;
+    ngrid[1] = n_points_v;
+    ngrid[2] = n_points_w;
+
+    std::vector<std::vector<double> > spacing_vectors;
+    std::size_t cnt1 = 0, cnt2 = 0;
+    typedef boost::python::stl_input_iterator<boost::python::list> iterator_value_type;
+    BOOST_FOREACH(const iterator_value_type::value_type& vect, std::make_pair(iterator_value_type(spacing_vectors_data), iterator_value_type() ) )
+    {
+        typedef boost::python::stl_input_iterator<double> iterator_value_type2;
+        std::vector<double> space_vect;
+        BOOST_FOREACH(const iterator_value_type2::value_type& v, std::make_pair(iterator_value_type2(vect), iterator_value_type2() ) )
+        {
+            space_vect.push_back(v);
+        }
+        spacing_vectors.push_back(space_vect);
+    }
+
+    return rDummy.CreateRegularControlPointGrid<3>(start, ngrid, spacing_vectors);
 }
 
 ////////////////////////////////////////
@@ -203,6 +312,18 @@ TPatchType& GetReference(typename TPatchType::Pointer& dummy)
 }
 
 template<class TPatchType>
+std::size_t Patch_GetId(TPatchType& rDummy)
+{
+    return rDummy.Id();
+}
+
+template<class TPatchType>
+void Patch_SetId(TPatchType& rDummy, const std::size_t& Id)
+{
+    rDummy.SetId(Id);
+}
+
+template<class TPatchType>
 typename TPatchType::Pointer Patch_pGetNeighbor(TPatchType& rDummy, const BoundarySide& side)
 {
     return rDummy.pNeighbor(side);
@@ -219,12 +340,11 @@ template<int TDim>
 std::size_t MultiPatch_Enumerate(MultiPatch<TDim>& rDummy)
 {
     std::size_t system_size;
-    std::set<std::size_t> enumerated_patches;
 
     for (typename MultiPatch<TDim>::PatchContainerType::iterator it = rDummy.begin(); it != rDummy.end(); ++it)
         it->pFESpace()->ResetFunctionIndices();
 
-    rDummy.Enumerate(system_size, enumerated_patches);
+    rDummy.Enumerate(system_size);
     KRATOS_WATCH(system_size)
 
     return system_size;
@@ -278,15 +398,56 @@ void MultiPatchRefinementUtility_DegreeElevate(MultiPatchRefinementUtility& rDum
    rDummy.DegreeElevate<TDim>(pPatch, order_incr_array);
 }
 
+template<int TDim, class TExporter, class TPatchType>
+void MultiPatchExporter_Export(TExporter& rDummy,
+        typename TPatchType::Pointer pPatch, const std::string& filename)
+{
+    rDummy.template Export<TDim>(pPatch, filename);
+}
+
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
+
+void IsogeometricApplication_AddTransformation()
+{
+    class_<Transformation<double>, Transformation<double>::Pointer, boost::noncopyable>
+    ("Transformation", init<>())
+    .def("AppendTransformation", &Transformation<double>::AppendTransformation)
+    // .def(boost::python::operators<boost::python::op_mul>());
+    .def(self_ns::str(self))
+    ;
+
+    class_<Translation<double>, Translation<double>::Pointer, bases<Transformation<double> >, boost::noncopyable>
+    ("Translation", init<const double&, const double&, const double&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<Rotation<0, double>, Rotation<0, double>::Pointer, bases<Transformation<double> >, boost::noncopyable>
+    ("RotationX", init<const double&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<Rotation<1, double>, Rotation<1, double>::Pointer, bases<Transformation<double> >, boost::noncopyable>
+    ("RotationY", init<const double&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<Rotation<2, double>, Rotation<2, double>::Pointer, bases<Transformation<double> >, boost::noncopyable>
+    ("RotationZ", init<const double&>())
+    .def(self_ns::str(self))
+    ;
+}
 
 void IsogeometricApplication_AddControlPoint()
 {
     class_<ControlPoint<double>, ControlPoint<double>::Pointer>
     ("ControlPoint", init<>())
+    .add_property("WX", ControlPoint_GetWX, ControlPoint_SetWX)
+    .add_property("WY", ControlPoint_GetWY, ControlPoint_SetWY)
+    .add_property("WZ", ControlPoint_GetWZ, ControlPoint_SetWZ)
     .add_property("W", ControlPoint_GetW, ControlPoint_SetW)
+    .def("ApplyTransformation", &ControlPoint_ApplyTransformation)
     .def(self_ns::str(self))
     ;
 }
@@ -463,10 +624,12 @@ void IsogeometricApplication_AddPatchesToPython()
     class_<Patch<TDim> >
     // class_<Patch<TDim>, typename Patch<TDim>::Pointer >
     (ss.str().c_str(), init<const std::size_t&, typename FESpace<TDim>::Pointer>())
+    .add_property("Id", &Patch_GetId<Patch<TDim> >, &Patch_SetId<Patch<TDim> >)
     .def("CreateControlPointGridFunction", &Patch<TDim>::CreateControlPointGridFunction)
     .def("CreateDoubleGridFunction", &Patch<TDim>::CreateDoubleGridFunction)
     .def("CreateArray1DGridFunction", &Patch<TDim>::CreateArray1DGridFunction)
     .def("CreateVectorGridFunction", &Patch<TDim>::CreateVectorGridFunction)
+    .def("ApplyTransformation", &Patch<TDim>::ApplyTransformation)
     .def("Order", &Patch<TDim>::Order)
     .def("TotalNumber", &Patch<TDim>::TotalNumber)
     .def("Neighbor", &Patch_pGetNeighbor<Patch<TDim> >)
@@ -481,45 +644,45 @@ void IsogeometricApplication_AddPatchesToPython()
     .def(self_ns::str(self))
     ;
 
-//    ss.str(std::string());
-//    ss << "HnMesh" << TDim << "D";
-//    class_<HnMesh<TDim>, bases<Patch<TDim> > >
-//    // class_<HnMesh<TDim>, typename HnMesh<TDim>::Pointer, bases<Patch<TDim> > >
-//    (ss.str().c_str(), init<const std::size_t&, const std::string&>())
-//    .def("SetEchoLevel", &HnMesh<TDim>::SetEchoLevel)
-//    .def("ReadMesh", &HnMesh<TDim>::ReadMesh)
-//    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-//    .def("Refine", &HnMesh<TDim>::Refine) // use this for debugging only, use RefineNodes and LinearDependencyRefine instead
-//    .def("RefineNodes", &HnMesh<TDim>::RefineNodes)
-//    .def("LinearDependencyRefine", &HnMesh<TDim>::LinearDependencyRefine)
-//    .def("BuildMesh", &HnMesh<TDim>::BuildMesh)
-//    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-//    .def("ExportCellTopology", &HnMesh<TDim>::ExportCellTopology)
-//    .def("ExportCellGeology", &HnMesh<TDim>::ExportCellGeology)
-////    .def("ExportRefinedDomain", &HnMesh<TDim>::ExportRefinedDomain)
-//    .def("ExportSupportDomain", &HnMesh<TDim>::ExportSupportDomain)
-//    .def("ExportMatlab", &HnMesh<TDim>::ExportMatlab)
-//    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-//    .def("ExportMDPA", &HnMesh<TDim>::ExportMDPA)
-//    .def("ExportMDPA2", &HnMesh<TDim>::ExportMDPA2)
-//    .def("ExportPostMDPA", &HnMesh<TDim>::ExportPostMDPA)
-//    .def("ExportCellGeologyAsPostMDPA", &HnMesh<TDim>::ExportCellGeologyAsPostMDPA)
-//    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-//    .def("PrintKnotVectors", &HnMesh<TDim>::PrintKnotVectors)
-//    .def("PrintCells", &HnMesh<TDim>::PrintCells)
-//    .def("PrintBasisFuncs", &HnMesh<TDim>::PrintBasisFuncs)
-//    .def("PrintRefinementHistory", &HnMesh<TDim>::PrintRefinementHistory)
-//    .def("CheckNestedSpace", &HnMesh<TDim>::CheckNestedSpace)
-//    .def(self_ns::str(self))
-//    ;
+    ss.str(std::string());
+    ss << "HBMesh" << TDim << "D";
+    class_<HBMesh<TDim>, bases<Patch<TDim> > >
+    // class_<HBMesh<TDim>, typename HBMesh<TDim>::Pointer, bases<Patch<TDim> > >
+    (ss.str().c_str(), init<const std::size_t&, const std::string&>())
+    .def("SetEchoLevel", &HBMesh<TDim>::SetEchoLevel)
+    .def("ReadMesh", &HBMesh<TDim>::ReadMesh)
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    .def("Refine", &HBMesh<TDim>::Refine) // use this for debugging only, use RefineNodes and LinearDependencyRefine instead
+    .def("RefineNodes", &HBMesh<TDim>::RefineNodes)
+    .def("LinearDependencyRefine", &HBMesh<TDim>::LinearDependencyRefine)
+    .def("BuildMesh", &HBMesh<TDim>::BuildMesh)
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    .def("ExportCellTopology", &HBMesh<TDim>::ExportCellTopology)
+    .def("ExportCellGeology", &HBMesh<TDim>::ExportCellGeology)
+    //    .def("ExportRefinedDomain", &HBMesh<TDim>::ExportRefinedDomain)
+    .def("ExportSupportDomain", &HBMesh<TDim>::ExportSupportDomain)
+    .def("ExportMatlab", &HBMesh<TDim>::ExportMatlab)
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    .def("ExportMDPA", &HBMesh<TDim>::ExportMDPA)
+    .def("ExportMDPA2", &HBMesh<TDim>::ExportMDPA2)
+    .def("ExportPostMDPA", &HBMesh<TDim>::ExportPostMDPA)
+    .def("ExportCellGeologyAsPostMDPA", &HBMesh<TDim>::ExportCellGeologyAsPostMDPA)
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    .def("PrintKnotVectors", &HBMesh<TDim>::PrintKnotVectors)
+    .def("PrintCells", &HBMesh<TDim>::PrintCells)
+    .def("PrintBasisFuncs", &HBMesh<TDim>::PrintBasisFuncs)
+    .def("PrintRefinementHistory", &HBMesh<TDim>::PrintRefinementHistory)
+    .def("CheckNestedSpace", &HBMesh<TDim>::CheckNestedSpace)
+    .def(self_ns::str(self))
+    ;
 
-//    ss.str(std::string());
-//    ss << "HnMesh" << TDim << "DPointer";
-//    class_<typename HnMesh<TDim>::Pointer>
-//    (ss.str().c_str(), init<typename HnMesh<TDim>::Pointer>())
-//    .def("GetReference", GetReference<HnMesh<TDim> >, return_value_policy<reference_existing_object>())
-//    .def(self_ns::str(self))
-//    ;
+    ss.str(std::string());
+    ss << "HBMesh" << TDim << "DPointer";
+    class_<typename HBMesh<TDim>::Pointer>
+    (ss.str().c_str(), init<typename HBMesh<TDim>::Pointer>())
+    .def("GetReference", GetReference<HBMesh<TDim> >, return_value_policy<reference_existing_object>())
+    .def(self_ns::str(self))
+    ;
 
     ss.str(std::string());
     ss << "MultiPatch" << TDim << "D";
@@ -533,6 +696,51 @@ void IsogeometricApplication_AddPatchesToPython()
     .def("PrintAddress", &MultiPatch<TDim>::PrintAddress)
     .def(self_ns::str(self))
     ;
+}
+
+void IsogeometricApplication_AddImportExportToPython()
+{
+    std::stringstream ss;
+
+    ss.str(std::string());
+    ss << "MultiNURBSPatchGeoExporter";
+    class_<MultiNURBSPatchGeoExporter, MultiNURBSPatchGeoExporter::Pointer, boost::noncopyable>
+    (ss.str().c_str(), init<>())
+    .def("Export", &MultiPatchExporter_Export<1, MultiNURBSPatchGeoExporter, Patch<1> >)
+    .def("Export", &MultiPatchExporter_Export<2, MultiNURBSPatchGeoExporter, Patch<2> >)
+    .def("Export", &MultiPatchExporter_Export<3, MultiNURBSPatchGeoExporter, Patch<3> >)
+    .def("Export", &MultiPatchExporter_Export<1, MultiNURBSPatchGeoExporter, MultiPatch<1> >)
+    .def("Export", &MultiPatchExporter_Export<2, MultiNURBSPatchGeoExporter, MultiPatch<2> >)
+    .def("Export", &MultiPatchExporter_Export<3, MultiNURBSPatchGeoExporter, MultiPatch<3> >)
+    .def(self_ns::str(self))
+    ;
+
+    ss.str(std::string());
+    ss << "MultiNURBSPatchMatlabExporter";
+    class_<MultiNURBSPatchMatlabExporter, MultiNURBSPatchMatlabExporter::Pointer, boost::noncopyable>
+    (ss.str().c_str(), init<>())
+    .def("Export", &MultiPatchExporter_Export<1, MultiNURBSPatchMatlabExporter, Patch<1> >)
+    .def("Export", &MultiPatchExporter_Export<2, MultiNURBSPatchMatlabExporter, Patch<2> >)
+    .def("Export", &MultiPatchExporter_Export<3, MultiNURBSPatchMatlabExporter, Patch<3> >)
+    .def("Export", &MultiPatchExporter_Export<1, MultiNURBSPatchMatlabExporter, MultiPatch<1> >)
+    .def("Export", &MultiPatchExporter_Export<2, MultiNURBSPatchMatlabExporter, MultiPatch<2> >)
+    .def("Export", &MultiPatchExporter_Export<3, MultiNURBSPatchMatlabExporter, MultiPatch<3> >)
+    .def(self_ns::str(self))
+    ;
+
+    ss.str(std::string());
+    ss << "MultiNURBSPatchGLVisExporter";
+    class_<MultiNURBSPatchGLVisExporter, MultiNURBSPatchGLVisExporter::Pointer, boost::noncopyable>
+    (ss.str().c_str(), init<>())
+    .def("Export", &MultiPatchExporter_Export<1, MultiNURBSPatchGLVisExporter, Patch<1> >)
+    .def("Export", &MultiPatchExporter_Export<2, MultiNURBSPatchGLVisExporter, Patch<2> >)
+    .def("Export", &MultiPatchExporter_Export<3, MultiNURBSPatchGLVisExporter, Patch<3> >)
+    .def("Export", &MultiPatchExporter_Export<1, MultiNURBSPatchGLVisExporter, MultiPatch<1> >)
+    .def("Export", &MultiPatchExporter_Export<2, MultiNURBSPatchGLVisExporter, MultiPatch<2> >)
+    .def("Export", &MultiPatchExporter_Export<3, MultiNURBSPatchGLVisExporter, MultiPatch<3> >)
+    .def(self_ns::str(self))
+    ;
+
 }
 
 void IsogeometricApplication_AddCustomUtilities2ToPython()
@@ -555,6 +763,12 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     ;
 
     /////////////////////////////////////////////////////////////////
+    ///////////////////TRANSFORMATION////////////////////////////////
+    /////////////////////////////////////////////////////////////////
+
+    IsogeometricApplication_AddTransformation();
+
+    /////////////////////////////////////////////////////////////////
     ///////////////////CONTROL POINT/////////////////////////////////
     /////////////////////////////////////////////////////////////////
 
@@ -569,8 +783,10 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     class_<ControlGridUtility, ControlGridUtility::Pointer, boost::noncopyable>
     ("ControlGridUtility", init<>())
     .def("CreateLinearControlPointGrid", &ControlGridUtility_CreateLinearControlPointGrid)
-    .def("CreateRectangularControlPointGrid", &ControlGridUtility_CreateRectangularControlPointGrid)
-    .def("CreateCubicControlPointGrid", &ControlGridUtility_CreateCubicControlPointGrid)
+    .def("CreateRectangularControlPointGrid", &ControlGridUtility_CreateRectangularControlPointGrid1)
+    .def("CreateRectangularControlPointGrid", &ControlGridUtility_CreateRectangularControlPointGrid2)
+    .def("CreateCubicControlPointGrid", &ControlGridUtility_CreateCubicControlPointGrid1)
+    .def("CreateCubicControlPointGrid", &ControlGridUtility_CreateCubicControlPointGrid2)
     ;
 
     /////////////////////////////////////////////////////////////////
@@ -601,36 +817,36 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     /////////////////////////////////////////////////////////////////
 
 
-//    /////////////////////////////////////////////////////////////////
-//    ///////////////////////TSPLINES//////////////////////////////////
-//    /////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////
+    ///////////////////////TSPLINES//////////////////////////////////
+    /////////////////////////////////////////////////////////////////
 
-//    class_<TsMesh2D, TsMesh2D::Pointer, boost::noncopyable>
-//    ("TsMesh2D", init<>())
-//    .def("BeginConstruct", &TsMesh2D::BeginConstruct)
-//    .def("EndConstruct", &TsMesh2D::EndConstruct)
-//    .def("ReadFromFile", &TsMesh2D::ReadFromFile)
-//    .def("ExportMatlab", &TsMesh2D::ExportMatlab)
-//    .def("BuildExtendedTmesh", &TsMesh2D::BuildExtendedTmesh)
-//    .def("IsAnalysisSuitable", &TsMesh2D::IsAnalysisSuitable)
-//    .def("BuildAnchors", &TsMesh2D::BuildAnchors)
-//    .def("BuildCells", &TsMesh2D::BuildCells)
-//    .def("ExportMDPA", &TsMesh2D::ExportMDPA)
-////    .def("FindKnots2", &TsMesh2D::FindKnots2)
-//    .def(self_ns::str(self))
-//    ;
+    class_<TsMesh2D, TsMesh2D::Pointer, boost::noncopyable>
+    ("TsMesh2D", init<>())
+    .def("BeginConstruct", &TsMesh2D::BeginConstruct)
+    .def("EndConstruct", &TsMesh2D::EndConstruct)
+    .def("ReadFromFile", &TsMesh2D::ReadFromFile)
+    .def("ExportMatlab", &TsMesh2D::ExportMatlab)
+    .def("BuildExtendedTmesh", &TsMesh2D::BuildExtendedTmesh)
+    .def("IsAnalysisSuitable", &TsMesh2D::IsAnalysisSuitable)
+    .def("BuildAnchors", &TsMesh2D::BuildAnchors)
+    .def("BuildCells", &TsMesh2D::BuildCells)
+    .def("ExportMDPA", &TsMesh2D::ExportMDPA)
+    //    .def("FindKnots2", &TsMesh2D::FindKnots2)
+    .def(self_ns::str(self))
+    ;
 
-//    /////////////////////////////////////////////////////////////////
-//    ///////////////////////HIERARCHICAL BSplines/////////////////////
-//    /////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////
+    ///////////////////////HIERARCHICAL BSplines/////////////////////
+    /////////////////////////////////////////////////////////////////
 
-//    enum_<HN_ECHO_FLAGS>("HN_ECHO_FLAGS")
-//    .value("ECHO_REFIMENT", ECHO_REFIMENT)
-//    ;
+    enum_<HN_ECHO_FLAGS>("HN_ECHO_FLAGS")
+    .value("ECHO_REFIMENT", ECHO_REFIMENT)
+    ;
 
-//    /////////////////////////////////////////////////////////////////
-//    ///////////////////////PATCHES///////////////////////////////////
-//    /////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////
+    ///////////////////////PATCHES///////////////////////////////////
+    /////////////////////////////////////////////////////////////////
 
     enum_<BoundarySide>("BoundarySide")
     .value("Left", _LEFT_)
@@ -650,12 +866,6 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     .def("CreatePatchPointer", &MultiPatchUtility::CreatePatchPointer<1>)
     .def("CreatePatchPointer", &MultiPatchUtility::CreatePatchPointer<2>)
     .def("CreatePatchPointer", &MultiPatchUtility::CreatePatchPointer<3>)
-    .def("ExportGeo", &MultiPatchUtility::ExportGeo<1>)
-    .def("ExportGeo", &MultiPatchUtility::ExportGeo<2>)
-    .def("ExportGeo", &MultiPatchUtility::ExportGeo<3>)
-    .def("ExportGlvis", &MultiPatchUtility::ExportGlvis<1>)
-    .def("ExportGlvis", &MultiPatchUtility::ExportGlvis<2>)
-    .def("ExportGlvis", &MultiPatchUtility::ExportGlvis<3>)
     ;
 
     class_<MultiPatchRefinementUtility, MultiPatchRefinementUtility::Pointer, boost::noncopyable>
@@ -667,6 +877,19 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     .def("DegreeElevate", MultiPatchRefinementUtility_DegreeElevate<2>)
     .def("DegreeElevate", MultiPatchRefinementUtility_DegreeElevate<3>)
     ;
+
+    class_<BSplinesPatchUtility, BSplinesPatchUtility::Pointer, boost::noncopyable>
+    ("BSplinesPatchUtility", init<>())
+    .def("CreateConnectedPatch", &BSplinesPatchUtility::CreateConnectedPatch<2>)
+    .def("CreateConnectedPatch", &BSplinesPatchUtility::CreateConnectedPatch<3>)
+    ;
+
+    /////////////////////////////////////////////////////////////////
+    ///////////////////////IMPORT/EXPORT/////////////////////////////
+    /////////////////////////////////////////////////////////////////
+
+    IsogeometricApplication_AddImportExportToPython();
+
 }
 
 }  // namespace Python.

@@ -146,7 +146,7 @@ public:
 
                         p = it->pControlPointGridFunction()->GetValue(p_ref);
 
-                        typename NodeType::Pointer pNewNode( new NodeType( 0, p.X0(), p.Y0(), p.Z0() ) );
+                        typename NodeType::Pointer pNewNode( new NodeType( 0, p.X(), p.Y(), p.Z() ) );
                         pNewNode->SetId(NodeCounter++);
                         #ifdef DEBUG_MESH_GENERATION
                         std::cout << "Node " << pNewNode->Id() << " (" << pNewNode->X() << " " << pNewNode->Y() << " " << pNewNode->Z() << ") is created" << std::endl;
@@ -230,7 +230,7 @@ public:
 
                             p = it->pControlPointGridFunction()->GetValue(p_ref);
 
-                            typename NodeType::Pointer pNewNode( new NodeType( 0, p.X0(), p.Y0(), p.Z0() ) );
+                            typename NodeType::Pointer pNewNode( new NodeType( 0, p.X(), p.Y(), p.Z() ) );
                             pNewNode->SetId(NodeCounter++);
                             #ifdef DEBUG_MESH_GENERATION
                             std::cout << "Node " << pNewNode->Id() << " (" << pNewNode->X() << " " << pNewNode->Y() << " " << pNewNode->Z() << ") is created" << std::endl;
@@ -259,10 +259,10 @@ public:
                             std::size_t Node2 = NodeCounter_old + (i * (NumDivision2 + 1) + j + 1) * (NumDivision3 + 1) + k;
                             std::size_t Node3 = NodeCounter_old + ((i + 1) * (NumDivision2 + 1) + j) * (NumDivision3 + 1) + k;
                             std::size_t Node4 = NodeCounter_old + ((i + 1) * (NumDivision2 + 1) + j + 1) * (NumDivision3 + 1) + k;
-                            std::size_t Node5 = Node1;
-                            std::size_t Node6 = Node2;
-                            std::size_t Node7 = Node3;
-                            std::size_t Node8 = Node4;
+                            std::size_t Node5 = Node1 + 1;
+                            std::size_t Node6 = Node2 + 1;
+                            std::size_t Node7 = Node3 + 1;
+                            std::size_t Node8 = Node4 + 1;
 
                             // TODO: check if jacobian checking is necessary
                             temp_element_nodes.clear();

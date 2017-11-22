@@ -82,7 +82,8 @@ public:
     }
 
     /// Compute the BSplines index in 3D
-    static std::size_t Index3D(const std::size_t& i, const std::size_t& j, const std::size_t& k, const std::size_t& n1, const std::size_t& n2, const std::size_t& n3)
+    static std::size_t Index3D(const std::size_t& i, const std::size_t& j, const std::size_t& k,
+        const std::size_t& n1, const std::size_t& n2, const std::size_t& n3)
     {
         return ((k-1)*n2 + (j-1))*n1 + (i-1);
     }

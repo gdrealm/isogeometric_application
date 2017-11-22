@@ -43,6 +43,9 @@ public:
     /// Destructor
     virtual ~ControlGrid() {}
 
+    /// Create a new control grid pointer
+    static ControlGrid::Pointer Create() {return ControlGrid::Pointer(new ControlGrid());}
+
     /// Get and Set the name
     void SetName(const std::string& Name) {mName = Name;}
     const std::string Name() const {return mName;}
@@ -69,7 +72,13 @@ public:
     std::size_t size() const {return mData.size();}
 
     /// resize the underlying container
+    void Resize(const std::size_t& new_size) {mData.resize(new_size);}
+
+    /// resize the underlying container
     void resize(const std::size_t& new_size) {mData.resize(new_size);}
+
+    /// Access the underlying data
+    DataContainerType& Data() {return mData;}
 
     /// Access the underlying data
     const DataContainerType& Data() const {return mData;}
@@ -90,15 +99,16 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
+        rOStream << "Grid " << Name() << "[" << Size() << "]";
     }
 
     virtual void PrintData(std::ostream& rOStream) const
     {
+        rOStream << " Data:\n (";
+        for (std::size_t i = 0; i < Data().size(); ++i)
+            rOStream << " " << Data()[i];
+        rOStream << ")" << std::endl;
     }
-
-protected:
-    /// Access the underlying data
-    DataContainerType& Data() {return mData;}
 
 private:
     std::string mName;
