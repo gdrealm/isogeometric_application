@@ -1,2 +1,7 @@
-(c) Hoang-Giang Bui, 2014, 2015, 2016, 2017
-This code is closed source
+isogeometric_application (IA) is an extension of KRATOS Multiphysics framework to assist isogeometric analysis with NURBS, hierarchical B-Splines and T-Splines. IA uses the Bezier decomposition concept to retain the local characteristics of the standard finite element. Therefore, IA can interoperably works with other KRATOS applications.
+
+(c) KRATOS, 2007, is copyrighted to Pooyan Dadvand and Riccardo Rossi at CIMNE (International Center for Numerical Methods in Engineering), Gran Capita' s/n, 08034 Barcelona, Spain
+
+(c) Isogeometric_Application, 2014, 2015, 2016, 2017, 2018, is copyrighted to Hoang-Giang Bui at Ruhr University Bochum.
+
+KRATOS is open source code with its own license terms. Nevertheless, isogeometric_application is not.
