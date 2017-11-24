@@ -1012,15 +1012,15 @@ public:
      * TO BE CALLED BY ELEMENT
      */
     virtual void GenerateGeometryData(
-        ValuesContainerType& Knots1,
-        ValuesContainerType& Knots2, //not used
-        ValuesContainerType& Knots3, //not used
-        ValuesContainerType& Weights,
-        MatrixType& ExtractionOperator, //not used
-        int Degree1,
-        int Degree2, //not used
-        int Degree3, //not used
-        int NumberOfIntegrationMethod
+        const ValuesContainerType& Knots1,
+        const ValuesContainerType& Knots2, //not used
+        const ValuesContainerType& Knots3, //not used
+        const ValuesContainerType& Weights,
+        const MatrixType& ExtractionOperator, //not used
+        const int& Degree1,
+        const int& Degree2, //not used
+        const int& Degree3, //not used
+        const int& NumberOfIntegrationMethod
     )
     {
         mKnots = Knots1;

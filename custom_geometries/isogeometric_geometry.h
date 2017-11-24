@@ -217,7 +217,7 @@ public:
      */
     typedef typename BaseType::NormalType NormalType;
 
-    typedef typename BaseType::NormalType ValuesContainerType;
+    typedef Vector ValuesContainerType;
 
     /**
      * Type of iterators
@@ -402,15 +402,15 @@ public:
      */
     virtual void GenerateGeometryData
     (
-        ValuesContainerType& Knots1,
-        ValuesContainerType& Knots2,
-        ValuesContainerType& Knots3,
-        ValuesContainerType& Weights,
-        MatrixType& ExtractionOperator,
-        int Degree1,
-        int Degree2,
-        int Degree3,
-        int NumberOfIntegrationMethod
+        const ValuesContainerType& Knots1,
+        const ValuesContainerType& Knots2,
+        const ValuesContainerType& Knots3,
+        const ValuesContainerType& Weights,
+        const MatrixType& ExtractionOperator,
+        const int& Degree1,
+        const int& Degree2,
+        const int& Degree3,
+        const int& NumberOfIntegrationMethod
     )
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
@@ -421,15 +421,15 @@ public:
      */
     virtual void AssignGeometryData
     (
-        ValuesContainerType& Knots1,
-        ValuesContainerType& Knots2,
-        ValuesContainerType& Knots3,
-        ValuesContainerType& Weights,
-        MatrixType& ExtractionOperator,
-        int Degree1,
-        int Degree2,
-        int Degree3,
-        int NumberOfIntegrationMethod
+        const ValuesContainerType& Knots1,
+        const ValuesContainerType& Knots2,
+        const ValuesContainerType& Knots3,
+        const ValuesContainerType& Weights,
+        const MatrixType& ExtractionOperator,
+        const int& Degree1,
+        const int& Degree2,
+        const int& Degree3,
+        const int& NumberOfIntegrationMethod
     )
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
