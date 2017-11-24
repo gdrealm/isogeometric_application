@@ -933,7 +933,7 @@ namespace Kratos
             // check if the knot span cover any cell
             for(cell_container_t::iterator it2 = mCells.begin(); it2 != mCells.end(); ++it2)
             {
-                if((*it2)->IsCoverred(KnotsIndex1, KnotsIndex2))
+                if((*it2)->IsCovered(KnotsIndex1, KnotsIndex2))
                 {
                     Uxi.clear();
                     Ueta.clear();
@@ -1176,12 +1176,11 @@ namespace Kratos
 
         // write elements
         outfile << "Begin Elements KinematicLinearGeo2dBezier\n";
-        std::vector<unsigned int> AnchorIds;
         for(cell_container_t::const_iterator it = mCells.begin(); it != mCells.end(); ++it)
         {
-            AnchorIds = (*it)->GetSupportedAnchors();
+            const std::vector<std::size_t>& AnchorIds = (*it)->GetSupportedAnchors();
             outfile << (*it)->Id() << " 1";
-            for(std::vector<unsigned int>::iterator it2 = AnchorIds.begin(); it2 != AnchorIds.end(); ++it2)
+            for(std::vector<std::size_t>::const_iterator it2 = AnchorIds.begin(); it2 != AnchorIds.end(); ++it2)
                 outfile << " " << (*it2);
             outfile << std::endl;
         }

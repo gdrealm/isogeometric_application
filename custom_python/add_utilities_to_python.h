@@ -35,6 +35,7 @@ namespace Python
 void  IsogeometricApplication_AddCustomUtilities1ToPython();
 void  IsogeometricApplication_AddCustomUtilities2ToPython();
 void  IsogeometricApplication_AddCustomUtilities3ToPython();
+void  IsogeometricApplication_AddCustomUtilities4ToPython();
 
 }  // namespace Python.
 

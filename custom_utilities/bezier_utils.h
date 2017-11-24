@@ -1115,6 +1115,201 @@ public:
      ********************************************************/
 
     /**
+    * Compute Bezier extraction for NURBS in 1D
+    */
+    template<class TValuesContainerType>
+    static void bezier_extraction_1d(
+        std::vector<Matrix>& C,
+        int& nb, // number of elements
+        const TValuesContainerType& U,
+        const int p)
+    {
+        int m = U.size() - p - 1;
+        int a = p + 1;
+        int b = a + 1;
+        nb = 1;
+        int i, j, k, l, r, s, save, multiplicity;
+        double alpha, numerator;
+        std::vector<double> alphas(p+1);
+
+        C.push_back(IdentityMatrix(p+1));
+
+        while (b <= m)
+        {
+            if (nb+1 > C.size())
+                C.push_back(IdentityMatrix(p+1));
+            else
+                noalias(C[nb]) = IdentityMatrix(p+1);
+            i = b;
+            while (b<=m && U[b]==U[b-1]) ++b;
+
+            multiplicity = b - i + 1;
+            if (multiplicity < p)
+            {
+                numerator = U[b-1] - U[a-1];
+                for (j = p; j>=multiplicity+1; --j) alphas[j-multiplicity-1] = numerator/(U[a+j-1]-U[a-1]);
+                r = p - multiplicity;
+                for (j = 1; j <= r; ++j)
+                {
+                    save = r-j+1;
+                    s = multiplicity + j;
+                    for (k = p+1; k >= s+1; --k)
+                    {
+                        alpha = alphas[k-s-1];
+                        for (l = 1; l <= p+1; ++l)
+                            C[nb-1](l-1,k-1) = alpha*C[nb-1](l-1,k-1) + (1-alpha)*C[nb-1](l-1,k-2);
+                    }
+                    if (b <= m)
+                    {
+                        for (l = 0; l <= j; ++l)
+                            C[nb](save+l-1, save-1) = C[nb-1](p-j+l, p);
+                    }
+                }
+                nb = nb+1;
+                if (b <= m)
+                {
+                    a = b;
+                    b = b+1;
+                }
+            }
+            else if (multiplicity == p)
+            {
+                if (b <= m)
+                {
+                    nb = nb+1;
+                    a = b;
+                    b = b+1;
+                }
+            }
+        }
+
+        assert(nb == C.size());
+    }
+
+    /**
+    * Compute Bezier extraction for NURBS in 2D
+    */
+    template<class TValuesContainerType>
+    static void bezier_extraction_2d(
+        std::vector<Matrix>& C,
+        int& nb1, // number of elements in u-direction
+        int& nb2, // number of elements in v-direction
+        const TValuesContainerType& U,
+        const TValuesContainerType& V,
+        const int p,
+        const int q)
+    {
+        std::vector<Matrix> Cxi, Cet;
+
+        BezierUtils::bezier_extraction_1d(Cxi, nb1, U, p);
+        BezierUtils::bezier_extraction_1d(Cet, nb2, V, q);
+
+        C.resize(nb1*nb2);
+
+        int eta, xi, e, row, col, ird, jrd, icd, jcd, i, j;
+        for (eta = 0; eta < nb2; ++eta)
+        {
+            for (xi = 0; xi < nb1; ++xi)
+            {
+                e = eta*nb1 + xi;
+                C[e].resize((p+1)*(q+1), (p+1)*(q+1), false);
+                for (row = 0; row < q+1; ++row)
+                {
+                    ird = row*(p+1);
+                    jrd = (row+1)*(p+1)-1;
+                    for (col = 0; col < q+1; ++col)
+                    {
+                        icd = col*(p+1);
+                        jcd = (col+1)*(p+1)-1;
+                        for (i = 0; i < p+1; ++i)
+                        {
+                            for (j = 0; j < p+1; ++j)
+                            {
+                                C[e](ird+i, icd+j) = Cet[eta](row, col) * Cxi[xi](i, j);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+    * Compute Bezier extraction for NURBS in 3D
+    */
+    template<class TValuesContainerType>
+    static void bezier_extraction_3d(
+        std::vector<Matrix>& C,
+        int& nb1, // number of elements in u-direction
+        int& nb2, // number of elements in v-direction
+        int& nb3, // number of elements in w-direction
+        const TValuesContainerType& U,
+        const TValuesContainerType& V,
+        const TValuesContainerType& W,
+        const int p,
+        const int q,
+        const int r)
+    {
+        std::vector<Matrix> Cxi, Cet, Cze;
+        Matrix C_et_xi;
+
+        bezier_extraction_1d(Cxi, nb1, U, p);
+        bezier_extraction_1d(Cet, nb2, V, q);
+        bezier_extraction_1d(Cze, nb3, W, r);
+
+        C_et_xi.resize((p+1)*(q+1), (p+1)*(q+1), false);
+        C.resize(nb1*nb2*nb3);
+
+        int eta, xi,zeta, e, row, col, ird, jrd, icd, jcd, i, j;
+        for (eta = 0; eta < nb2; ++eta)
+        {
+            for (xi = 0; xi < nb1; ++xi)
+            {
+                for (row = 0; row < q+1; ++row)
+                {
+                    ird = row*(p+1);
+                    jrd = (row+1)*(p+1)-1;
+                    for (col = 0; col < q+1; ++col)
+                    {
+                        icd = col*(p+1);
+                        jcd = (col+1)*(p+1)-1;
+                        for (i = 0; i < p+1; ++i)
+                        {
+                            for (j = 0; j < p+1; ++j)
+                            {
+                                C_et_xi(ird+i, icd+j) = Cet[eta](row, col) * Cxi[xi](i, j);
+                            }
+                        }
+                    }
+                }
+
+                for (zeta = 0; zeta < nb3; ++zeta)
+                {
+                    e = (zeta * nb2 + eta) * nb1 + xi;
+                    C[e].resize((p+1)*(q+1)*(r+1), (p+1)*(q+1)*(r+1));
+                    for (row = 0; row < r+1; ++row)
+                    {
+                        ird = row*(p+1)*(q+1);
+                        jrd = (row+1)*(p+1)*(q+1)-1;
+                        for (col = 0; col < r+1; ++col)
+                        {
+                            icd = col*(p+1)*(q+1);
+                            jcd = (col+1)*(p+1)*(q+1)-1;
+                            for (i = 0; i < (p+1)*(q+1); ++i)
+                            {
+                                for (j = 0; j < (p+1)*(q+1); ++j)
+                                {
+                                    C[e](ird+i, icd+j) = Cze[zeta](row, col) * C_et_xi(i, j);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
         Compute extended knot vector given the local knot vector
      */
 //    static void compute_extended_knot_vector(
@@ -1204,10 +1399,6 @@ public:
         const int p,
         const int q,
         const int r);
-
-    // function to test the bezier extraction for T-splines
-    void test_tsplines_1();
-    void test_bezier_extraction_local_1d();
 
     ///@}
     ///@name Inquiry

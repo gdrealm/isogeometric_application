@@ -18,6 +18,8 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/serializer.h"
+#include "custom_utilities/nurbs/cell.h"
+#include "custom_utilities/nurbs/cell_manager.h"
 
 
 namespace Kratos
@@ -45,6 +47,7 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(FESpace);
 
     /// Type definition
+    typedef CellManager<Cell> cell_container_t;
 
     /// Default constructor
     FESpace() {}
@@ -105,26 +108,70 @@ public:
     /// Reset all the dof numbers for each grid function to -1
     void ResetFunctionIndices()
     {
-        if (mFunctionIds.size() != this->TotalNumber())
-            mFunctionIds.resize(this->TotalNumber());
-        std::fill(mFunctionIds.begin(), mFunctionIds.end(), -1);
+        if (mFunctionsIds.size() != this->TotalNumber())
+            mFunctionsIds.resize(this->TotalNumber());
+        std::fill(mFunctionsIds.begin(), mFunctionsIds.end(), -1);
+    }
+
+    /// Reset the function indices to a given values
+    void ResetFunctionIndices(const std::vector<std::size_t>& func_indices)
+    {
+        assert(func_indices.size() == this->TotalNumber());
+        if (mFunctionsIds.size() != this->TotalNumber())
+            mFunctionsIds.resize(this->TotalNumber());
+        std::copy(func_indices.begin(), func_indices.end(), mFunctionsIds.begin());
     }
 
     /// Enumerate the dofs of each grid function. The enumeration algorithm is pretty straightforward.
     /// If the dof does not have pre-existing value, which assume it is -1, it will be assigned the incremental value.
     std::size_t& Enumerate(std::size_t& start)
     {
-        for (std::size_t i = 0; i < mFunctionIds.size(); ++i)
+        mGlobalToLocal.clear();
+        for (std::size_t i = 0; i < mFunctionsIds.size(); ++i)
         {
-            if (mFunctionIds[i] == -1)
-                mFunctionIds[i] = start++;
+            if (mFunctionsIds[i] == -1) mFunctionsIds[i] = start++;
+            mGlobalToLocal[mFunctionsIds[i]] = i;
         }
 
         return start;
     }
 
     /// Access the function indices
-    const std::vector<std::size_t>& FunctionIndices() const {return mFunctionIds;}
+    const std::vector<std::size_t>& FunctionIndices() const {return mFunctionsIds;}
+
+    /// Update the function indices using a map. The map shall be the mapping from old index to new index.
+    void UpdateFunctionIndices(const std::map<std::size_t, std::size_t>& indices_map)
+    {
+        for (std::size_t i = 0; i < mFunctionsIds.size(); ++i)
+        {
+            std::map<std::size_t, std::size_t>::const_iterator it = indices_map.find(mFunctionsIds[i]);
+
+            if (it == indices_map.end())
+            {
+                std::cout << "WARNING!!! the indices_map does not contain " << mFunctionsIds[i] << std::endl;
+                continue;
+            }
+
+            mFunctionsIds[i] = it->second;
+        }
+
+        mGlobalToLocal.clear();
+        for (std::size_t i = 0; i < mFunctionsIds.size(); ++i)
+        {
+            mGlobalToLocal[mFunctionsIds[i]] = i;
+        }
+    }
+
+    /// Return the local id of a given global id
+    std::size_t LocalId(const std::size_t& global_id) const
+    {
+        std::map<std::size_t, std::size_t>::const_iterator it = mGlobalToLocal.find(global_id);
+
+        if (it == mGlobalToLocal.end())
+            KRATOS_THROW_ERROR(std::logic_error, "The global id does not exist in global_to_local map", "")
+
+        return it->second;
+    }
 
     /// Check the compatibility between boundaries of two FESpacees
     virtual bool CheckBoundaryCompatibility(const FESpace<TDim>& rFESpace1, const BoundarySide& side1,
@@ -193,10 +240,18 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /// Create the cell manager for all the cells in the support domain of the FESpace
+    virtual typename cell_container_t::Pointer ConstructCellManager() const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
     /// Overload assignment operator
     FESpace<TDim>& operator=(const FESpace<TDim>& rOther)
     {
-        this->mFunctionIds = rOther.mFunctionIds;
+        this->mFunctionsIds = rOther.mFunctionsIds;
         return *this;
     }
 
@@ -219,8 +274,8 @@ public:
     virtual void PrintData(std::ostream& rOStream) const
     {
         rOStream << " Function Indices:";
-        for (std::size_t i = 0; i < mFunctionIds.size(); ++i)
-            rOStream << " " << mFunctionIds[i];
+        for (std::size_t i = 0; i < mFunctionsIds.size(); ++i)
+            rOStream << " " << mFunctionsIds[i];
     }
 
 protected:
@@ -228,7 +283,9 @@ protected:
     /**
      * data for grid function interpolation
      */
-    std::vector<std::size_t> mFunctionIds; // this is to store a unique number of the shape function over the forest of FESpace(s).
+    std::vector<std::size_t> mFunctionsIds; // this is to store a unique number of the shape function over the forest of FESpace(s).
+
+    std::map<std::size_t, std::size_t> mGlobalToLocal;
 
 private:
 
@@ -257,7 +314,7 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(FESpace);
 
     /// Default constructor
-    FESpace() {}
+    FESpace() : mFunctionId(-1) {}
 
     /// Destructor
     virtual ~FESpace() {}
@@ -292,6 +349,19 @@ public:
         return true;
     }
 
+    /// Reset all the dof numbers for each grid function to -1
+    void ResetFunctionIndices()
+    {
+        mFunctionId = -1;
+    }
+
+    /// Reset the function indices to a given values
+    void ResetFunctionIndices(const std::vector<std::size_t>& func_indices)
+    {
+        assert(func_indices.size() == 1);
+        mFunctionId = func_indices[0];
+    }
+
     /// Check the compatibility between boundaries of two FESpacees
     virtual bool CheckBoundaryCompatibility(const FESpace<0>& rFESpace1, const BoundarySide& side1,
             const FESpace<0>& rFESpace2, const BoundarySide& side2) const
@@ -320,6 +390,11 @@ public:
     virtual void PrintData(std::ostream& rOStream) const
     {
     }
+
+protected:
+
+    std::size_t mFunctionId;
+
 };
 
 

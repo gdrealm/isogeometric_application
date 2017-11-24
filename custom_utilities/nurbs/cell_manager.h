@@ -29,7 +29,7 @@ namespace Kratos
 bool CellManager_RtreeSearchCallback(std::size_t id, void* arg);
 
 /**
-  TODO
+A cell manager is a collection of cells. It provides facility to search for cells, or obtain cells in the consistent manner.
  */
 template<class TCellType>
 class CellManager
@@ -60,19 +60,13 @@ public:
     {}
 
     /// Set the tolerance for the internal searching algorithm
-    void SetTolerance(double Tol) {mTol = Tol;}
+    void SetTolerance(const double& Tol) {mTol = Tol;}
 
     /// Get the tolerance for the internal searching algorithm
     double GetTolerance() const {return mTol;}
 
     /// Check if the cell exists in the list; ortherwise create new cell and return
-    virtual cell_t CreateCell(unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling the virtual function", __FUNCTION__)
-    }
-
-    /// Check if the cell exists in the list; ortherwise create new cell and return
-    virtual cell_t CreateCell(unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
+    virtual cell_t CreateCell(const std::vector<knot_t>& pKnots)
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling the virtual function", __FUNCTION__)
     }
@@ -99,7 +93,7 @@ public:
     }
 
     /// Get a cell based on its Id
-    cell_t get(std::size_t Id)
+    cell_t get(const std::size_t& Id)
     {
         // create the index map if it's not created yet
         if(!cell_map_is_created)
@@ -114,12 +108,12 @@ public:
     }
 
     /// Overload operator[]
-    cell_t operator[](std::size_t Id)
+    cell_t operator[](const std::size_t& Id)
     {
         return get(Id);
     }
 
-    /// Search the cells coverred in another cell. In return p_cell covers all the cells of std::vector<cell_t>
+    /// Search the cells coverred in another cell. In return std::vector<cell_t> are all the cells covered by p_cell.
     virtual std::vector<cell_t> GetCells(cell_t p_cell)
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling the virtual function", __FUNCTION__)
@@ -145,6 +139,7 @@ public:
     }
 
 protected:
+
     cell_container_t mpCells;
     mutable map_t mCellsMap; // map from cell id to the basis function. It's mainly used to search for the cell quickly. But it needs to be re-initialized whenever new cell is added to the set
     bool cell_map_is_created;

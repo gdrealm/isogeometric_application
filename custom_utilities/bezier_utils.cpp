@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 2014-01-28 $
 //   Revision:            $Revision: 1.1 $
@@ -9,9 +9,9 @@
 // System includes
 #include <string>
 #include <vector>
-#include <iostream> 
+#include <iostream>
 
-// External includes 
+// External includes
 #include "boost/numeric/ublas/vector.hpp"
 
 // Project includes
@@ -40,7 +40,7 @@ const int BezierUtils::msBernsteinCoefs[] = {
         , 15, 105, 455, 1365, 3003, 5005, 6435
         , 16, 120, 560, 1820, 4368, 8008, 11440, 12870
     };
-   
+
 BezierUtils::MapType BezierUtils::mIntegrationMethods;
 
 // void BezierUtils::IsogeometricMathUtils::compute_extended_knot_vector(
@@ -59,10 +59,10 @@ BezierUtils::MapType BezierUtils::mIntegrationMethods;
 //        else
 //            break;
 //    }
-//    
+//
 //    // compute the index of the basis function w.r.t the extended knot vector
 //    nt = p - a + 1;
-//    
+//
 //    // count the multiplicity of the last knot
 //    int b = 0;
 //    for(std::size_t i = n - 1; i >= 0; --i)
@@ -72,16 +72,16 @@ BezierUtils::MapType BezierUtils::mIntegrationMethods;
 //        else
 //            break;
 //    }
-//    
+//
 //    // compute the extended knot vector
 //    Ubar.resize(nt + n + (p-b+1));
-// 
+//
 //    for(std::size_t i = 0; i < nt; ++i)
 //        Ubar[i] = Xi[0];
-// 
+//
 //    for(std::size_t i = nt; i < nt + n; ++i)
 //        Ubar[i] = Xi[i - nt];
-// 
+//
 //    for(std::size_t i = nt + n; i < nt + n + (p-b+1); ++i)
 //        Ubar[i] = Xi[n-1];
 // }
@@ -106,7 +106,7 @@ void BezierUtils::bezier_extraction_tsplines_1d(
     int nt;
     IsogeometricMathUtils::compute_extended_knot_vector(Ubar, nt, Xi, p);
 
-    // algorithm: modify from the paper: Isogeometric finite element data structure based on Bezier extraction of T-splines, Scott et al    
+    // algorithm: modify from the paper: Isogeometric finite element data structure based on Bezier extraction of T-splines, Scott et al
     int a = p + 1;
     int b = a + 1;
     nb = 1;
@@ -121,8 +121,8 @@ void BezierUtils::bezier_extraction_tsplines_1d(
     int ki = 1;
     int si = 1;
     int i, j, k, loc, r, save, s, mult, add, total_add = 0;
-    double numer, alpha;
-    double* alphas = new double[p];
+    double numer, alpha;//, alphas[p];
+    std::vector<double> alphas(p+1);
     while(b < mbar)
     {
         // count multiplicity of knots at location b
@@ -200,8 +200,6 @@ void BezierUtils::bezier_extraction_tsplines_1d(
 //            }
 //        }
     }
-
-    delete alphas;
 }
 
 void BezierUtils::bezier_extraction_tsplines_2d(std::vector<Vector>& Crows,
@@ -251,78 +249,6 @@ void BezierUtils::bezier_extraction_tsplines_2d(std::vector<Vector>& Crows,
         }
 }
 
-void BezierUtils::test_tsplines_1()
-{
-    // test the extended knot vector computation
-    Vector Ubar_xi;
-    int nt_xi;
-    std::vector<double> Xi;
-    int p = 3;
-    
-    Xi.resize(5);
-    Xi[0] = 0.0;
-    Xi[1] = 1.0;
-    Xi[2] = 2.0;
-    Xi[3] = 3.0;
-    Xi[4] = 4.0;
-    
-    IsogeometricMathUtils::compute_extended_knot_vector(Ubar_xi, nt_xi, Xi, p);
-    KRATOS_WATCH(Ubar_xi)
-    KRATOS_WATCH(nt_xi)
-
-    // test the bezier extraction in 1D
-    std::vector<double> Uxi;
-    Uxi.resize(4);
-    Uxi[0] = 0.5;
-    Uxi[1] = 1.5;
-    Uxi[2] = 2.5;
-    Uxi[3] = 3.5;
-    
-    std::vector<int> spans_xi;
-    spans_xi.resize(4);
-    spans_xi[0] = 1;
-    spans_xi[1] = 2;
-    spans_xi[2] = 3;
-    spans_xi[3] = 4;
-    
-    std::vector<Vector> Crows;
-    int nb_xi;
-    bezier_extraction_tsplines_1d(Crows, nb_xi, Ubar_xi, Xi, Uxi, spans_xi, p);
-    
-    KRATOS_WATCH(nb_xi)
-    for(std::size_t i = 0; i < Crows.size(); ++i)
-        std::cout << "Crows 1d " << i << ": " << Crows[i] << std::endl;
-    KRATOS_WATCH(Ubar_xi)
-
-    // test the bezier extraction in 2D
-    std::vector<double> Eta = Xi;
-    Vector Ubar_eta;
-
-    std::vector<double> Ueta;
-    Ueta.resize(3);
-    Ueta[0] = 0.5;
-    Ueta[1] = 1.5;
-    Ueta[2] = 2.5;
-
-    std::vector<int> spans_eta;
-    spans_eta.resize(3);
-    spans_eta[0] = 1;
-    spans_eta[1] = 2;
-    spans_eta[2] = 3;
-    
-    int q = 3;
-    int nb_eta;
-    
-    bezier_extraction_tsplines_2d(Crows, nb_xi, nb_eta, Ubar_xi, Ubar_eta, Xi, Eta, Uxi, Ueta, spans_xi, spans_eta, p, q);
-    KRATOS_WATCH(nb_xi)
-    KRATOS_WATCH(nb_eta)
-    for(std::size_t i = 0; i < Crows.size(); ++i)
-        std::cout << "Crows 2d " << i << ": " << Crows[i] << std::endl;
-    KRATOS_WATCH(Ubar_xi)
-    KRATOS_WATCH(Ubar_eta)
-}
-
-
 void BezierUtils::bezier_extraction_local_1d(std::vector<Vector>& Crows,
                                              int& nb,
                                              Vector& Ubar,
@@ -354,7 +280,7 @@ void BezierUtils::bezier_extraction_local_1d(std::vector<Vector>& Crows,
         Um.push_back(mult);
         i += mult;
     }
-    
+
     // compute the inserted knots
     std::vector<double> ins_knots;
     for(int i = 0; i < num_inner_knots; ++i)
@@ -417,7 +343,7 @@ void BezierUtils::bezier_extraction_local_2d(std::vector<Vector>& Crows,
 
     bezier_extraction_local_1d(Cxi, nb_xi, Ubar_xi, Xi, Uxi, p);
     bezier_extraction_local_1d(Ceta, nb_eta, Ubar_eta, Eta, Ueta, q);
-    
+
     if(Crows.size() != nb_xi * nb_eta)
         Crows.resize(nb_xi * nb_eta);
     for(std::size_t i = 0; i < Crows.size(); ++i)
@@ -471,6 +397,7 @@ void BezierUtils::bezier_extraction_local_3d(std::vector<Vector>& Crows,
 
     unsigned int row, col;
     for(std::size_t i = 0; i < nb_xi; ++i)
+    {
         for(std::size_t j = 0; j < p + 1; ++j)
         {
             for(std::size_t k = 0; k < nb_eta; ++k)
@@ -485,37 +412,7 @@ void BezierUtils::bezier_extraction_local_3d(std::vector<Vector>& Crows,
                         }
                 }
         }
-}
-
-void BezierUtils::test_bezier_extraction_local_1d()
-{
-    std::vector<Vector> Crows;
-    int nb;
-    Vector Ubar;
-    std::vector<double> Xi;
-    std::vector<double> U;
-
-//    int p = 3;
-//    Xi.push_back(0.0);
-//    Xi.push_back(0.0);
-//    Xi.push_back(1.0);
-//    Xi.push_back(1.0);
-//    Xi.push_back(2.0);
-//    U.push_back(0.1);
-//    U.push_back(1.1);
-//    U.push_back(0.05);
-
-    int p = 1;
-    Xi.push_back(0.0);
-    Xi.push_back(0.0);
-    Xi.push_back(0.5);
-
-    bezier_extraction_local_1d(Crows, nb, Ubar, Xi, U, p);
-    
-    KRATOS_WATCH(Ubar)
-    KRATOS_WATCH(nb)
-    for(int i = 0; i < Crows.size(); ++i)
-        KRATOS_WATCH(Crows[i])
+    }
 }
 
 }// namespace Kratos.

@@ -18,8 +18,6 @@
 #define ENABLE_PROFILING
 #define DEBUG_REFINE
 
-#define INSPECT_REFINE_BF_25
-
 namespace Kratos
 {
 
@@ -454,7 +452,9 @@ namespace Kratos
                             double area = (pRight->Value() - pLeft->Value()) * (pUp->Value() - pDown->Value());
                             if(fabs(area) > area_tol)
                             {
-                                cell_t p_cell = mpCellManager->CreateCell(level, pLeft, pRight, pDown, pUp);
+                                std::vector<knot_t> pKnots = {pLeft, pRight, pDown, pUp};
+                                cell_t p_cell = mpCellManager->CreateCell(pKnots);
+                                p_cell->SetLevel(level);
                                 p_bf->AddCell(p_cell);
                                 p_cell->AddBf(p_bf);
                             }
@@ -514,7 +514,9 @@ namespace Kratos
                                     double area = (pRight->Value() - pLeft->Value()) * (pUp->Value() - pDown->Value()) * (pAbove->Value() - pBelow->Value());
                                     if(fabs(area) > area_tol)
                                     {
-                                        cell_t p_cell = mpCellManager->CreateCell(level, pLeft, pRight, pDown, pUp, pBelow, pAbove);
+                                        std::vector<knot_t> pKnots = {pLeft, pRight, pDown, pUp, pBelow, pAbove};
+                                        cell_t p_cell = mpCellManager->CreateCell(pKnots);
+                                        p_cell->SetLevel(level);
                                         p_bf->AddCell(p_cell);
                                         p_cell->AddBf(p_bf);
                                     }
@@ -684,7 +686,9 @@ namespace Kratos
                             double area = (pRight->Value() - pLeft->Value()) * (pUp->Value() - pDown->Value());
                             if(fabs(area) > area_tol)
                             {
-                                cell_t pnew_cell = mpCellManager->CreateCell(next_level, pLeft, pRight, pDown, pUp);
+                                std::vector<knot_t> pKnots = {pLeft, pRight, pDown, pUp};
+                                cell_t pnew_cell = mpCellManager->CreateCell(pKnots);
+                                pnew_cell->SetLevel(next_level);
                                 pnew_bf->AddCell(pnew_cell);
                                 pnew_cell->AddBf(pnew_bf);
                                 pnew_cells->insert(pnew_cell);
@@ -746,7 +750,9 @@ namespace Kratos
                                     double area = (pRight->Value() - pLeft->Value()) * (pUp->Value() - pDown->Value()) * (pAbove->Value() - pBelow->Value());
                                     if(fabs(area) > area_tol)
                                     {
-                                        cell_t pnew_cell = mpCellManager->CreateCell(next_level, pLeft, pRight, pDown, pUp, pBelow, pAbove); //#
+                                        std::vector<knot_t> pKnots = {pLeft, pRight, pDown, pUp, pBelow, pAbove};
+                                        cell_t pnew_cell = mpCellManager->CreateCell(pKnots);
+                                        pnew_cell->SetLevel(next_level);
                                         pnew_bf->AddCell(pnew_cell);
                                         pnew_cell->AddBf(pnew_bf);
                                         pnew_cells->insert(pnew_cell);
@@ -778,7 +784,7 @@ namespace Kratos
             {
                 for(cell_container_t::iterator it_subcell = pnew_cells->begin(); it_subcell != pnew_cells->end(); ++it_subcell)
                 {
-                    if((*it_subcell)->IsCoverred(*it_cell, TDim))
+                    if((*it_subcell)->IsCovered(*it_cell, TDim))
                     {
                         for(HBCell::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
                         {
@@ -1353,7 +1359,7 @@ namespace Kratos
             outfile << "];\n";
 
             // write the supported basis functions
-            const std::vector<unsigned int>& bfs = (*it_cell)->GetSupportedAnchors();
+            const std::vector<std::size_t>& bfs = (*it_cell)->GetSupportedAnchors();
             outfile << "N{" << cnt << "} = [";
             for(std::size_t i = 0; i < bfs.size(); ++i)
                 outfile << " " << bfs[i];
@@ -1415,7 +1421,7 @@ namespace Kratos
         #endif
         for(typename cell_container_t::iterator it = mpCellManager->begin(); it != mpCellManager->end(); ++it)
         {
-            const std::vector<unsigned int>& supported_bfs = (*it)->GetSupportedAnchors();
+            const std::vector<std::size_t>& supported_bfs = (*it)->GetSupportedAnchors();
             #ifdef MDPA_CELL_RENUMBERING
             outfile << ++ElemId << " 1"; // assign new element Id
             OldToNewElemId[(*it)->Id()] = ElemId;
@@ -1675,7 +1681,7 @@ namespace Kratos
             outfile << " KinematicLinearBezier3D\n";
         for(typename cell_container_t::iterator it = mpCellManager->begin(); it != mpCellManager->end(); ++it)
         {
-            const std::vector<unsigned int>& supported_bfs = (*it)->GetSupportedAnchors();
+            const std::vector<std::size_t>& supported_bfs = (*it)->GetSupportedAnchors();
             outfile << "        ";
             #ifdef MDPA_CELL_RENUMBERING
             outfile << ++ElemId << " 1"; // assign new element Id
@@ -1785,7 +1791,7 @@ namespace Kratos
                                 R(k) = W(k) * N(k) / Denom;
 
                             // get the list of supported basis function of this cell
-                            const std::vector<unsigned int>& bfs_id = (*it_cell)->GetSupportedAnchors();
+                            const std::vector<std::size_t>& bfs_id = (*it_cell)->GetSupportedAnchors();
 
                             // compute the glocal coordinates at the local coordinates
                             double X = 0.0, Y = 0.0, Z = 0.0;
@@ -1894,7 +1900,7 @@ namespace Kratos
                                     R(k) = W(k) * N(k) / Denom;
 
                                 // get the list of supported basis function of this cell
-                                const std::vector<unsigned int>& bfs_id = (*it_cell)->GetSupportedAnchors();
+                                const std::vector<std::size_t>& bfs_id = (*it_cell)->GetSupportedAnchors();
 
                                 // compute the glocal coordinates at the local coordinates
                                 double X = 0.0, Y = 0.0, Z = 0.0;
@@ -2267,7 +2273,7 @@ namespace Kratos
                 R(k) = W(k) * N(k) / Denom;
 
             // get the list of supported basis function of this cell
-            const std::vector<unsigned int>& bfs_id = p_cell->GetSupportedAnchors();
+            const std::vector<std::size_t>& bfs_id = p_cell->GetSupportedAnchors();
 
             // compute the glocal coordinates at the local coordinates
             double X = 0.0, Y = 0.0, Z = 0.0;

@@ -68,6 +68,8 @@ public:
             pFESpace->SetInfo(dim, Orders[dim]+1, Orders[dim]);
         }
 
+        pFESpace->ResetFunctionIndices();
+
         return pFESpace;
     }
 

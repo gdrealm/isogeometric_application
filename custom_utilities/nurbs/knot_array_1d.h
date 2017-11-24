@@ -105,6 +105,48 @@ public:
             KRATOS_THROW_ERROR(std::runtime_error, "Index access out of range", "")
     }
 
+    /// Get the size of the knot vector
+    std::size_t size() const {return mpKnots.size();}
+
+    /// Get the number of knot spans
+    std::size_t nspans() const
+    {
+        std::size_t nspan = 0;
+        TDataType left = (*begin())->Value();
+        for (const_iterator it = begin(); it != end(); ++it)
+        {
+            TDataType right = (*it)->Value();
+            if (right != left)
+            {
+                ++nspan;
+                left = right;
+            }
+        }
+        return nspan;
+    }
+
+    /// Get the two knots bounded the span (the closest one)
+    std::tuple<knot_t, knot_t> span(const std::size_t& i_span) const
+    {
+        std::size_t i = 0;
+        knot_t left = *begin();
+        for (const_iterator it = begin(); it != end(); ++it)
+        {
+            knot_t right = (*it);
+            if (right->Value() != left->Value())
+            {
+                ++i;
+                if (i == i_span)
+                    return std::make_tuple(left, right);
+                left = right;
+            }
+            else
+                left = right; // move the knot
+        }
+        // shall not come here
+        KRATOS_THROW_ERROR(std::logic_error, "the span index exceeds the number of span of the knot vector", "")
+    }
+
     /// Iterator
     iterator begin() {return mpKnots.begin();}
 
@@ -116,9 +158,6 @@ public:
 
     /// Iterator
     const_iterator end() const {return mpKnots.end();}
-
-    /// Get the size of the knot vector
-    std::size_t size() const {return mpKnots.size();}
 
     /// Compare the two knot vectors
     bool operator==(const KnotArray1D<TDataType>& rOther) const
@@ -176,6 +215,7 @@ public:
     }
 
 private:
+
     knot_container_t mpKnots;
 };
 

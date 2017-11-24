@@ -76,7 +76,7 @@ public:
         for (typename MultiPatch<TDim>::PatchContainerType::ptr_const_iterator it = pMultiPatch->Patches().ptr_begin(); it != pMultiPatch->Patches().ptr_end(); ++it)
         {
             std::stringstream patch_name;
-            patch_name << "Patch" << (*it)->Id();
+            patch_name << "patch" << (*it)->Id();
             this->ExportMatlab(outfile, *it, patch_name.str());
         }
 

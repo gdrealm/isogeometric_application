@@ -173,12 +173,9 @@ public:
     /// Get the order of the patch in specific direction
     virtual const std::size_t Order(const std::size_t& i) const
     {
-        if (i == 0)
-            return mOrder1;
-        else if (i == 1)
-            return mOrder2;
-        else if (i == 2)
-            return mOrder3;
+        if (i == 0) return mOrder1;
+        else if (i == 1) return mOrder2;
+        else if (i == 2) return mOrder3;
     }
 
     /// Set the maximum level allowed in the hierarchical mesh
@@ -227,7 +224,7 @@ public:
     static std::string StaticType()
     {
         std::stringstream ss;
-        ss << "HierarchicalNURBSPatch" << TDim << "D";
+        ss << "Hierarchical B-Splines Patch" << TDim << "D";
         return ss.str();
     }
 
@@ -385,7 +382,7 @@ class HBMesh<0> : public Patch<0>
     /// Get the string describing the type of the patch
     static std::string StaticType()
     {
-        return "HierarchicalNURBSPatch0D";
+        return "Hierarchical B-Splines Patch0D";
     }
 
 private:

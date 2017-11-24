@@ -329,6 +329,12 @@ typename TPatchType::Pointer Patch_pGetNeighbor(TPatchType& rDummy, const Bounda
     return rDummy.pNeighbor(side);
 }
 
+template<class TPatchType, class TMultiPatchType>
+typename TPatchType::Pointer MultiPatch_GetItem(TMultiPatchType& rDummy, std::size_t index)
+{
+    return rDummy.pGetPatch(index);
+}
+
 template<int TDim>
 void MultiPatch_MakeNeighbor(MultiPatch<TDim>& rDummy, typename Patch<TDim>::Pointer pPatch1, BoundarySide side1,
            typename Patch<TDim>::Pointer pPatch2, BoundarySide side2)
@@ -341,10 +347,7 @@ std::size_t MultiPatch_Enumerate(MultiPatch<TDim>& rDummy)
 {
     std::size_t system_size;
 
-    for (typename MultiPatch<TDim>::PatchContainerType::iterator it = rDummy.begin(); it != rDummy.end(); ++it)
-        it->pFESpace()->ResetFunctionIndices();
-
-    rDummy.Enumerate(system_size);
+    system_size = rDummy.Enumerate();
     KRATOS_WATCH(system_size)
 
     return system_size;
@@ -690,8 +693,9 @@ void IsogeometricApplication_AddPatchesToPython()
     (ss.str().c_str(), init<>())
     .def("ResetId", &MultiPatch<TDim>::ResetId)
     .def("AddPatch", &MultiPatch<TDim>::AddPatch)
-    .def("GetPatch", &MultiPatch<TDim>::pGetPatch)
+    .def("__getitem__", &MultiPatch_GetItem<Patch<TDim>, MultiPatch<TDim> >)
     .def("MakeNeighbor", &MultiPatch_MakeNeighbor<TDim>)
+    .def("EquationSystemSize", &MultiPatch<TDim>::EquationSystemSize)
     .def("Enumerate", &MultiPatch_Enumerate<TDim>)
     .def("PrintAddress", &MultiPatch<TDim>::PrintAddress)
     .def(self_ns::str(self))

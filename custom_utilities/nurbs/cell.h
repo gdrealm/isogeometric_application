@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 23 Apr 2015 $
 //   Revision:            $Revision: 1.0 $
@@ -14,7 +14,7 @@
 #include <vector>
 #include <iostream>
 
-// External includes 
+// External includes
 
 // Project includes
 #include "includes/define.h"
@@ -24,9 +24,9 @@ namespace Kratos
 {
 
 /**
-    Represent a cell in Tsplines mesh topology.
-    A cell is the smaller unit in the T-splines topology mesh (i.e. element, or Bezier decomposition of the T-splines basis function)
-    A cell is determined by its topology index of its vertices
+    Represent a cell in NURBS/hierarchical B-Splines/T-splines mesh topology.
+    A cell is the smaller unit in the isogeometric topology mesh (e.g. it represents an element, or Bezier element of the T-splines basis function).
+    A cell is determined by its topology index of its vertices.
  */
 class Cell
 {
@@ -38,12 +38,13 @@ public:
     typedef Knot<double> KnotType;
     typedef KnotType::Pointer knot_t;
 
-    /// Default constructor
-    Cell(std::size_t Id, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
+    /// Constructor with knots
+    Cell(const std::size_t& Id, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
     : mId(Id), mpLeft(pLeft), mpRight(pRight), mpUp(pUp), mpDown(pDown), mpAbove(new KnotType(0.0)), mpBelow(new KnotType(0.0))
     {}
 
-    Cell(std::size_t Id, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
+    /// Constructor with knots
+    Cell(const std::size_t& Id, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
     : mId(Id), mpLeft(pLeft), mpRight(pRight), mpUp(pUp), mpDown(pDown), mpAbove(pAbove), mpBelow(pBelow)
     {}
 
@@ -78,14 +79,14 @@ public:
     int BelowIndex() const {return mpBelow->Index();}
     double BelowValue() const {return mpBelow->Value();}
 
-    /// Check if the cell is coverred by knot spans; the comparison is based on indexing, so the knot vectors must be sorted a priori
-    bool IsCoverred(const std::vector<int>& rKnotsIndex1, const std::vector<int>& rKnotsIndex2) const
+    /// Check if the cell is covered by knot spans; the comparison is based on indexing, so the knot vectors must be sorted a priori
+    bool IsCovered(const std::vector<int>& rKnotsIndex1, const std::vector<int>& rKnotsIndex2) const
     {
         int anchor_cover_xi_min  = *std::min_element(rKnotsIndex1.begin(), rKnotsIndex1.end());
         int anchor_cover_xi_max  = *std::max_element(rKnotsIndex1.begin(), rKnotsIndex1.end());
         int anchor_cover_eta_min = *std::min_element(rKnotsIndex2.begin(), rKnotsIndex2.end());
         int anchor_cover_eta_max = *std::max_element(rKnotsIndex2.begin(), rKnotsIndex2.end());
-        
+
         if(     LeftIndex()  >= anchor_cover_xi_min
             && RightIndex() <= anchor_cover_xi_max
             && DownIndex()  >= anchor_cover_eta_min
@@ -96,8 +97,8 @@ public:
         return false;
     }
 
-    /// Check if this cell is coverred by another cell
-    bool IsCoverred(const Cell::Pointer p_cell, const int Dim) const
+    /// Check if this cell is covered by another cell
+    bool IsCovered(const Cell::Pointer p_cell, const int Dim) const
     {
         if(Dim == 2)
         {
@@ -164,7 +165,7 @@ public:
     }
 
     /// Add supported anchor and the respective extraction operator of this cell to the anchor
-    void AddAnchor(int Id, double W, const Vector& Crow)
+    void AddAnchor(const unsigned int& Id, const double& W, const Vector& Crow)
     {
         mSupportedAnchors.push_back(Id);
         mAnchorWeights.push_back(W);
@@ -175,7 +176,7 @@ public:
     std::size_t NumberOfAnchors() const {return mSupportedAnchors.size();}
 
     /// Get the supported anchors of this cell
-    const std::vector<unsigned int>& GetSupportedAnchors() const {return mSupportedAnchors;}
+    const std::vector<std::size_t>& GetSupportedAnchors() const {return mSupportedAnchors;}
 
     /// Get the weights of all the supported anchors
     const std::vector<double>& GetAnchorWeights() const {return mAnchorWeights;}
@@ -187,7 +188,7 @@ public:
     }
 
     /// Get the extraction operator matrix
-    const Matrix GetExtractionOperator() const
+    Matrix GetExtractionOperator() const
     {
         Matrix M;
         M.resize(mCrows.size(), mCrows[0].size());
@@ -199,43 +200,6 @@ public:
     /// Get the extraction operator as CSR triplet
     void GetExtractionOperator(std::vector<int>& rowPtr, std::vector<int>& colInd, std::vector<double>& values) const
     {
-//        CompressedMatrix M;
-//        M.resize(mCrows.size(), mCrows[0].size());
-//        int cnt = 0;
-//        for(std::size_t i = 0; i < mCrows.size(); ++i)
-//        {
-//            KRATOS_WATCH(mCrows[i])
-//            std::cout << "inserted";
-//            for(std::size_t j = 0; j < mCrows[i].size(); ++j)
-//            {
-//                if(mCrows[i](j) != 0)
-//                {
-//                    std::cout << " " << mCrows[i](j);
-// //                    M.push_back(i, j, mCrows[i](j));
-//                    M(i, j) = mCrows[i](j);
-//                    ++cnt;
-//                }
-//            }
-//            std::cout << std::endl;
-//        }
-//        M.complete_index1_data();
-//        std::cout << "inserted " << cnt << " entries" << std::endl;
-// 
-//        rowPtr.resize(M.index1_data().size());
-//        std::copy(M.index1_data().begin(), M.index1_data().end(), rowPtr.begin());
-//        KRATOS_WATCH(M.index1_data().size())
-//        KRATOS_WATCH(rowPtr.size())
-// 
-//        colInd.resize(M.index2_data().size());
-//        std::copy(M.index2_data().begin(), M.index2_data().end(), colInd.begin());
-//        KRATOS_WATCH(M.index2_data().size())
-//        KRATOS_WATCH(colInd.size())
-// 
-//        values.resize(M.value_data().size());
-//        std::copy(M.value_data().begin(), M.value_data().end(), values.begin());
-//        KRATOS_WATCH(M.value_data().size())
-//        KRATOS_WATCH(values.size())
-
         int cnt = 0;
         rowPtr.push_back(cnt);
         for(std::size_t i = 0; i < mCrows.size(); ++i)
@@ -251,10 +215,6 @@ public:
             }
             rowPtr.push_back(cnt);
         }
-//        std::cout << "inserted " << cnt << " entries" << std::endl;
-//        KRATOS_WATCH(rowPtr.size())
-//        KRATOS_WATCH(colInd.size())
-//        KRATOS_WATCH(values.size())
     }
 
     /// Implement relational operator for automatic arrangement in container
@@ -279,12 +239,13 @@ public:
     {
         rOStream << ", supporting anchors: ";
         rOStream << "(";
-        for(std::vector<unsigned int>::const_iterator it = mSupportedAnchors.begin(); it != mSupportedAnchors.end(); ++it)
+        for(std::vector<std::size_t>::const_iterator it = mSupportedAnchors.begin(); it != mSupportedAnchors.end(); ++it)
             rOStream << " " << (*it);
         rOStream << ")";
     }
 
 private:
+
     std::size_t mId;
     knot_t mpLeft;
     knot_t mpRight;
@@ -292,7 +253,7 @@ private:
     knot_t mpDown;
     knot_t mpAbove;
     knot_t mpBelow;
-    std::vector<unsigned int> mSupportedAnchors;
+    std::vector<std::size_t> mSupportedAnchors;
     std::vector<double> mAnchorWeights; // weight of the anchor
     std::vector<Vector> mCrows; // bezier extraction operator row to each anchor
 };

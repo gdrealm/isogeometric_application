@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 18 Aug 2015 $
 //   Revision:            $Revision: 1.0 $
@@ -16,7 +16,7 @@
 #include <map>
 #include <iostream>
 
-// External includes 
+// External includes
 #include <omp.h>
 
 // Project includes
@@ -58,28 +58,33 @@ public:
     {}
 
     /// Check if the cell exists in the list; ortherwise create new cell and return
-    virtual cell_t CreateCell(unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
+//    virtual cell_t CreateCell(knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
+    virtual cell_t CreateCell(const std::vector<knot_t>& pKnots)
     {
+        assert(pKnots.size() == 4);
+
         // search in the list of cell if any cell has the same knot span
         // Currently I use the brute-force approach. I know it is not efficient. I will improve it in the future.
         for(iterator it = BaseType::mpCells.begin(); it != BaseType::mpCells.end(); ++it)
         {
-            if( (*it)->Left()  == pLeft
-             && (*it)->Right() == pRight
-             && (*it)->Down()  == pDown
-             && (*it)->Up()    == pUp )
+            if( (*it)->Left()  == pKnots[0] // left
+             && (*it)->Right() == pKnots[1] // right
+             && (*it)->Down()  == pKnots[2] // down
+             && (*it)->Up()    == pKnots[3] ) // up
                 return *it;
         }
 
         // ortherwise create new cell
-        cell_t p_cell = cell_t(new TCellType(++BaseType::mLastId, Level, pLeft, pRight, pDown, pUp));
+        cell_t p_cell = cell_t(new TCellType(++BaseType::mLastId, pKnots[0], pKnots[1], pKnots[2], pKnots[3]));
         BaseType::mpCells.insert(p_cell);
         BaseType::cell_map_is_created = false;
 
         #ifdef USE_R_TREE_TO_SEARCH_FOR_CELLS
         // update the r-tree
-        double cmin[] = {pLeft->Value(), pDown->Value()};
-        double cmax[] = {pRight->Value(), pUp->Value()};
+//        double cmin[] = {pLeft->Value(), pDown->Value()};
+//        double cmax[] = {pRight->Value(), pUp->Value()};
+        double cmin[] = {pKnots[0]->Value(), pKnots[2]->Value()};
+        double cmax[] = {pKnots[1]->Value(), pKnots[3]->Value()};
         rtree_cells.Insert(cmin, cmax, p_cell->Id());
         #endif
 
@@ -139,24 +144,24 @@ public:
         // Currently I use the brute-force approach. I know it is not efficient. I will improve it in the future. TODO
         for(iterator it = BaseType::mpCells.begin(); it != BaseType::mpCells.end(); ++it)
             if(*it != p_cell)
-                if((*it)->IsCoverred(p_cell, 2))
+                if((*it)->IsCovered(p_cell, 2))
                     p_cells.push_back(*it);
         #endif
 
         #ifdef USE_R_TREE_TO_SEARCH_FOR_CELLS
-        // determine the overlapping cells; for now, this's only working in 3D
+        // determine the overlapping cells; for now, this only works in 3D
         std::vector<std::size_t> OverlappingCells;
         double cmin[] = {p_cell->LeftValue(), p_cell->DownValue()};
         double cmax[] = {p_cell->RightValue(), p_cell->UpValue()};
         int nhits = rtree_cells.Search(cmin, cmax, CellManager_RtreeSearchCallback, (void*)(&OverlappingCells));
 //        printf("Search resulted in %d hits\n", nhits);
 
-        // check within overlapping cells the one coverred in p_cell
+        // check within overlapping cells the one covered in p_cell
         for(std::size_t i = 0; i < OverlappingCells.size(); ++i)
         {
             cell_t pthis_cell = this->get(OverlappingCells[i]);
             if(pthis_cell != p_cell)
-                if(pthis_cell->IsCoverred(p_cell, 2))
+                if(pthis_cell->IsCovered(p_cell, 2))
                     p_cells.push_back(pthis_cell);
         }
         #endif
@@ -174,6 +179,7 @@ public:
     }
 
 private:
+
     #ifdef USE_R_TREE_TO_SEARCH_FOR_CELLS
     RTree<std::size_t, double, 2, double> rtree_cells;
     #endif

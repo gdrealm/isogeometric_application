@@ -58,30 +58,35 @@ public:
     {}
 
     /// Check if the cell exists in the list; ortherwise create new cell and return
-    virtual cell_t CreateCell(unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
+//    virtual cell_t CreateCell(knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
+    virtual cell_t CreateCell(const std::vector<knot_t>& pKnots)
     {
+        assert(pKnots.size() == 6);
+
         // search in the list of cell if any cell has the same knot span
         // Currently I use the brute-force approach. I know it is not efficient. I will improve it in the future.
         for(iterator it = BaseType::mpCells.begin(); it != BaseType::mpCells.end(); ++it)
         {
-            if( (*it)->Left()  == pLeft
-             && (*it)->Right() == pRight
-             && (*it)->Down()  == pDown
-             && (*it)->Up()    == pUp
-             && (*it)->Below() == pBelow
-             && (*it)->Above() == pAbove )
+            if( (*it)->Left()  == pKnots[0] // left
+             && (*it)->Right() == pKnots[1] // right
+             && (*it)->Down()  == pKnots[2] // down
+             && (*it)->Up()    == pKnots[3] // up
+             && (*it)->Below() == pKnots[4] // below
+             && (*it)->Above() == pKnots[5] ) // above
                 return *it;
         }
 
         // ortherwise create new cell
-        cell_t p_cell = cell_t(new TCellType(++BaseType::mLastId, Level, pLeft, pRight, pDown, pUp, pBelow, pAbove));
+        cell_t p_cell = cell_t(new TCellType(++BaseType::mLastId, pKnots[0], pKnots[1], pKnots[2], pKnots[3], pKnots[4], pKnots[5]));
         BaseType::mpCells.insert(p_cell);
         BaseType::cell_map_is_created = false;
 
         #ifdef USE_R_TREE_TO_SEARCH_FOR_CELLS
         // update the r-tree
-        double cmin[] = {pLeft->Value(), pDown->Value(), pBelow->Value()};
-        double cmax[] = {pRight->Value(), pUp->Value(), pAbove->Value()};
+//        double cmin[] = {pLeft->Value(), pDown->Value(), pBelow->Value()};
+//        double cmax[] = {pRight->Value(), pUp->Value(), pAbove->Value()};
+        double cmin[] = {pKnots[0]->Value(), pKnots[2]->Value(), pKnots[4]->Value()};
+        double cmax[] = {pKnots[1]->Value(), pKnots[3]->Value(), pKnots[5]->Value()};
         rtree_cells.Insert(cmin, cmax, p_cell->Id());
         #endif
 
@@ -141,7 +146,7 @@ public:
         // Currently I use the brute-force approach. I know it is not efficient. I will improve it in the future. TODO
         for(iterator it = BaseType::mpCells.begin(); it != BaseType::mpCells.end(); ++it)
             if(*it != p_cell)
-                if((*it)->IsCoverred(p_cell, 3))
+                if((*it)->IsCovered(p_cell, 3))
                     p_cells.push_back(*it);
         #endif
 
@@ -158,7 +163,7 @@ public:
         {
             cell_t pthis_cell = this->get(OverlappingCells[i]);
             if(pthis_cell != p_cell)
-                if(pthis_cell->IsCoverred(p_cell, 3))
+                if(pthis_cell->IsCovered(p_cell, 3))
                     p_cells.push_back(pthis_cell);
         }
         #endif

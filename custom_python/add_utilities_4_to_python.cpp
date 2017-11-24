@@ -22,6 +22,7 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "includes/model_part.h"
 #include "custom_python/add_utilities_to_python.h"
 #include "custom_utilities/nonconforming_multipatch_lagrange_mesh.h"
+#include "custom_utilities/multipatch_model_part.h"
 
 
 namespace Kratos
@@ -51,15 +52,37 @@ void IsogeometricApplication_AddMeshToPython()
     .def("SetDivision", &NonConformingMultipatchLagrangeMesh<TDim>::SetDivision)
     .def("SetUniformDivision", &NonConformingMultipatchLagrangeMesh<TDim>::SetUniformDivision)
     .def("WriteModelPart", &NonConformingMultipatchLagrangeMesh<TDim>::WriteModelPart)
+    .def(self_ns::str(self))
     ;
 
 }
 
-void IsogeometricApplication_AddCustomUtilities3ToPython()
+template<int TDim>
+void IsogeometricApplication_AddModelPartToPython()
+{
+    std::stringstream ss;
+
+    ss.str(std::string());
+    ss << "MultiPatchModelPart" << TDim << "D";
+    class_<MultiPatchModelPart<TDim>, typename MultiPatchModelPart<TDim>::Pointer, boost::noncopyable>
+    (ss.str().c_str(), init<typename MultiPatch<TDim>::Pointer>())
+    .def("BeginModelPart", &MultiPatchModelPart<TDim>::BeginModelPart)
+    .def("AddElement", &MultiPatchModelPart<TDim>::AddElement)
+    .def("AddCondition", &MultiPatchModelPart<TDim>::AddCondition)
+    .def("EndModelPart", &MultiPatchModelPart<TDim>::EndModelPart)
+    .def(self_ns::str(self))
+    ;
+}
+
+
+void IsogeometricApplication_AddCustomUtilities4ToPython()
 {
 
     IsogeometricApplication_AddMeshToPython<2>();
     IsogeometricApplication_AddMeshToPython<3>();
+
+    IsogeometricApplication_AddModelPartToPython<2>();
+    IsogeometricApplication_AddModelPartToPython<3>();
 
 }
 

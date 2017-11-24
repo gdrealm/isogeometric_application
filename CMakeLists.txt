@@ -75,13 +75,15 @@ set( KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_processes_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_1_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_2_to_python.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_3_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_4_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/isogeometric_python_application.cpp
 )
 
 ###############################################################
 ## define library Kratos which defines the basic python interface
 add_library(KratosIsogeometricApplication SHARED ${KRATOS_ISOGEOMETRIC_APPLICATION_SOURCES})
+
+add_subdirectory(tests)
 
 target_link_libraries(KratosIsogeometricApplication KratosCore)
 #target_link_libraries(KratosIsogeometricApplication KratosStructuralApplication)

@@ -224,8 +224,6 @@ void IsogeometricApplication_AddCustomUtilities1ToPython()
     .def("ComputeCentroid", BezierUtils_ComputeCentroid<Condition>)
 //    .def("compute_extended_knot_vector", &BezierUtils::compute_extended_knot_vector)
 //    .def("bezier_extraction_tsplines_1d", &BezierUtils::bezier_extraction_tsplines_1d)
-    .def("test_tsplines_1", &BezierUtils::test_tsplines_1)
-    .def("test_bezier_extraction_local_1d", &BezierUtils::test_bezier_extraction_local_1d)
     ;
 
     class_<BezierClassicalPostUtility, BezierClassicalPostUtility::Pointer, boost::noncopyable>("BezierClassicalPostUtility", init<ModelPart::Pointer>())

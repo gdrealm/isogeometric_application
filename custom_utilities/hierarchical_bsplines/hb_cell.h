@@ -49,20 +49,23 @@ public:
     typedef bf_container_t::iterator bf_iterator;
 
     /// Default constructor
-    HBCell(std::size_t Id, unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
-    : BaseType(Id, pLeft, pRight, pDown, pUp), mLevel(Level)
+    HBCell(const std::size_t& Id, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
+    : BaseType(Id, pLeft, pRight, pDown, pUp)
     {}
 
-    HBCell(std::size_t Id, unsigned int Level, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
-    : BaseType(Id, pLeft, pRight, pDown, pUp, pBelow, pAbove), mLevel(Level)
+    HBCell(const std::size_t& Id, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
+    : BaseType(Id, pLeft, pRight, pDown, pUp, pBelow, pAbove)
     {}
 
     /// Destructor
     virtual ~HBCell()
     {}
 
+    /// Set the level for this cell
+    void SetLevel(const std::size_t& Level) {mLevel = Level;}
+
     /// Get the level of this cell
-    unsigned int Level() const {return mLevel;}
+    const std::size_t& Level() const {return mLevel;}
 
     /// Add the basis function to the set. If it does exist in the set, return the internal one
     bf_t AddBf(bf_t p_bf)
@@ -95,9 +98,9 @@ public:
     std::size_t size() const {return mpBasisFuncs.size();}
 
     /// Check if this cell is coverred by another cell
-    bool IsCoverred(const HBCell::Pointer p_cell, const int Dim) const
+    bool IsCovered(const HBCell::Pointer p_cell, const int Dim) const
     {
-        return BaseType::IsCoverred(BaseType::Pointer(p_cell), Dim);
+        return BaseType::IsCovered(BaseType::Pointer(p_cell), Dim);
     }
 
     /// Information
@@ -106,7 +109,7 @@ public:
     virtual void PrintData(std::ostream& rOStream) const;
 
 private:
-    unsigned int mLevel;
+    std::size_t mLevel;
     bf_container_t mpBasisFuncs; // list of basis functions contain this cell in its support
 };
 

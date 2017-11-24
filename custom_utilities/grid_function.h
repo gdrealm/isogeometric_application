@@ -75,7 +75,6 @@ public:
         return v;
     }
 
-
     /// Check the compatibility between the underlying control grid and fe space.
     bool Validate() const
     {
