@@ -22,6 +22,8 @@ kernel = Kernel()   #defining kernel
 nurbs_fespace_library = BSplinesFESpaceLibrary()
 grid_util = ControlGridUtility()
 multipatch_util = MultiPatchUtility()
+mpatch_export1 = MultiNURBSPatchGeoExporter()
+mpatch_export2 = MultiNURBSPatchGLVisExporter()
 
 def CreateMultiPatch():
     mpatch = MultiPatch2D()
@@ -32,7 +34,7 @@ def CreateMultiPatch():
     patch1 = patch1_ptr.GetReference()
     patch1.CreateControlPointGridFunction(ctrl_grid_1)
     #print(patch1)
-    multipatch_util.ExportGeo(patch1, "patch1.txt")
+    mpatch_export1.Export(patch1, "patch1.txt")
 
     fes2 = nurbs_fespace_library.CreateRectangularFESpace(3, 3)
     ctrl_grid_2 = grid_util.CreateRectangularControlPointGrid(1.0, 0.0, fes1.Number(0), fes1.Number(1), 2.0, 1.0)
@@ -40,13 +42,13 @@ def CreateMultiPatch():
     patch2 = patch2_ptr.GetReference()
     patch2.CreateControlPointGridFunction(ctrl_grid_2)
     #print(patch2)
-    multipatch_util.ExportGeo(patch2, "patch2.txt")
+    mpatch_export1.Export(patch2, "patch2.txt")
 
     mpatch.AddPatch(patch1)
     mpatch.AddPatch(patch2)
     mpatch.ResetId()
     mpatch.MakeNeighbor(patch1, BoundarySide.Right, patch2, BoundarySide.Left)
-    print(mpatch)
+    #print(mpatch)
 
     print("############REFINEMENT###############")
     multipatch_refine_util = MultiPatchRefinementUtility()
@@ -61,7 +63,7 @@ def CreateMultiPatch():
 
 mpatch = CreateMultiPatch()
 
-multipatch_util.ExportGlvis(mpatch, "mpatch.mesh")
+mpatch_export2.Export(mpatch, "mpatch.mesh")
 
 system_size = mpatch.Enumerate()
 print("system_size:", system_size)
