@@ -1,6 +1,6 @@
 function write_layer_bezier_2d(fid, name, nurbs, C, Cxi, Cet, params)
 %
-% write the Bezier geometry info for 1 layer for 1 nurbs volume patch
+% write the Bezier geometry info for 1 layer for 1 nurbs surface patch
 %
 % Input:
 %   fid     file handler
