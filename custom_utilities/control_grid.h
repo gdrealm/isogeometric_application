@@ -22,6 +22,7 @@ namespace Kratos
 
 /**
 This class is a container to keep the control values.
+TODO implement iterator to iterate through control values.
  */
 template<typename TDataType>
 class ControlGrid
@@ -32,7 +33,6 @@ public:
 
     /// Type definition
     typedef TDataType DataType;
-    typedef std::vector<TDataType> DataContainerType;
 
     /// Default constructor
     ControlGrid() : mName("UNKNOWN") {}
@@ -46,73 +46,65 @@ public:
     /// Create a new control grid pointer
     static ControlGrid::Pointer Create() {return ControlGrid::Pointer(new ControlGrid());}
 
-    /// Get and Set the name
-    void SetName(const std::string& Name) {mName = Name;}
-    const std::string Name() const {return mName;}
-
-    /// Copy the data the other grid function. The size of two grid functions must be equal.
-    virtual void CopyFrom(const ControlGrid<TDataType>& rOther) {}
-
-    /// Copy the data the other grid function. The size of two grid functions must be equal.
-    virtual void CopyFrom(const typename ControlGrid<TDataType>::Pointer pOther) {}
-
-    /// Copy the data the other grid function. In the case that the source has different size, the grid function is resized.
-    virtual void ResizeAndCopyFrom(ControlGrid<TDataType>& rOther) {}
-
-    /// Copy the data the other grid function. In the case that the source has different size, the grid function is resized.
-    virtual void ResizeAndCopyFrom(const typename ControlGrid<TDataType>::Pointer pOther) {}
-
     /// Clone this grid function
     virtual typename ControlGrid<TDataType>::Pointer Clone() {return NULL;}
 
-    /// Get the size of underlying data
-    std::size_t Size() const {return mData.size();}
+    /// Set the name
+    void SetName(const std::string& Name) {mName = Name;}
+
+    /// Get the name
+    const std::string& Name() const {return mName;}
 
     /// Get the size of underlying data
-    std::size_t size() const {return mData.size();}
+    virtual std::size_t Size() const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Error calling base class function", __FUNCTION__)
+    }
 
-    /// resize the underlying container
-    void Resize(const std::size_t& new_size) {mData.resize(new_size);}
-
-    /// resize the underlying container
-    void resize(const std::size_t& new_size) {mData.resize(new_size);}
-
-    /// Access the underlying data
-    DataContainerType& Data() {return mData;}
-
-    /// Access the underlying data
-    const DataContainerType& Data() const {return mData;}
+    /// Get the size of underlying data
+    virtual std::size_t size() const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Error calling base class function", __FUNCTION__)
+    }
 
     /// Get the data at specific point
-    const TDataType& GetData(const std::size_t& i) const {return mData[i];}
+    virtual const TDataType& GetData(const std::size_t& i) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Error calling base class function", __FUNCTION__)
+    }
 
     /// Set the data at specific point
     /// Be careful with this method. You can destroy the coherency of internal data.
-    void SetData(const std::size_t& i, const TDataType& value) {mData[i] = value;}
+    virtual void SetData(const std::size_t& i, const TDataType& value)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Error calling base class function", __FUNCTION__)
+    }
 
     // overload operator []
-    TDataType& operator[] (const std::size_t& i) {return mData[i];}
+    virtual TDataType& operator[] (const std::size_t& i)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Error calling base class function", __FUNCTION__)
+    }
 
     // overload operator []
-    const TDataType& operator[] (const std::size_t& i) const {return mData[i];}
+    virtual const TDataType& operator[] (const std::size_t& i) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Error calling base class function", __FUNCTION__)
+    }
 
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "Grid " << Name() << "[" << Size() << "]";
+        rOStream << "Control Grid " << Name() << "[" << Size() << "]";
     }
 
     virtual void PrintData(std::ostream& rOStream) const
     {
-        rOStream << " Data:\n (";
-        for (std::size_t i = 0; i < Data().size(); ++i)
-            rOStream << " " << Data()[i];
-        rOStream << ")" << std::endl;
     }
 
 private:
+
     std::string mName;
-    DataContainerType mData;
 };
 
 /// output stream function

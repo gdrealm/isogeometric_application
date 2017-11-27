@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: Aug 18, 2013 $
 //   Revision:            $Revision: 1.1 $
@@ -13,24 +13,25 @@
 
 // System includes
 #include <string>
-#include <iostream> 
+#include <iostream>
 
 
-// External includes 
+// External includes
 
 
 // Project includes
 #include "includes/define.h"
 #include "includes/kratos_application.h"
 #include "includes/variables.h"
+#include "custom_utilities/control_point.h"
 
 namespace Kratos
 {
 
 	///@name Kratos Globals
-	///@{ 
+	///@{
 
-	// Variables definition 
+	// Variables definition
     KRATOS_DEFINE_VARIABLE( Vector, NURBS_WEIGHT )
     KRATOS_DEFINE_VARIABLE( Vector, NURBS_KNOTS_1 )
     KRATOS_DEFINE_VARIABLE( Vector, NURBS_KNOTS_2 )
@@ -50,18 +51,19 @@ namespace Kratos
     KRATOS_DEFINE_VARIABLE( Vector, EXTRACTION_OPERATOR_CSR_ROWPTR )
     KRATOS_DEFINE_VARIABLE( Vector, EXTRACTION_OPERATOR_CSR_COLIND )
     KRATOS_DEFINE_VARIABLE( Vector, EXTRACTION_OPERATOR_CSR_VALUES )
+    KRATOS_DEFINE_VARIABLE( ControlPoint<double>, CONTROL_POINT )
     KRATOS_DEFINE_3D_VARIABLE_WITH_COMPONENTS(LOCAL_COORDINATES)
 
-	///@} 
+	///@}
 	///@name Type Definitions
-	///@{ 
+	///@{
 
-	///@} 
+	///@}
 	///@name  Enum's
 	///@{
 
 	///@}
-	///@name  Functions 
+	///@name  Functions
 	///@{
 
 	///@}
@@ -76,14 +78,14 @@ namespace Kratos
 	public:
 		///@name Type Definitions
 		///@{
-		
+
 
 		/// Pointer definition of KratosDiscontinuitiesApplication
 		KRATOS_CLASS_POINTER_DEFINITION(KratosIsogeometricApplication);
 
 		///@}
-		///@name Life Cycle 
-		///@{ 
+		///@name Life Cycle
+		///@{
 
 		/// Default constructor.
 		KratosIsogeometricApplication();
@@ -94,7 +96,7 @@ namespace Kratos
 
 
 		///@}
-		///@name Operators 
+		///@name Operators
 		///@{
 
 
@@ -108,7 +110,7 @@ namespace Kratos
 
 		///@}
 		///@name Access
-		///@{ 
+		///@{
 
 
 		///@}
@@ -116,7 +118,7 @@ namespace Kratos
 		///@{
 
 
-		///@}      
+		///@}
 		///@name Input and output
 		///@{
 
@@ -149,7 +151,7 @@ namespace Kratos
         }
 
 
-		///@}      
+		///@}
 		///@name Friends
 		///@{
 
@@ -157,75 +159,75 @@ namespace Kratos
 		///@}
 
 	protected:
-		///@name Protected static Member Variables 
-		///@{ 
+		///@name Protected static Member Variables
+		///@{
 
 
-		///@} 
-		///@name Protected member Variables 
-		///@{ 
+		///@}
+		///@name Protected member Variables
+		///@{
 
 
-		///@} 
+		///@}
 		///@name Protected Operators
-		///@{ 
+		///@{
 
 
-		///@} 
+		///@}
 		///@name Protected Operations
-		///@{ 
+		///@{
 
 
-		///@} 
-		///@name Protected  Access 
-		///@{ 
+		///@}
+		///@name Protected  Access
+		///@{
 
 
-		///@}      
-		///@name Protected Inquiry 
-		///@{ 
+		///@}
+		///@name Protected Inquiry
+		///@{
 
 
-		///@}    
-		///@name Protected LifeCycle 
-		///@{ 
+		///@}
+		///@name Protected LifeCycle
+		///@{
 
 
 		///@}
 
 	private:
-		///@name Static Member Variables 
-		///@{ 
+		///@name Static Member Variables
+		///@{
 
 
-		///@} 
-		///@name Member Variables 
-		///@{ 
-        
+		///@}
+		///@name Member Variables
+		///@{
 
-		///@} 
+
+		///@}
 		///@name Private Operators
-		///@{ 
+		///@{
 
 
-		///@} 
+		///@}
 		///@name Private Operations
-		///@{ 
+		///@{
 
 
-		///@} 
-		///@name Private  Access 
-		///@{ 
+		///@}
+		///@name Private  Access
+		///@{
 
 
-		///@}    
-		///@name Private Inquiry 
-		///@{ 
+		///@}
+		///@name Private Inquiry
+		///@{
 
 
-		///@}    
-		///@name Un accessible methods 
-		///@{ 
+		///@}
+		///@name Un accessible methods
+		///@{
 
 		/// Assignment operator.
 		KratosIsogeometricApplication& operator=(KratosIsogeometricApplication const& rOther);
@@ -234,26 +236,26 @@ namespace Kratos
 		KratosIsogeometricApplication(KratosIsogeometricApplication const& rOther);
 
 
-		///@}    
+		///@}
 
-	}; // Class KratosIsogeometricApplication 
+	}; // Class KratosIsogeometricApplication
 
-	///@} 
-
-
-	///@name Type Definitions       
-	///@{ 
+	///@}
 
 
-	///@} 
-	///@name Input and output 
-	///@{ 
+	///@name Type Definitions
+	///@{
 
-	///@} 
+
+	///@}
+	///@name Input and output
+	///@{
+
+	///@}
 
 
 }  // namespace Kratos.
 
-#endif // KRATOS_ISOGEOMETRIC_APPLICATION_H_INCLUDED  defined 
+#endif // KRATOS_ISOGEOMETRIC_APPLICATION_H_INCLUDED  defined
 
 

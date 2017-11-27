@@ -6,8 +6,8 @@
 //
 //
 
-#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_HN_MESH_H_INCLUDED )
-#define  KRATOS_ISOGEOMETRIC_APPLICATION_HN_MESH_H_INCLUDED
+#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_DEPRECATED_HN_MESH_H_INCLUDED )
+#define  KRATOS_ISOGEOMETRIC_APPLICATION_DEPRECATED_HN_MESH_H_INCLUDED
 
 // System includes
 #include <ctime>
@@ -38,8 +38,8 @@
 #include "custom_utilities/nurbs/domain_manager_2d.h"
 #include "custom_utilities/nurbs/domain_manager_3d.h"
 #include "custom_utilities/patch.h"
-#include "custom_utilities/hierarchical_bsplines/basis_function_manager.h"
-#include "custom_utilities/hierarchical_bsplines/hb_basis_function.h"
+#include "custom_utilities/hbsplines/deprecated_basis_function_manager.h"
+#include "custom_utilities/hbsplines/deprecated_hb_basis_function.h"
 
 namespace Kratos
 {
@@ -53,7 +53,7 @@ enum HN_ECHO_FLAGS
 Hierarchical B-Splines mesh and refinement
 */
 template<int TDim>
-class HBMesh : public Patch<TDim>
+class DeprecatedHBMesh : public Patch<TDim>
 {
 private:
     template<class data_type>
@@ -127,7 +127,7 @@ public:
 //    static const int ECHO_REFIMENT      = 0b0000000000001000;
 
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(HBMesh);
+    KRATOS_CLASS_POINTER_DEFINITION(DeprecatedHBMesh);
 
     /// Type definition
     typedef Patch<TDim> BaseType;
@@ -135,11 +135,12 @@ public:
     typedef KnotArray1D<double> knot_container_t;
     typedef typename knot_container_t::knot_t knot_t;
 
-    typedef HBCell::Pointer cell_t;
-    typedef CellManager<HBCell> cell_container_t;
+    typedef HBCell<DeprecatedHBBasisFunction> CellType;
+    typedef typename CellType::Pointer cell_t;
+    typedef CellManager<CellType> cell_container_t;
 
-    typedef HBBasisFunction::Pointer bf_t;
-    typedef BasisFunctionManager<HBBasisFunction> bf_container_t;
+    typedef DeprecatedHBBasisFunction::Pointer bf_t;
+    typedef DeprecatedBasisFunctionManager<DeprecatedHBBasisFunction> bf_container_t;
 
     typedef DomainManager::Pointer domain_t;
     typedef std::map<std::size_t, domain_t> domain_container_t;
@@ -149,10 +150,10 @@ public:
     **************************************************************************/
 
     /// Default constructor
-    HBMesh(const std::size_t& Id, const std::string& Name);
+    DeprecatedHBMesh(const std::size_t& Id, const std::string& Name);
 
     /// Destructor
-    ~HBMesh() {}
+    ~DeprecatedHBMesh() {}
 
     /**************************************************************************
                            FUNDAMENTAL SUBROUTINES
@@ -263,7 +264,7 @@ public:
     virtual bool Validate() const;
 
     /// Build the hierarchical boundary mesh
-    void BuildBoundaryMesh(HBMesh& rMesh, std::string boundary_mesh_type) const;
+    void BuildBoundaryMesh(DeprecatedHBMesh& rMesh, std::string boundary_mesh_type) const;
 
     /**************************************************************************
                             MATLAB INTERFACE
@@ -359,16 +360,16 @@ private:
  * Template specific instantiation for null-D hierarchical B-Splines patch to terminate the compilation
  */
 template<>
-class HBMesh<0> : public Patch<0>
+class DeprecatedHBMesh<0> : public Patch<0>
 {
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(HBMesh);
+    KRATOS_CLASS_POINTER_DEFINITION(DeprecatedHBMesh);
 
     /// Default constructor
-    HBMesh(const std::size_t& Id, const std::string& Name) : Patch<0>(Id), mName(Name) {}
+    DeprecatedHBMesh(const std::size_t& Id, const std::string& Name) : Patch<0>(Id), mName(Name) {}
 
     /// Destructor
-    ~HBMesh() {}
+    ~DeprecatedHBMesh() {}
 
     /// Get the name of this hierarchical mesh
     const std::string& Name() const {return mName;}
@@ -391,7 +392,7 @@ private:
 
 /// output stream function
 template<int TDim>
-inline std::ostream& operator<<(std::ostream& rOStream, const HBMesh<TDim>& rThis)
+inline std::ostream& operator<<(std::ostream& rOStream, const DeprecatedHBMesh<TDim>& rThis)
 {
     rThis.PrintInfo(rOStream);
     return rOStream;

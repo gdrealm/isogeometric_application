@@ -6,8 +6,8 @@
 //
 //
 
-#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_BASIS_FUNCTION_MANAGER_H_INCLUDED )
-#define  KRATOS_ISOGEOMETRIC_APPLICATION_BASIS_FUNCTION_MANAGER_H_INCLUDED
+#if !defined(KRATOS_ISOGEOMETRIC_APPLICATION_DEPRECATED_BASIS_FUNCTION_MANAGER_H_INCLUDED )
+#define  KRATOS_ISOGEOMETRIC_APPLICATION_DEPRECATED_BASIS_FUNCTION_MANAGER_H_INCLUDED
 
 // System includes
 #include <string>
@@ -29,11 +29,11 @@ namespace Kratos
   TODO
  */
 template<class TBasisFuncType>
-class BasisFunctionManager
+class DeprecatedBasisFunctionManager
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(BasisFunctionManager);
+    KRATOS_CLASS_POINTER_DEFINITION(DeprecatedBasisFunctionManager);
 
     /// Type definitions
     typedef Knot<double> KnotType;
@@ -51,15 +51,12 @@ public:
     typedef std::map<std::size_t, bf_t> map_t;
 
     /// Default constructor
-    BasisFunctionManager() : mTol(1.0e-10), mLastId(0)
+    DeprecatedBasisFunctionManager() : mLastId(0)
     {}
 
     /// Destructor
-    virtual ~BasisFunctionManager()
+    virtual ~DeprecatedBasisFunctionManager()
     {}
-
-    /// Set the tolerance for the internal searching algorithm
-    void SetTolerance(double Tol) {mTol = Tol;}
 
     /// Check if the bf exists in the list; otherwise create new bf and return
     typename TBasisFuncType::Pointer CreateBf(unsigned int Level,
@@ -107,7 +104,7 @@ public:
     }
 
     /// Get a basis function based on its Id
-    bf_t get(std::size_t Id)
+    bf_t get(const std::size_t& Id)
     {
         // create the index map if it's not created yet
         if(!function_map_is_created)
@@ -122,7 +119,7 @@ public:
     }
 
     /// Overload operator[]
-    bf_t operator[](std::size_t Id)
+    bf_t operator[](const std::size_t& Id)
     {
         return get(Id);
     }
@@ -148,7 +145,6 @@ public:
 
 private:
     std::size_t mLastId;
-    double mTol;
     bf_container_t mpBasisFuncs;
 
     mutable map_t mFunctionsMap; // map from basis function id to the basis function. It's mainly used to search for the bf quickly. But it needs to be re-initialized whenever new bf is added to the set
@@ -166,7 +162,7 @@ private:
 
 /// output stream function
 template<class TBasisFuncType>
-inline std::ostream& operator <<(std::ostream& rOStream, const BasisFunctionManager<TBasisFuncType>& rThis)
+inline std::ostream& operator <<(std::ostream& rOStream, const DeprecatedBasisFunctionManager<TBasisFuncType>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rThis.PrintData(rOStream);
@@ -175,5 +171,5 @@ inline std::ostream& operator <<(std::ostream& rOStream, const BasisFunctionMana
 
 }// namespace Kratos.
 
-#endif // KRATOS_ISOGEOMETRIC_APPLICATION_BASIS_FUNCTION_MANAGER_H_INCLUDED
+#endif // KRATOS_ISOGEOMETRIC_APPLICATION_DEPRECATED_BASIS_FUNCTION_MANAGER_H_INCLUDED
 

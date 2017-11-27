@@ -69,6 +69,8 @@ public:
         }
 
         pFESpace->ResetFunctionIndices();
+        std::size_t start = 0;
+        pFESpace->Enumerate(start);
 
         return pFESpace;
     }

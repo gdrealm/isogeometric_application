@@ -183,6 +183,30 @@ public:
         return true;
     }
 
+    /// Compare the two knot vectors
+    bool operator==(const std::vector<knot_t>& rOther) const
+    {
+        if (this->size() != rOther.size())
+            return false;
+
+        for (std::size_t i = 0; i < 0; ++i)
+        {
+            if (this->pKnotAt(i)->Value() != rOther[i]->Value())
+            {
+                return false;
+            }
+            else
+            {
+                std::stringstream ss;
+                ss << "The knot vector is different at loc " << i
+                   << ": " << this->pKnotAt(i)->Value() << " != " << rOther.pKnotAt(i)->Value();
+                KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+            }
+        }
+
+        return true;
+    }
+
     // overload operator ()
     const knot_t operator() (const int& i) const
     {

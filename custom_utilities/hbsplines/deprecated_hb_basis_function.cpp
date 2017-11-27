@@ -1,10 +1,10 @@
-#include "custom_utilities/hierarchical_bsplines/hb_basis_function.h"
+#include "custom_utilities/hbsplines/deprecated_hb_basis_function.h"
 
 // #define DEBUG_BEZIER_EXTRACTION
 
 namespace Kratos
 {
-    void HBBasisFunction::ComputeExtractionOperator(cell_t p_cell, Vector& Crow, int p1, int p2)
+    void DeprecatedHBBasisFunction::ComputeExtractionOperator(cell_t p_cell, Vector& Crow, int p1, int p2)
     {
         // a priori check
         for(std::size_t i = 0; i < mpLocalKnots1.size(); ++i)
@@ -175,7 +175,7 @@ namespace Kratos
         #endif
     }
 
-    void HBBasisFunction::ComputeExtractionOperator(cell_t p_cell, Vector& Crow, int p1, int p2, int p3)
+    void DeprecatedHBBasisFunction::ComputeExtractionOperator(cell_t p_cell, Vector& Crow, int p1, int p2, int p3)
     {
         // a priori check
         for(std::size_t i = 0; i < mpLocalKnots1.size(); ++i)

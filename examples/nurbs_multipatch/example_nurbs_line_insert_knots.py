@@ -20,11 +20,11 @@ from KratosMultiphysics.IsogeometricApplication import *
 kernel = Kernel()   #defining kernel
 
 nurbs_fespace_library = BSplinesFESpaceLibrary()
-grid_util = ControlGridUtility()
+grid_lib = ControlGridLibrary()
 multipatch_util = MultiPatchUtility()
 
 fes1 = nurbs_fespace_library.CreateLinearFESpace(3)
-ctrl_grid_1 = grid_util.CreateLinearControlPointGrid(0.0, 0.0, 0.0, fes1.Number(0), 1.0, 0.0, 0.0)
+ctrl_grid_1 = grid_lib.CreateLinearControlPointGrid(0.0, 0.0, 0.0, fes1.Number(0), 1.0, 0.0, 0.0)
 #print(fes1)
 #print(ctrl_grid_1)
 

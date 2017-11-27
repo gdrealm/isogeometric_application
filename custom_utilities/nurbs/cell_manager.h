@@ -65,7 +65,7 @@ public:
     /// Get the tolerance for the internal searching algorithm
     double GetTolerance() const {return mTol;}
 
-    /// Check if the cell exists in the list; ortherwise create new cell and return
+    /// Check if the cell exists in the list; otherwise create new cell and return
     virtual cell_t CreateCell(const std::vector<knot_t>& pKnots)
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling the virtual function", __FUNCTION__)

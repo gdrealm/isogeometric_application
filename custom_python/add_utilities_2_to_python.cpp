@@ -31,7 +31,7 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "custom_utilities/control_point.h"
 #include "custom_utilities/control_grid.h"
 #include "custom_utilities/nurbs/regular_control_grid.h"
-#include "custom_utilities/control_grid_utility.h"
+#include "custom_utilities/control_grid_library.h"
 #include "custom_utilities/fespace.h"
 #include "custom_utilities/nurbs/bsplines_fespace.h"
 #include "custom_utilities/nurbs/bsplines_fespace_library.h"
@@ -39,8 +39,6 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "custom_utilities/patch.h"
 #include "custom_utilities/multipatch_utility.h"
 #include "custom_utilities/multipatch_refinement_utility.h"
-#include "custom_utilities/hierarchical_bsplines/hb_mesh.h"
-#include "custom_utilities/tsplines/tsmesh_2d.h"
 #include "custom_utilities/import_export/multi_nurbs_patch_geo_exporter.h"
 #include "custom_utilities/import_export/multi_nurbs_patch_matlab_exporter.h"
 #include "custom_utilities/import_export/multi_nurbs_patch_glvis_exporter.h"
@@ -118,8 +116,8 @@ void ControlGrid_SetItem(ControlGrid<TDataType>& rDummy, int index, const TDataT
 
 ////////////////////////////////////////
 
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateLinearControlPointGrid(
-        ControlGridUtility& rDummy,
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateLinearControlPointGrid(
+        ControlGridLibrary& rDummy,
         const double& start_x, const double& start_y, const double& start_z,
         const std::size_t& n_points_u,
         const double& end_x, const double& end_y, const double& end_z)
@@ -140,8 +138,8 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateLinearContr
     return rDummy.CreateRegularControlPointGrid<1>(start, ngrid, end);
 }
 
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateRectangularControlPointGrid1(
-        ControlGridUtility& rDummy,
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateRectangularControlPointGrid1(
+        ControlGridLibrary& rDummy,
         const double& start_x, const double& start_y,
         const std::size_t& n_points_u, const std::size_t& n_points_v,
         const double& end_x, const double& end_y)
@@ -161,8 +159,8 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateRectangular
     return rDummy.CreateRegularControlPointGrid<2>(start, ngrid, end);
 }
 
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateRectangularControlPointGrid2(
-        ControlGridUtility& rDummy,
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateRectangularControlPointGrid2(
+        ControlGridLibrary& rDummy,
         const double& start_x, const double& start_y, const double& start_z,
         const std::size_t& n_points_u, const std::size_t& n_points_v,
         const double& space1_x, const double& space1_y, const double& space1_z,
@@ -194,8 +192,8 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateRectangular
     return rDummy.CreateRegularControlPointGrid<2>(start, ngrid, spacing_vectors);
 }
 
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateCubicControlPointGrid1(
-        ControlGridUtility& rDummy,
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateCubicControlPointGrid1(
+        ControlGridLibrary& rDummy,
         const double& start_x, const double& start_y, const double& start_z,
         const std::size_t& n_points_u, const std::size_t& n_points_v, const std::size_t& n_points_w,
         const double& end_x, const double& end_y, const double& end_z)
@@ -218,8 +216,8 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateCubicContro
     return rDummy.CreateRegularControlPointGrid<3>(start, ngrid, end);
 }
 
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateCubicControlPointGrid2(
-        ControlGridUtility& rDummy,
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateCubicControlPointGrid2(
+        ControlGridLibrary& rDummy,
         const double& start_x, const double& start_y, const double& start_z,
         const std::size_t& n_points_u, const std::size_t& n_points_v, const std::size_t& n_points_w,
         boost::python::list spacing_vectors_data)
@@ -249,6 +247,78 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility_CreateCubicContro
     }
 
     return rDummy.CreateRegularControlPointGrid<3>(start, ngrid, spacing_vectors);
+}
+
+// template<typename TDataType>
+// typename ControlGrid<TDataType>::Pointer ControlGridLibrary_CreateLinearZeroControlGrid(
+//         ControlGridLibrary& rDummy,
+//         const std::string& name,
+//         const std::size_t& n_points_u)
+// {
+//     std::vector<std::size_t> ngrid(1);
+//     ngrid[0] = n_points_u;
+//     return rDummy.CreateRegularZeroControlGrid<1>(name, ngrid);
+// }
+
+// template<typename TDataType>
+// typename ControlGrid<TDataType>::Pointer ControlGridLibrary_CreateRectangularZeroControlGrid(
+//         ControlGridLibrary& rDummy,
+//         const std::string& name,
+//         const std::size_t& n_points_u, const std::size_t& n_points_v)
+// {
+//     std::vector<std::size_t> ngrid(2);
+//     ngrid[0] = n_points_u;
+//     ngrid[1] = n_points_v;
+//     return rDummy.CreateRegularZeroControlGrid<2>(name, ngrid);
+// }
+
+// template<typename TDataType>
+// typename ControlGrid<TDataType>::Pointer ControlGridLibrary_CreateCubicZeroControlGrid(
+//         ControlGridLibrary& rDummy,
+//         const std::string& name,
+//         const std::size_t& n_points_u, const std::size_t& n_points_v, const std::size_t& n_points_w)
+// {
+//     std::vector<std::size_t> ngrid(3);
+//     ngrid[0] = n_points_u;
+//     ngrid[1] = n_points_v;
+//     ngrid[2] = n_points_w;
+//     return rDummy.CreateRegularZeroControlGrid<3>(name, ngrid);
+// }
+
+template<class TVariableType>
+typename ControlGrid<typename TVariableType::Type>::Pointer ControlGridLibrary_CreateLinearZeroControlGridWithVariable(
+        ControlGridLibrary& rDummy,
+        const TVariableType& rVariable,
+        const std::size_t& n_points_u)
+{
+    std::vector<std::size_t> ngrid(1);
+    ngrid[0] = n_points_u;
+    return rDummy.CreateRegularZeroControlGrid<1, TVariableType>(rVariable, ngrid);
+}
+
+template<class TVariableType>
+typename ControlGrid<typename TVariableType::Type>::Pointer ControlGridLibrary_CreateRectangularZeroControlGridWithVariable(
+        ControlGridLibrary& rDummy,
+        const TVariableType& rVariable,
+        const std::size_t& n_points_u, const std::size_t& n_points_v)
+{
+    std::vector<std::size_t> ngrid(2);
+    ngrid[0] = n_points_u;
+    ngrid[1] = n_points_v;
+    return rDummy.CreateRegularZeroControlGrid<2, TVariableType>(rVariable, ngrid);
+}
+
+template<class TVariableType>
+typename ControlGrid<typename TVariableType::Type>::Pointer ControlGridLibrary_CreateCubicZeroControlGridWithVariable(
+        ControlGridLibrary& rDummy,
+        const TVariableType& rVariable,
+        const std::size_t& n_points_u, const std::size_t& n_points_v, const std::size_t& n_points_w)
+{
+    std::vector<std::size_t> ngrid(3);
+    ngrid[0] = n_points_u;
+    ngrid[1] = n_points_v;
+    ngrid[2] = n_points_w;
+    return rDummy.CreateRegularZeroControlGrid<3, TVariableType>(rVariable, ngrid);
 }
 
 ////////////////////////////////////////
@@ -305,11 +375,6 @@ void GridFunction_SetControlGrid(GridFunction<TDim, TDataType>& rDummy, typename
 
 ////////////////////////////////////////
 
-template<class TPatchType>
-TPatchType& GetReference(typename TPatchType::Pointer& dummy)
-{
-    return *dummy;
-}
 
 template<class TPatchType>
 std::size_t Patch_GetId(TPatchType& rDummy)
@@ -409,6 +474,29 @@ void MultiPatchExporter_Export(TExporter& rDummy,
 }
 
 //////////////////////////////////////////////////
+
+template<int TDim>
+typename Patch<TDim>::Pointer BSplinesPatchUtility_CreateConnectedPatch(BSplinesPatchUtility& dummy,
+        typename Patch<TDim-1>::Pointer pPatch1, typename Patch<TDim-1>::Pointer pPatch2)
+{
+    return BSplinesPatchUtility::CreateConnectedPatch<TDim>(pPatch1, pPatch2);
+}
+
+boost::python::list BSplinesPatchUtility_CreatePatchFromGeo(BSplinesPatchUtility& dummy,
+        const std::string& filename)
+{
+    int Dim = BSplinesPatchUtility::GetDimensionOfGeo(filename);
+    boost::python::list patches;
+    if (Dim == 2)
+        patches.append(BSplinesPatchUtility::CreatePatchFromGeo<2>(filename));
+    else if (Dim == 3)
+        patches.append(BSplinesPatchUtility::CreatePatchFromGeo<3>(filename));
+    else
+        KRATOS_THROW_ERROR(std::logic_error, "The dimension of the patch is invalid", "")
+    return patches;
+}
+
+//////////////////////////////////////////////////
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 
@@ -487,67 +575,89 @@ void IsogeometricApplication_AddControlGrids()
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    class_<RegularControlGrid<1, ControlPoint<double> >, RegularControlGrid<1, ControlPoint<double> >::Pointer, bases<ControlGrid<ControlPoint<double> > >, boost::noncopyable>
-    ("ControlPointControlGrid1D", init<const std::size_t&>())
+    class_<BaseRegularControlGrid<ControlPoint<double> >, BaseRegularControlGrid<ControlPoint<double> >::Pointer, bases<ControlGrid<ControlPoint<double> > >, boost::noncopyable>
+    ("BaseRegularControlPointGrid", init<>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<1, double>, RegularControlGrid<1, double>::Pointer, bases<ControlGrid<double> >, boost::noncopyable>
-    ("DoubleControlGrid1D", init<const std::size_t&>())
+    class_<BaseRegularControlGrid<double>, BaseRegularControlGrid<double>::Pointer, bases<ControlGrid<double> >, boost::noncopyable>
+    ("BaseRegularDoubleControlGrid", init<>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<1, array_1d<double, 3> >, RegularControlGrid<1, array_1d<double, 3> >::Pointer, bases<ControlGrid<array_1d<double, 3> > >, boost::noncopyable>
-    ("Array1DControlGrid1D", init<const std::size_t&>())
+    class_<BaseRegularControlGrid<array_1d<double, 3> >, BaseRegularControlGrid<array_1d<double, 3> >::Pointer, bases<ControlGrid<array_1d<double, 3> > >, boost::noncopyable>
+    ("BaseRegularArray1DControlGrid", init<>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<1, Vector>, RegularControlGrid<1, Vector>::Pointer, bases<ControlGrid<Vector> >, boost::noncopyable>
-    ("VectorControlGrid1D", init<const std::size_t&>())
-    .def(self_ns::str(self))
-    ;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    class_<RegularControlGrid<2, ControlPoint<double> >, RegularControlGrid<2, ControlPoint<double> >::Pointer, bases<ControlGrid<ControlPoint<double> > >, boost::noncopyable>
-    ("ControlPointControlGrid2D", init<const std::size_t&, const std::size_t&>())
-    .def(self_ns::str(self))
-    ;
-
-    class_<RegularControlGrid<2, double>, RegularControlGrid<2, double>::Pointer, bases<ControlGrid<double> >, boost::noncopyable>
-    ("DoubleControlGrid2D", init<const std::size_t&, const std::size_t&>())
-    .def(self_ns::str(self))
-    ;
-
-    class_<RegularControlGrid<2, array_1d<double, 3> >, RegularControlGrid<2, array_1d<double, 3> >::Pointer, bases<ControlGrid<array_1d<double, 3> > >, boost::noncopyable>
-    ("Array1DControlGrid2D", init<const std::size_t&, const std::size_t&>())
-    .def(self_ns::str(self))
-    ;
-
-    class_<RegularControlGrid<2, Vector>, RegularControlGrid<2, Vector>::Pointer, bases<ControlGrid<Vector> >, boost::noncopyable>
-    ("VectorControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    class_<BaseRegularControlGrid<Vector>, BaseRegularControlGrid<Vector>::Pointer, bases<ControlGrid<Vector> >, boost::noncopyable>
+    ("BaseRegularVectorControlGrid", init<>())
     .def(self_ns::str(self))
     ;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    class_<RegularControlGrid<3, ControlPoint<double> >, RegularControlGrid<3, ControlPoint<double> >::Pointer, bases<ControlGrid<ControlPoint<double> > >, boost::noncopyable>
-    ("ControlPointControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    class_<RegularControlGrid<1, ControlPoint<double> >, RegularControlGrid<1, ControlPoint<double> >::Pointer, bases<BaseRegularControlGrid<ControlPoint<double> > >, boost::noncopyable>
+    ("RegularControlPointGrid1D", init<const std::size_t&>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<3, double>, RegularControlGrid<3, double>::Pointer, bases<ControlGrid<double> >, boost::noncopyable>
-    ("DoubleControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    class_<RegularControlGrid<1, double>, RegularControlGrid<1, double>::Pointer, bases<BaseRegularControlGrid<double> >, boost::noncopyable>
+    ("RegularDoubleControlGrid1D", init<const std::size_t&>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<3, array_1d<double, 3> >, RegularControlGrid<3, array_1d<double, 3> >::Pointer, bases<ControlGrid<array_1d<double, 3> > >, boost::noncopyable>
-    ("Array1DControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    class_<RegularControlGrid<1, array_1d<double, 3> >, RegularControlGrid<1, array_1d<double, 3> >::Pointer, bases<BaseRegularControlGrid<array_1d<double, 3> > >, boost::noncopyable>
+    ("RegularArray1DControlGrid1D", init<const std::size_t&>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<3, Vector>, RegularControlGrid<3, Vector>::Pointer, bases<ControlGrid<Vector> >, boost::noncopyable>
-    ("VectorControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    class_<RegularControlGrid<1, Vector>, RegularControlGrid<1, Vector>::Pointer, bases<BaseRegularControlGrid<Vector> >, boost::noncopyable>
+    ("RegularVectorControlGrid1D", init<const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    class_<RegularControlGrid<2, ControlPoint<double> >, RegularControlGrid<2, ControlPoint<double> >::Pointer, bases<BaseRegularControlGrid<ControlPoint<double> > >, boost::noncopyable>
+    ("RegularControlPointGrid2D", init<const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<RegularControlGrid<2, double>, RegularControlGrid<2, double>::Pointer, bases<BaseRegularControlGrid<double> >, boost::noncopyable>
+    ("RegularDoubleControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<RegularControlGrid<2, array_1d<double, 3> >, RegularControlGrid<2, array_1d<double, 3> >::Pointer, bases<BaseRegularControlGrid<array_1d<double, 3> > >, boost::noncopyable>
+    ("RegularArray1DControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<RegularControlGrid<2, Vector>, RegularControlGrid<2, Vector>::Pointer, bases<BaseRegularControlGrid<Vector> >, boost::noncopyable>
+    ("RegularVectorControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    class_<RegularControlGrid<3, ControlPoint<double> >, RegularControlGrid<3, ControlPoint<double> >::Pointer, bases<BaseRegularControlGrid<ControlPoint<double> > >, boost::noncopyable>
+    ("RegularControlPointGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<RegularControlGrid<3, double>, RegularControlGrid<3, double>::Pointer, bases<BaseRegularControlGrid<double> >, boost::noncopyable>
+    ("RegularDoubleControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<RegularControlGrid<3, array_1d<double, 3> >, RegularControlGrid<3, array_1d<double, 3> >::Pointer, bases<BaseRegularControlGrid<array_1d<double, 3> > >, boost::noncopyable>
+    ("RegularArray1DControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<RegularControlGrid<3, Vector>, RegularControlGrid<3, Vector>::Pointer, bases<BaseRegularControlGrid<Vector> >, boost::noncopyable>
+    ("RegularVectorControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
     .def(self_ns::str(self))
     ;
 }
@@ -628,10 +738,8 @@ void IsogeometricApplication_AddPatchesToPython()
     // class_<Patch<TDim>, typename Patch<TDim>::Pointer >
     (ss.str().c_str(), init<const std::size_t&, typename FESpace<TDim>::Pointer>())
     .add_property("Id", &Patch_GetId<Patch<TDim> >, &Patch_SetId<Patch<TDim> >)
+    .def("WorkingSpaceDimension", &Patch<TDim>::WorkingSpaceDimension)
     .def("CreateControlPointGridFunction", &Patch<TDim>::CreateControlPointGridFunction)
-    .def("CreateDoubleGridFunction", &Patch<TDim>::CreateDoubleGridFunction)
-    .def("CreateArray1DGridFunction", &Patch<TDim>::CreateArray1DGridFunction)
-    .def("CreateVectorGridFunction", &Patch<TDim>::CreateVectorGridFunction)
     .def("ApplyTransformation", &Patch<TDim>::ApplyTransformation)
     .def("Order", &Patch<TDim>::Order)
     .def("TotalNumber", &Patch<TDim>::TotalNumber)
@@ -644,46 +752,6 @@ void IsogeometricApplication_AddPatchesToPython()
     class_<typename Patch<TDim>::Pointer>
     (ss.str().c_str(), init<typename Patch<TDim>::Pointer>())
     .def("GetReference", GetReference<Patch<TDim> >, return_value_policy<reference_existing_object>())
-    .def(self_ns::str(self))
-    ;
-
-    ss.str(std::string());
-    ss << "HBMesh" << TDim << "D";
-    class_<HBMesh<TDim>, bases<Patch<TDim> > >
-    // class_<HBMesh<TDim>, typename HBMesh<TDim>::Pointer, bases<Patch<TDim> > >
-    (ss.str().c_str(), init<const std::size_t&, const std::string&>())
-    .def("SetEchoLevel", &HBMesh<TDim>::SetEchoLevel)
-    .def("ReadMesh", &HBMesh<TDim>::ReadMesh)
-    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-    .def("Refine", &HBMesh<TDim>::Refine) // use this for debugging only, use RefineNodes and LinearDependencyRefine instead
-    .def("RefineNodes", &HBMesh<TDim>::RefineNodes)
-    .def("LinearDependencyRefine", &HBMesh<TDim>::LinearDependencyRefine)
-    .def("BuildMesh", &HBMesh<TDim>::BuildMesh)
-    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-    .def("ExportCellTopology", &HBMesh<TDim>::ExportCellTopology)
-    .def("ExportCellGeology", &HBMesh<TDim>::ExportCellGeology)
-    //    .def("ExportRefinedDomain", &HBMesh<TDim>::ExportRefinedDomain)
-    .def("ExportSupportDomain", &HBMesh<TDim>::ExportSupportDomain)
-    .def("ExportMatlab", &HBMesh<TDim>::ExportMatlab)
-    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-    .def("ExportMDPA", &HBMesh<TDim>::ExportMDPA)
-    .def("ExportMDPA2", &HBMesh<TDim>::ExportMDPA2)
-    .def("ExportPostMDPA", &HBMesh<TDim>::ExportPostMDPA)
-    .def("ExportCellGeologyAsPostMDPA", &HBMesh<TDim>::ExportCellGeologyAsPostMDPA)
-    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-    .def("PrintKnotVectors", &HBMesh<TDim>::PrintKnotVectors)
-    .def("PrintCells", &HBMesh<TDim>::PrintCells)
-    .def("PrintBasisFuncs", &HBMesh<TDim>::PrintBasisFuncs)
-    .def("PrintRefinementHistory", &HBMesh<TDim>::PrintRefinementHistory)
-    .def("CheckNestedSpace", &HBMesh<TDim>::CheckNestedSpace)
-    .def(self_ns::str(self))
-    ;
-
-    ss.str(std::string());
-    ss << "HBMesh" << TDim << "DPointer";
-    class_<typename HBMesh<TDim>::Pointer>
-    (ss.str().c_str(), init<typename HBMesh<TDim>::Pointer>())
-    .def("GetReference", GetReference<HBMesh<TDim> >, return_value_policy<reference_existing_object>())
     .def(self_ns::str(self))
     ;
 
@@ -704,12 +772,8 @@ void IsogeometricApplication_AddPatchesToPython()
 
 void IsogeometricApplication_AddImportExportToPython()
 {
-    std::stringstream ss;
-
-    ss.str(std::string());
-    ss << "MultiNURBSPatchGeoExporter";
     class_<MultiNURBSPatchGeoExporter, MultiNURBSPatchGeoExporter::Pointer, boost::noncopyable>
-    (ss.str().c_str(), init<>())
+    ("MultiNURBSPatchGeoExporter", init<>())
     .def("Export", &MultiPatchExporter_Export<1, MultiNURBSPatchGeoExporter, Patch<1> >)
     .def("Export", &MultiPatchExporter_Export<2, MultiNURBSPatchGeoExporter, Patch<2> >)
     .def("Export", &MultiPatchExporter_Export<3, MultiNURBSPatchGeoExporter, Patch<3> >)
@@ -719,10 +783,8 @@ void IsogeometricApplication_AddImportExportToPython()
     .def(self_ns::str(self))
     ;
 
-    ss.str(std::string());
-    ss << "MultiNURBSPatchMatlabExporter";
     class_<MultiNURBSPatchMatlabExporter, MultiNURBSPatchMatlabExporter::Pointer, boost::noncopyable>
-    (ss.str().c_str(), init<>())
+    ("MultiNURBSPatchMatlabExporter", init<>())
     .def("Export", &MultiPatchExporter_Export<1, MultiNURBSPatchMatlabExporter, Patch<1> >)
     .def("Export", &MultiPatchExporter_Export<2, MultiNURBSPatchMatlabExporter, Patch<2> >)
     .def("Export", &MultiPatchExporter_Export<3, MultiNURBSPatchMatlabExporter, Patch<3> >)
@@ -732,10 +794,8 @@ void IsogeometricApplication_AddImportExportToPython()
     .def(self_ns::str(self))
     ;
 
-    ss.str(std::string());
-    ss << "MultiNURBSPatchGLVisExporter";
     class_<MultiNURBSPatchGLVisExporter, MultiNURBSPatchGLVisExporter::Pointer, boost::noncopyable>
-    (ss.str().c_str(), init<>())
+    ("MultiNURBSPatchGLVisExporter", init<>())
     .def("Export", &MultiPatchExporter_Export<1, MultiNURBSPatchGLVisExporter, Patch<1> >)
     .def("Export", &MultiPatchExporter_Export<2, MultiNURBSPatchGLVisExporter, Patch<2> >)
     .def("Export", &MultiPatchExporter_Export<3, MultiNURBSPatchGLVisExporter, Patch<3> >)
@@ -784,13 +844,22 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
 
     IsogeometricApplication_AddControlGrids();
 
-    class_<ControlGridUtility, ControlGridUtility::Pointer, boost::noncopyable>
-    ("ControlGridUtility", init<>())
-    .def("CreateLinearControlPointGrid", &ControlGridUtility_CreateLinearControlPointGrid)
-    .def("CreateRectangularControlPointGrid", &ControlGridUtility_CreateRectangularControlPointGrid1)
-    .def("CreateRectangularControlPointGrid", &ControlGridUtility_CreateRectangularControlPointGrid2)
-    .def("CreateCubicControlPointGrid", &ControlGridUtility_CreateCubicControlPointGrid1)
-    .def("CreateCubicControlPointGrid", &ControlGridUtility_CreateCubicControlPointGrid2)
+    class_<ControlGridLibrary, ControlGridLibrary::Pointer, boost::noncopyable>
+    ("ControlGridLibrary", init<>())
+    .def("CreateLinearControlPointGrid", &ControlGridLibrary_CreateLinearControlPointGrid)
+    .def("CreateRectangularControlPointGrid", &ControlGridLibrary_CreateRectangularControlPointGrid1)
+    .def("CreateRectangularControlPointGrid", &ControlGridLibrary_CreateRectangularControlPointGrid2)
+    .def("CreateCubicControlPointGrid", &ControlGridLibrary_CreateCubicControlPointGrid1)
+    .def("CreateCubicControlPointGrid", &ControlGridLibrary_CreateCubicControlPointGrid2)
+    // .def("CreateLinearZeroDoubleControlGrid", &ControlGridLibrary_CreateLinearZeroControlGrid<double>)
+    // .def("CreateRectangularZeroDoubleControlGrid", &ControlGridLibrary_CreateRectangularZeroControlGrid<double>)
+    // .def("CreateCubicZeroDoubleControlGrid", &ControlGridLibrary_CreateCubicZeroControlGrid<double>)
+    .def("CreateLinearZeroDoubleControlGrid", &ControlGridLibrary_CreateLinearZeroControlGridWithVariable<Variable<double> >)
+    .def("CreateRectangularZeroDoubleControlGrid", &ControlGridLibrary_CreateRectangularZeroControlGridWithVariable<Variable<double> >)
+    .def("CreateCubicZeroDoubleControlGrid", &ControlGridLibrary_CreateCubicZeroControlGridWithVariable<Variable<double> >)
+    .def("CreateLinearZeroArray1DControlGrid", &ControlGridLibrary_CreateLinearZeroControlGridWithVariable<Variable<array_1d<double, 3> > >)
+    .def("CreateRectangularZeroArray1DControlGrid", &ControlGridLibrary_CreateRectangularZeroControlGridWithVariable<Variable<array_1d<double, 3> > >)
+    .def("CreateCubicZeroArray1DControlGrid", &ControlGridLibrary_CreateCubicZeroControlGridWithVariable<Variable<array_1d<double, 3> > >)
     ;
 
     /////////////////////////////////////////////////////////////////
@@ -815,38 +884,6 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     IsogeometricApplication_AddGridFunctionsToPython<1>();
     IsogeometricApplication_AddGridFunctionsToPython<2>();
     IsogeometricApplication_AddGridFunctionsToPython<3>();
-
-    /////////////////////////////////////////////////////////////////
-    ///////////////////////GRID FUNCTIONS////////////////////////////
-    /////////////////////////////////////////////////////////////////
-
-
-    /////////////////////////////////////////////////////////////////
-    ///////////////////////TSPLINES//////////////////////////////////
-    /////////////////////////////////////////////////////////////////
-
-    class_<TsMesh2D, TsMesh2D::Pointer, boost::noncopyable>
-    ("TsMesh2D", init<>())
-    .def("BeginConstruct", &TsMesh2D::BeginConstruct)
-    .def("EndConstruct", &TsMesh2D::EndConstruct)
-    .def("ReadFromFile", &TsMesh2D::ReadFromFile)
-    .def("ExportMatlab", &TsMesh2D::ExportMatlab)
-    .def("BuildExtendedTmesh", &TsMesh2D::BuildExtendedTmesh)
-    .def("IsAnalysisSuitable", &TsMesh2D::IsAnalysisSuitable)
-    .def("BuildAnchors", &TsMesh2D::BuildAnchors)
-    .def("BuildCells", &TsMesh2D::BuildCells)
-    .def("ExportMDPA", &TsMesh2D::ExportMDPA)
-    //    .def("FindKnots2", &TsMesh2D::FindKnots2)
-    .def(self_ns::str(self))
-    ;
-
-    /////////////////////////////////////////////////////////////////
-    ///////////////////////HIERARCHICAL BSplines/////////////////////
-    /////////////////////////////////////////////////////////////////
-
-    enum_<HN_ECHO_FLAGS>("HN_ECHO_FLAGS")
-    .value("ECHO_REFIMENT", ECHO_REFIMENT)
-    ;
 
     /////////////////////////////////////////////////////////////////
     ///////////////////////PATCHES///////////////////////////////////
@@ -884,8 +921,9 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
 
     class_<BSplinesPatchUtility, BSplinesPatchUtility::Pointer, boost::noncopyable>
     ("BSplinesPatchUtility", init<>())
-    .def("CreateConnectedPatch", &BSplinesPatchUtility::CreateConnectedPatch<2>)
-    .def("CreateConnectedPatch", &BSplinesPatchUtility::CreateConnectedPatch<3>)
+    .def("CreateConnectedPatch", &BSplinesPatchUtility_CreateConnectedPatch<2>)
+    .def("CreateConnectedPatch", &BSplinesPatchUtility_CreateConnectedPatch<3>)
+    .def("CreatePatchFromGeo", &BSplinesPatchUtility_CreatePatchFromGeo)
     ;
 
     /////////////////////////////////////////////////////////////////

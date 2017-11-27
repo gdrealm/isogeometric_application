@@ -32,6 +32,12 @@ namespace Kratos
 namespace Python
 {
 
+template<class TPatchType>
+TPatchType& GetReference(typename TPatchType::Pointer& dummy)
+{
+    return *dummy;
+}
+
 void  IsogeometricApplication_AddCustomUtilities1ToPython();
 void  IsogeometricApplication_AddCustomUtilities2ToPython();
 void  IsogeometricApplication_AddCustomUtilities3ToPython();

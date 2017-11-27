@@ -27,12 +27,10 @@
 namespace Kratos
 {
 
-// forward declaration
-class HBBasisFunction;
-
 /**
     Represent a cell in hierarchical B-Splines topology
  */
+template<class TBasisFuncType>
 class HBCell : public Cell
 {
 public:
@@ -44,9 +42,10 @@ public:
 
     typedef Cell BaseType;
 
-    typedef boost::shared_ptr<HBBasisFunction> bf_t;
+    typedef typename TBasisFuncType::Pointer bf_t;
     typedef std::set<bf_t> bf_container_t;
-    typedef bf_container_t::iterator bf_iterator;
+    typedef typename bf_container_t::iterator bf_iterator;
+    typedef typename bf_container_t::const_iterator bf_const_iterator;
 
     /// Default constructor
     HBCell(const std::size_t& Id, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
@@ -67,7 +66,8 @@ public:
     /// Get the level of this cell
     const std::size_t& Level() const {return mLevel;}
 
-    /// Add the basis function to the set. If it does exist in the set, return the internal one
+    /// Add the basis function to the set. If it does exist in the set, return the internal one.
+    /// Typically one shall add the basis function that has support domain covering this cell.
     bf_t AddBf(bf_t p_bf)
     {
         for(bf_iterator it = bf_begin(); it != bf_end(); ++it)
@@ -81,41 +81,56 @@ public:
     void RemoveBf(bf_t p_bf)
     {
         for(bf_iterator it = bf_begin(); it != bf_end(); ++it)
+        {
             if(*it == p_bf)
             {
                 mpBasisFuncs.erase(it);
                 break;
             }
+        }
     }
 
     /// Iterators
     bf_iterator bf_begin() {return mpBasisFuncs.begin();}
-    bf_iterator bf_begin() const {return mpBasisFuncs.begin();}
+    bf_const_iterator bf_begin() const {return mpBasisFuncs.begin();}
     bf_iterator bf_end() {return mpBasisFuncs.end();}
-    bf_iterator bf_end() const {return mpBasisFuncs.end();}
+    bf_const_iterator bf_end() const {return mpBasisFuncs.end();}
 
-    /// Number of bfs contain this cell in the support
+    /// Number of basis functions that covers this cell
     std::size_t size() const {return mpBasisFuncs.size();}
 
-    /// Check if this cell is coverred by another cell
-    bool IsCovered(const HBCell::Pointer p_cell, const int Dim) const
+    /// Check if this cell is covered by another cell
+    bool IsCovered(const HBCell::Pointer p_cell, const int& dim) const
     {
-        return BaseType::IsCovered(BaseType::Pointer(p_cell), Dim);
+        return BaseType::IsCovered(BaseType::Pointer(p_cell), dim);
     }
 
     /// Information
-    virtual void PrintInfo(std::ostream& rOStream) const;
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        BaseType::PrintInfo(rOStream);
+    }
 
-    virtual void PrintData(std::ostream& rOStream) const;
+    virtual void PrintData(std::ostream& rOStream) const
+    {
+        rOStream << ", supporting basis functions: (";
+        for(bf_iterator it = bf_begin(); it != bf_end(); ++it)
+            rOStream << " " << (*it)->Id();
+        rOStream << ")";
+        BaseType::PrintData(rOStream);
+    }
 
 private:
+
     std::size_t mLevel;
     bf_container_t mpBasisFuncs; // list of basis functions contain this cell in its support
 };
 
 /// output stream function
-inline std::ostream& operator <<(std::ostream& rOStream, const HBCell& rThis)
+template<class TBasisFuncType>
+inline std::ostream& operator <<(std::ostream& rOStream, const HBCell<TBasisFuncType>& rThis)
 {
+    rOStream << "hbcell ";
     rThis.PrintInfo(rOStream);
     rThis.PrintData(rOStream);
     return rOStream;

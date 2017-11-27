@@ -89,7 +89,7 @@ public:
 //            KRATOS_WATCH(local_id)
 
             typedef typename Patch<TDim>::ControlPointType ControlPointType;
-            const ControlPointType& point = mpMultiPatch->pGetPatch(patch_id)->pControlPointGridFunction()->pControlGrid()->Data()[local_id];
+            const ControlPointType& point = mpMultiPatch->pGetPatch(patch_id)->pControlPointGridFunction()->pControlGrid()->GetData(local_id);
             // KRATOS_WATCH(point)
 
             ModelPart::NodeType::Pointer pNewNode = pNewModelPart->CreateNewNode(i+1, point.X(), point.Y(), point.Z());
@@ -147,7 +147,7 @@ public:
             for (std::size_t i = 0; i < anchors.size(); ++i)
             {
                 temp_element_nodes.push_back(( *(FindKey(mpModelPart->Nodes(), anchors[i]+1, "Node").base())));
-                weights[i] = rControlPointGridFunction.pControlGrid()->Data()[pPatch->pFESpace()->LocalId(anchors[i])].W();
+                weights[i] = rControlPointGridFunction.pControlGrid()->GetData(pPatch->pFESpace()->LocalId(anchors[i])).W();
             }
 
             // create the geometry

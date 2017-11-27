@@ -22,22 +22,107 @@ namespace Kratos
 {
 
 /**
-Control value container by a regular grid
+Base class for control value container by a regular grid
+*/
+template<typename TDataType>
+class BaseRegularControlGrid : public ControlGrid<TDataType>
+{
+public:
+    /// Pointer definition
+    KRATOS_CLASS_POINTER_DEFINITION(BaseRegularControlGrid);
+
+    /// Type definition
+    typedef ControlGrid<TDataType> BaseType;
+    typedef std::vector<TDataType> DataContainerType;
+
+    /// Default constructor
+    BaseRegularControlGrid() : BaseType() {}
+
+    /// Constructor with name
+    BaseRegularControlGrid(const std::string& Name) : BaseType(Name) {}
+
+    /// Destructor
+    virtual ~BaseRegularControlGrid() {}
+
+    /************************************/
+    /********* INHERIT UPSTREAM *********/
+    /************************************/
+
+    /// Get the size of underlying data
+    virtual std::size_t Size() const {return mData.size();}
+
+    /// Get the size of underlying data
+    virtual std::size_t size() const {return mData.size();}
+
+    /// Get the data at specific point
+    virtual const TDataType& GetData(const std::size_t& i) const {return mData[i];}
+
+    /// Set the data at specific point
+    /// Be careful with this method. You can destroy the coherency of internal data.
+    virtual void SetData(const std::size_t& i, const TDataType& value) {mData[i] = value;}
+
+    /// overload operator []
+    virtual TDataType& operator[] (const std::size_t& i) {return mData[i];}
+
+    /// overload operator []
+    virtual const TDataType& operator[] (const std::size_t& i) const {return mData[i];}
+
+    /************************************/
+    /****** EXCLUSIVE SUBROUTINES *******/
+    /************************************/
+
+    /// resize the underlying container
+    void Resize(const std::size_t& new_size) {mData.resize(new_size);}
+
+    /// resize the underlying container
+    void resize(const std::size_t& new_size) {mData.resize(new_size);}
+
+    /// Access the underlying data
+    DataContainerType& Data() {return mData;}
+
+    /// Access the underlying data
+    const DataContainerType& Data() const {return mData;}
+
+    /************************************/
+    /******** SUCCEED DOWNSTREAM ********/
+    /************************************/
+
+    /// Copy the data the other grid function. The size of two grid functions must be equal.
+    virtual void CopyFrom(const ControlGrid<TDataType>& rOther) {}
+
+    /// Copy the data the other grid function. The size of two grid functions must be equal.
+    virtual void CopyFrom(const typename ControlGrid<TDataType>::Pointer pOther) {}
+
+    /// Copy the data the other grid function. In the case that the source has different size, the grid function is resized.
+    virtual void ResizeAndCopyFrom(ControlGrid<TDataType>& rOther) {}
+
+    /// Copy the data the other grid function. In the case that the source has different size, the grid function is resized.
+    virtual void ResizeAndCopyFrom(const typename ControlGrid<TDataType>::Pointer pOther) {}
+
+private:
+
+    DataContainerType mData;
+};
+
+
+/**
+Class for control value container by a regular grid
 */
 template<int TDim, typename TDataType>
-class RegularControlGrid : public ControlGrid<TDataType>
+class RegularControlGrid : public BaseRegularControlGrid<TDataType>
 {
 };
 
+
 template<typename TDataType>
-class RegularControlGrid<1, TDataType> : public ControlGrid<TDataType>
+class RegularControlGrid<1, TDataType> : public BaseRegularControlGrid<TDataType>
 {
 public:
     /// Pointer definition
     KRATOS_CLASS_POINTER_DEFINITION(RegularControlGrid);
 
     // type definitions
-    typedef ControlGrid<TDataType> BaseType;
+    typedef BaseRegularControlGrid<TDataType> BaseType;
     typedef typename BaseType::DataContainerType DataContainerType;
     typedef typename BaseType::DataType DataType;
 
@@ -59,7 +144,10 @@ public:
     virtual ~RegularControlGrid() {}
 
     /// Create a new control grid pointer
-    static RegularControlGrid::Pointer Create(const std::vector<std::size_t>& sizes) {return RegularControlGrid::Pointer(new RegularControlGrid(sizes));}
+    static typename RegularControlGrid<1, TDataType>::Pointer Create(const std::vector<std::size_t>& sizes)
+    {
+        return typename RegularControlGrid<1, TDataType>::Pointer(new RegularControlGrid<1, TDataType>(sizes));
+    }
 
     /// Get the size of underlying data
     std::size_t Size() const {return BaseType::Data().size();}
@@ -148,14 +236,14 @@ private:
 };
 
 template<typename TDataType>
-class RegularControlGrid<2, TDataType> : public ControlGrid<TDataType>
+class RegularControlGrid<2, TDataType> : public BaseRegularControlGrid<TDataType>
 {
 public:
     /// Pointer definition
     KRATOS_CLASS_POINTER_DEFINITION(RegularControlGrid);
 
     // type definitions
-    typedef ControlGrid<TDataType> BaseType;
+    typedef BaseRegularControlGrid<TDataType> BaseType;
     typedef typename BaseType::DataContainerType DataContainerType;
     typedef typename BaseType::DataType DataType;
 
@@ -177,7 +265,10 @@ public:
     virtual ~RegularControlGrid() {}
 
     /// Create a new control grid pointer
-    static RegularControlGrid::Pointer Create(const std::vector<std::size_t>& sizes) {return RegularControlGrid::Pointer(new RegularControlGrid(sizes));}
+    static typename RegularControlGrid<2, TDataType>::Pointer Create(const std::vector<std::size_t>& sizes)
+    {
+        return typename RegularControlGrid<2, TDataType>::Pointer(new RegularControlGrid<2, TDataType>(sizes));
+    }
 
     /// resize the grid
     void Resize(const std::size_t& new_size1, const std::size_t& new_size2)
@@ -291,14 +382,14 @@ private:
 };
 
 template<typename TDataType>
-class RegularControlGrid<3, TDataType> : public ControlGrid<TDataType>
+class RegularControlGrid<3, TDataType> : public BaseRegularControlGrid<TDataType>
 {
 public:
     /// Pointer definition
     KRATOS_CLASS_POINTER_DEFINITION(RegularControlGrid);
 
     // type definitions
-    typedef ControlGrid<TDataType> BaseType;
+    typedef BaseRegularControlGrid<TDataType> BaseType;
     typedef typename BaseType::DataContainerType DataContainerType;
     typedef typename BaseType::DataType DataType;
 
@@ -320,7 +411,10 @@ public:
     virtual ~RegularControlGrid() {}
 
     /// Create a new control grid pointer
-    static RegularControlGrid::Pointer Create(const std::vector<std::size_t>& sizes) {return RegularControlGrid::Pointer(new RegularControlGrid(sizes));}
+    static typename RegularControlGrid<3, TDataType>::Pointer Create(const std::vector<std::size_t>& sizes)
+    {
+        return typename RegularControlGrid<3, TDataType>::Pointer(new RegularControlGrid<3, TDataType>(sizes));
+    }
 
     /// resize the grid
     void Resize(const std::size_t& new_size1, const std::size_t& new_size2, const std::size_t& new_size3)

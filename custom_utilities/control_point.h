@@ -17,6 +17,7 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/serializer.h"
 #include "custom_utilities/trans/transformation.h"
 
 namespace Kratos
@@ -37,6 +38,9 @@ public:
 
     /// Constant constructor
     ControlPoint(const double& v) : mWX(v), mWY(v), mWZ(v), mW(v) {}
+
+    /// Constructor with full coordinates
+    ControlPoint(const double& wx, const double& wy, const double& wz, const double& w) : mWX(wx), mWY(wy), mWZ(wz), mW(w) {}
 
     /// Destructor
     virtual ~ControlPoint() {}
@@ -183,7 +187,27 @@ public:
     }
 
 private:
+
     TDataType mWX, mWY, mWZ, mW;
+
+    /// Serializer
+    friend class Serializer;
+
+    virtual void save(Serializer& rSerializer) const
+    {
+        rSerializer.save( "WX", mWX );
+        rSerializer.save( "WY", mWY );
+        rSerializer.save( "WZ", mWZ );
+        rSerializer.save( "W", mW );
+    }
+
+    virtual void load(Serializer& rSerializer)
+    {
+        rSerializer.load( "WX", mWX );
+        rSerializer.load( "WY", mWY );
+        rSerializer.load( "WZ", mWZ );
+        rSerializer.load( "W", mW );
+    }
 };
 
 /// output stream function

@@ -20,7 +20,7 @@ from KratosMultiphysics.IsogeometricApplication import *
 kernel = Kernel()   #defining kernel
 
 nurbs_fespace_library = BSplinesFESpaceLibrary()
-grid_util = ControlGridUtility()
+grid_lib = ControlGridLibrary()
 multipatch_util = MultiPatchUtility()
 bsplines_patch_util = BSplinesPatchUtility()
 mpatch_export = MultiNURBSPatchMatlabExporter()

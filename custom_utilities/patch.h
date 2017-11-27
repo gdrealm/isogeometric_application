@@ -14,6 +14,7 @@
 #include <tuple>
 
 // External includes
+#include <boost/any.hpp>
 #include <boost/array.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -23,6 +24,8 @@
 #include "containers/array_1d.h"
 #include "custom_utilities/control_point.h"
 #include "custom_utilities/grid_function.h"
+#include "custom_utilities/control_grid_utility.h"
+#include "isogeometric_application/isogeometric_application.h"
 
 
 #define DEBUG_DESTROY
@@ -50,7 +53,7 @@ public:
     typedef Transformation<double> TransformationType;
 
     typedef GridFunction<TDim, double> DoubleGridFunctionType;
-    typedef std::vector<typename DoubleGridFunctionType::Pointer> DoubleGridFunctionContainterType;
+    typedef std::vector<typename DoubleGridFunctionType::Pointer> DoubleGridFunctionContainerType;
 
     typedef GridFunction<TDim, array_1d<double, 3> > Array1DGridFunctionType;
     typedef std::vector<typename Array1DGridFunctionType::Pointer> Array1DGridFunctionContainerType;
@@ -86,7 +89,7 @@ public:
     virtual ~Patch()
     {
         #ifdef DEBUG_DESTROY
-        std::cout << Type() << ", Id = " << Id() << ", Add = " << this << " is destroyed" << std::endl;
+        std::cout << Type() << ", Id = " << Id() << ", Addr = " << this << " is destroyed" << std::endl;
         #endif
     }
 
@@ -95,6 +98,9 @@ public:
     {
         return typename Patch<TDim>::Pointer(new Patch<TDim>(Id, pFESpace));
     }
+
+    /// Get the working space dimension of the patch
+    std::size_t WorkingSpaceDimension() const {return TDim;}
 
     /// Set the Id of this patch
     void SetId(const std::size_t& Id) {mId = Id;}
@@ -145,91 +151,117 @@ public:
     /// Set the control point grid
     typename GridFunction<TDim, ControlPointType>::Pointer CreateControlPointGridFunction(typename ControlGrid<ControlPointType>::Pointer pControlPointGrid)
     {
-        CheckSize(*pControlPointGrid, __FUNCTION__);
-        mpControlPointGridFunc = typename GridFunction<TDim, ControlPointType>::Pointer(new GridFunction<TDim, ControlPointType>(mFESpace, pControlPointGrid));
-        return mpControlPointGridFunc;
+        return this->CreateGridFunction(CONTROL_POINT, pControlPointGrid);
     }
 
     /// Get the control point grid function
-    GridFunction<TDim, ControlPointType>& ControlPointGridFunction() {return *mpControlPointGridFunc;}
+    GridFunction<TDim, ControlPointType>& ControlPointGridFunction() {return *(this->pGetGridFunction(CONTROL_POINT));}
 
     /// Get the control point grid function
-    const GridFunction<TDim, ControlPointType>& ControlPointGridFunction() const {return *mpControlPointGridFunc;}
+    const GridFunction<TDim, ControlPointType>& ControlPointGridFunction() const {return *(this->pGetGridFunction(CONTROL_POINT));}
 
     /// Get the control point grid function pointer
-    typename GridFunction<TDim, ControlPointType>::Pointer pControlPointGridFunction() {return mpControlPointGridFunc;}
+    typename GridFunction<TDim, ControlPointType>::Pointer pControlPointGridFunction() {return this->pGetGridFunction(CONTROL_POINT);}
 
     /// Get the control point grid
-    typename GridFunction<TDim, ControlPointType>::ConstPointer pControlPointGridFunction() const {return mpControlPointGridFunc;}
+    typename GridFunction<TDim, ControlPointType>::ConstPointer pControlPointGridFunction() const {return this->pGetGridFunction(CONTROL_POINT);}
 
     /// Get the control point weights vector
     std::vector<double> GetControlWeights() const
     {
-        const typename GridFunction<TDim, ControlPointType>::DataContainerType& GridData = pControlPointGridFunction()->pControlGrid()->Data();
-        std::vector<double> Weights(GridData.size());
-        for (std::size_t i = 0; i < GridData.size(); ++i)
-            Weights[i] = GridData[i].W();
+        typename ControlGrid<ControlPointType>::ConstPointer pControlPointGrid = pControlPointGridFunction()->pControlGrid();
+        std::vector<double> Weights(pControlPointGrid->size());
+        for (std::size_t i = 0; i < pControlPointGrid->size(); ++i)
+            Weights[i] = (*pControlPointGrid)[i].W();
         return Weights;
     }
 
-    /// Apply the homogeneous transformation to the patch
+    /// Apply the homogeneous transformation to the patch by applying the homogeneous transformation to the control points grid. For DISPLACEMENT, access the grid function for DISPLACEMENT directly and transform it.
     void ApplyTransformation(const TransformationType& trans)
     {
-        typename GridFunction<TDim, ControlPointType>::DataContainerType& GridData = pControlPointGridFunction()->pControlGrid()->Data();
-        for (std::size_t i = 0; i < GridData.size(); ++i)
-            GridData[i].ApplyTransformation(trans);
+        typename ControlGrid<ControlPointType>::Pointer pControlPointGrid = pControlPointGridFunction()->pControlGrid();
+        ControlGridUtility::ApplyTransformation(*pControlPointGrid, trans);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// Create and add the grid function for double variable
-    typename DoubleGridFunctionType::Pointer CreateDoubleGridFunction(typename ControlGrid<double>::Pointer pControlGrid)
+    /// Create and add the grid function
+    template<typename TDataType>
+    typename GridFunction<TDim, TDataType>::Pointer CreateGridFunction(typename ControlGrid<TDataType>::Pointer pControlGrid)
     {
         CheckSize(*pControlGrid, __FUNCTION__);
-        typename DoubleGridFunctionType::Pointer pNewGridFunc = typename DoubleGridFunctionType::Pointer(new DoubleGridFunctionType(mFESpace, pControlGrid));
-        mpDoubleGridFuncs.push_back(pNewGridFunc);
+        typename GridFunction<TDim, TDataType>::Pointer pNewGridFunc = GridFunction<TDim, TDataType>::Create(mFESpace, pControlGrid);
+        mpGridFunctions.push_back(pNewGridFunc);
         return pNewGridFunc;
     }
 
-    /// Get the underlying double grid functions
-    DoubleGridFunctionContainterType& DoubleGridFunctions() {return mpDoubleGridFuncs;}
-
-    /// Get the underlying double grid functions
-    const DoubleGridFunctionContainterType& DoubleGridFunctions() const {return mpDoubleGridFuncs;}
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /// Create and add the grid function for array_1d variable
-    typename Array1DGridFunctionType::Pointer CreateArray1DGridFunction(typename ControlGrid<array_1d<double, 3> >::Pointer pControlGrid)
+    /// Create and add the grid function
+    template<class TVariableType>
+    typename GridFunction<TDim, typename TVariableType::Type>::Pointer CreateGridFunction(const TVariableType& rVariable,
+            typename ControlGrid<typename TVariableType::Type>::Pointer pControlGrid)
     {
-        CheckSize(*pControlGrid, __FUNCTION__);
-        typename Array1DGridFunctionType::Pointer pNewGridFunc = typename Array1DGridFunctionType::Pointer(new Array1DGridFunctionType(mFESpace, pControlGrid));
-        mpArray1DGridFuncs.push_back(pNewGridFunc);
-        return pNewGridFunc;
+        return this->CreateGridFunction<typename TVariableType::Type>(pControlGrid);
     }
 
-    /// Get the underlying array_1d grid functions
-    Array1DGridFunctionContainerType& Array1DGridFunctions() {return mpArray1DGridFuncs;}
-
-    /// Get the underlying array_1d grid functions
-    const Array1DGridFunctionContainerType& Array1DGridFunctions() const {return mpArray1DGridFuncs;}
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /// Create and add the grid function for vector variable
-    typename VectorGridFunctionType::Pointer CreateVectorGridFunction(typename ControlGrid<Vector>::Pointer pControlGrid)
+    /// Get the grid function
+    template<class TVariableType>
+    typename GridFunction<TDim, typename TVariableType::Type>::Pointer pGetGridFunction(const TVariableType& rVariable)
     {
-        CheckSize(*pControlGrid, __FUNCTION__);
-        typename VectorGridFunctionType::Pointer pNewGridFunc = typename VectorGridFunctionType::Pointer(new VectorGridFunctionType(mFESpace, pControlGrid));
-        mpVectorGridFuncs.push_back(pNewGridFunc);
-        return pNewGridFunc;
+        typedef typename GridFunction<TDim, typename TVariableType::Type>::Pointer GridFunctionPointerType;
+        for (std::size_t i = 0; i < mpGridFunctions.size(); ++i)
+        {
+            try
+            {
+                GridFunctionPointerType pGridFunc = boost::any_cast<GridFunctionPointerType>(mpGridFunctions[i]);
+                if (pGridFunc->pControlGrid()->Name() == rVariable.Name())
+                    return pGridFunc;
+            }
+            catch (boost::bad_any_cast& e)
+            {
+                continue;
+            }
+        }
+        // shall not come here
+        std::stringstream ss;
+        ss << "The grid function with control grid " << rVariable.Name() << " does not exist in the database";
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
     }
 
-    /// Get the underlying vector grid functions
-    VectorGridFunctionContainerType& VectorGridFunctions() {return mpVectorGridFuncs;}
+    /// Get the grid function
+    template<class TVariableType>
+    typename GridFunction<TDim, typename TVariableType::Type>::ConstPointer pGetGridFunction(const TVariableType& rVariable) const
+    {
+        typedef typename GridFunction<TDim, typename TVariableType::Type>::Pointer GridFunctionPointerType;
+        for (std::size_t i = 0; i < mpGridFunctions.size(); ++i)
+        {
+            try
+            {
+                GridFunctionPointerType pGridFunc = boost::any_cast<GridFunctionPointerType>(mpGridFunctions[i]);
+                if (pGridFunc->pControlGrid()->Name() == rVariable.Name())
+                    return pGridFunc;
+            }
+            catch (boost::bad_any_cast& e)
+            {
+                continue;
+            }
+        }
+        // shall not come here
+        std::stringstream ss;
+        ss << "The grid function with control grid " << rVariable.Name() << " does not exist in the database";
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+    }
 
-    /// Get the underlying vector grid functions
-    const VectorGridFunctionContainerType& VectorGridFunctions() const {return mpVectorGridFuncs;}
+    /// Filter out and get the underlying double grid functions
+    DoubleGridFunctionContainerType DoubleGridFunctions() {return this->ExtractGridFunctions<DoubleGridFunctionContainerType, double>(mpGridFunctions);}
+    DoubleGridFunctionContainerType DoubleGridFunctions() const {return this->ExtractGridFunctions<DoubleGridFunctionContainerType, double>(mpGridFunctions);}
+
+    /// Filter out and get the underlying array_1d grid functions
+    Array1DGridFunctionContainerType Array1DGridFunctions() {return this->ExtractGridFunctions<Array1DGridFunctionContainerType, array_1d<double, 3> >(mpGridFunctions);}
+    Array1DGridFunctionContainerType Array1DGridFunctions() const {return this->ExtractGridFunctions<Array1DGridFunctionContainerType, array_1d<double, 3> >(mpGridFunctions);}
+
+    /// Filter out and get the underlying Vector grid functions
+    VectorGridFunctionContainerType VectorGridFunctions() {return this->ExtractGridFunctions<VectorGridFunctionContainerType, Vector>(mpGridFunctions);}
+    VectorGridFunctionContainerType VectorGridFunctions() const {return this->ExtractGridFunctions<VectorGridFunctionContainerType, Vector>(mpGridFunctions);}
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -241,10 +273,11 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "The patch must have an Id", "")
         }
 
-        if (mpControlPointGridFunc->pControlGrid()->Size() != this->TotalNumber())
-            KRATOS_THROW_ERROR(std::logic_error, "The control point grid is incompatible", "")
+        if (pControlPointGridFunction() != NULL)
+            if (pControlPointGridFunction()->pControlGrid()->Size() != this->TotalNumber())
+                KRATOS_THROW_ERROR(std::logic_error, "The control point grid is incompatible", "")
 
-        for (typename DoubleGridFunctionContainterType::const_iterator it = DoubleGridFunctions().begin();
+        for (typename DoubleGridFunctionContainerType::const_iterator it = DoubleGridFunctions().begin();
                 it != DoubleGridFunctions().end(); ++it)
         {
             if ((*it)->pControlGrid()->Size() != this->TotalNumber())
@@ -524,7 +557,7 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << Type() << ", Id = " << Id() << ", Add = " << this;
+        rOStream << Type() << ", Id = " << Id() << ", Addr = " << this;
     }
 
     virtual void PrintData(std::ostream& rOStream) const
@@ -569,11 +602,8 @@ private:
     // shape function information
     typename FESpace<TDim>::Pointer mFESpace;
 
-    // grid functions, including the grid function over the control points
-    typename GridFunction<TDim, ControlPointType>::Pointer mpControlPointGridFunc;
-    DoubleGridFunctionContainterType mpDoubleGridFuncs;
-    Array1DGridFunctionContainerType mpArray1DGridFuncs;
-    VectorGridFunctionContainerType mpVectorGridFuncs;
+    // container to contain all the grid functions
+    std::vector<boost::any> mpGridFunctions; // using boost::any so store pointers to grid function
 
     /**
      * neighboring data
@@ -610,6 +640,30 @@ private:
                << ") of patch " << Id() << ". Error at " << source;
             KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
         }
+    }
+
+    /// Helper to extract the grid functions out from boost::any
+    template<class TContainerType, typename TDataType>
+    TContainerType ExtractGridFunctions(const std::vector<boost::any>& pGridFunctions) const
+    {
+        TContainerType GridFuncs;
+
+        typedef typename GridFunction<TDim, TDataType>::Pointer GridFunctionPointerType;
+
+        for (std::size_t i = 0; i < pGridFunctions.size(); ++i)
+        {
+            try
+            {
+                GridFunctionPointerType pGridFunc = boost::any_cast<GridFunctionPointerType>(mpGridFunctions[i]);
+                GridFuncs.push_back(pGridFunc);
+            }
+            catch (boost::bad_any_cast& e)
+            {
+                continue;
+            }
+        }
+
+        return GridFuncs;
     }
 };
 

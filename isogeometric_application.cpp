@@ -1,16 +1,16 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 18 Aug 2013 $
 //   Revision:            $Revision: 1.1 $
 //
-// 
+//
 
 
 // System includes
 
 
-// External includes 
+// External includes
 
 
 // Project includes
@@ -27,7 +27,7 @@
 
 namespace Kratos
 {
-    
+
     KRATOS_CREATE_VARIABLE( Vector, NURBS_WEIGHT )
     KRATOS_CREATE_VARIABLE( Vector, NURBS_KNOTS_1 )
     KRATOS_CREATE_VARIABLE( Vector, NURBS_KNOTS_2 )
@@ -47,6 +47,7 @@ namespace Kratos
     KRATOS_CREATE_VARIABLE( Vector, EXTRACTION_OPERATOR_CSR_ROWPTR )
     KRATOS_CREATE_VARIABLE( Vector, EXTRACTION_OPERATOR_CSR_COLIND )
     KRATOS_CREATE_VARIABLE( Vector, EXTRACTION_OPERATOR_CSR_VALUES )
+    KRATOS_CREATE_VARIABLE( ControlPoint<double>, CONTROL_POINT )
 
     KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS( LOCAL_COORDINATES )
 
@@ -58,7 +59,7 @@ namespace Kratos
  		// calling base class to register Kratos components
  		KratosApplication::Register();
  		std::cout << "Initializing KratosIsogeometricApplication... " << std::endl;
-        
+
         //register variables
         KRATOS_REGISTER_VARIABLE( NURBS_WEIGHT )
         KRATOS_REGISTER_VARIABLE( NURBS_KNOTS_1 )
@@ -79,8 +80,9 @@ namespace Kratos
         KRATOS_REGISTER_VARIABLE( EXTRACTION_OPERATOR_CSR_ROWPTR )
         KRATOS_REGISTER_VARIABLE( EXTRACTION_OPERATOR_CSR_COLIND )
         KRATOS_REGISTER_VARIABLE( EXTRACTION_OPERATOR_CSR_VALUES )
+        KRATOS_REGISTER_VARIABLE( CONTROL_POINT )
 
-        // to make sure the variable imported from other application is registerered
+        // to make sure the variable imported from other application is registered
         KRATOS_REGISTER_3D_VARIABLE_WITH_COMPONENTS( LOCAL_COORDINATES )
 
         // register the geometries

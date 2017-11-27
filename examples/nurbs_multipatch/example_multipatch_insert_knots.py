@@ -20,7 +20,7 @@ from KratosMultiphysics.IsogeometricApplication import *
 kernel = Kernel()   #defining kernel
 
 nurbs_fespace_library = BSplinesFESpaceLibrary()
-grid_util = ControlGridUtility()
+grid_lib = ControlGridLibrary()
 multipatch_util = MultiPatchUtility()
 mpatch_export1 = MultiNURBSPatchGeoExporter()
 mpatch_export2 = MultiNURBSPatchGLVisExporter()
@@ -29,19 +29,20 @@ def CreateMultiPatch():
     mpatch = MultiPatch2D()
 
     fes1 = nurbs_fespace_library.CreateRectangularFESpace(3, 3)
-    ctrl_grid_1 = grid_util.CreateRectangularControlPointGrid(0.0, 0.0, fes1.Number(0), fes1.Number(1), 1.0, 1.0)
+    ctrl_grid_1 = grid_lib.CreateRectangularControlPointGrid(0.0, 0.0, fes1.Number(0), fes1.Number(1), 1.0, 1.0)
+    print(ctrl_grid_1)
     patch1_ptr = multipatch_util.CreatePatchPointer(1, fes1)
     patch1 = patch1_ptr.GetReference()
     patch1.CreateControlPointGridFunction(ctrl_grid_1)
-    #print(patch1)
+#    print(patch1)
     mpatch_export1.Export(patch1, "patch1.txt")
 
     fes2 = nurbs_fespace_library.CreateRectangularFESpace(3, 3)
-    ctrl_grid_2 = grid_util.CreateRectangularControlPointGrid(1.0, 0.0, fes1.Number(0), fes1.Number(1), 2.0, 1.0)
+    ctrl_grid_2 = grid_lib.CreateRectangularControlPointGrid(1.0, 0.0, fes1.Number(0), fes1.Number(1), 2.0, 1.0)
     patch2_ptr = multipatch_util.CreatePatchPointer(2, fes2)
     patch2 = patch2_ptr.GetReference()
     patch2.CreateControlPointGridFunction(ctrl_grid_2)
-    #print(patch2)
+#    print(patch2)
     mpatch_export1.Export(patch2, "patch2.txt")
 
     mpatch.AddPatch(patch1)

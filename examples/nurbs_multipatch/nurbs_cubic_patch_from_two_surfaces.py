@@ -20,14 +20,14 @@ from KratosMultiphysics.IsogeometricApplication import *
 kernel = Kernel()   #defining kernel
 
 nurbs_fespace_library = BSplinesFESpaceLibrary()
-grid_util = ControlGridUtility()
+grid_lib = ControlGridLibrary()
 multipatch_util = MultiPatchUtility()
 bsplines_patch_util = BSplinesPatchUtility()
 mpatch_export = MultiNURBSPatchMatlabExporter()
 
 ## create rectangle 1
 fes1 = nurbs_fespace_library.CreateRectangularFESpace(3, 3)
-ctrl_grid_1 = grid_util.CreateRectangularControlPointGrid(0.0, 0.0, 0.0, fes1.Number(0), fes1.Number(1), 1.0/(fes1.Number(0)-1), 0.0, 0.0, 0.0, 1.0/(fes1.Number(1)-1), 0.0)
+ctrl_grid_1 = grid_lib.CreateRectangularControlPointGrid(0.0, 0.0, 0.0, fes1.Number(0), fes1.Number(1), 1.0/(fes1.Number(0)-1), 0.0, 0.0, 0.0, 1.0/(fes1.Number(1)-1), 0.0)
 
 patch1_ptr = multipatch_util.CreatePatchPointer(1, fes1)
 patch1 = patch1_ptr.GetReference()
@@ -36,7 +36,7 @@ print(patch1)
 
 ## create rectangle 2
 fes2 = nurbs_fespace_library.CreateRectangularFESpace(3, 3)
-ctrl_grid_2 = grid_util.CreateRectangularControlPointGrid(0.0, 0.0, 1.0, fes2.Number(0), fes2.Number(1), 1.0/(fes2.Number(0)-1), 0.0, 0.0, 0.0, 1.0/(fes2.Number(1)-1), 0.0)
+ctrl_grid_2 = grid_lib.CreateRectangularControlPointGrid(0.0, 0.0, 1.0, fes2.Number(0), fes2.Number(1), 1.0/(fes2.Number(0)-1), 0.0, 0.0, 0.0, 1.0/(fes2.Number(1)-1), 0.0)
 
 patch2_ptr = multipatch_util.CreatePatchPointer(2, fes2)
 patch2 = patch2_ptr.GetReference()

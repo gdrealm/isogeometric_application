@@ -701,7 +701,7 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << Type() << ", Add = " << this << ", n = (";
+        rOStream << Type() << ", Addr = " << this << ", n = (";
         for (std::size_t i = 0; i < TDim; ++i)
             rOStream << " " << this->Number(i);
         rOStream << "), p = (";

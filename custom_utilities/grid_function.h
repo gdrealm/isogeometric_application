@@ -42,6 +42,12 @@ public:
     /// Destructor
     virtual ~GridFunction() {}
 
+    /// Helper to create the new instance of grid function
+    static typename GridFunction<TDim, TDataType>::Pointer Create(typename FESpace<TDim>::Pointer pFESpace, typename ControlGrid<TDataType>::Pointer pControlGrid)
+    {
+        return typename GridFunction<TDim, TDataType>::Pointer(new GridFunction<TDim, TDataType>(pFESpace, pControlGrid));
+    }
+
     /// Set the FESpace
     void SetFESpace(typename FESpace<TDim>::Pointer pNewFESpace) {mpFESpace = pNewFESpace;} // use this with care
 
@@ -108,6 +114,7 @@ public:
 
     virtual void PrintInfo(std::ostream& rOStream) const
     {
+        rOStream << Info();
     }
 
     virtual void PrintData(std::ostream& rOStream) const

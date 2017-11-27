@@ -3,11 +3,10 @@
 ##################################################################
 #importing Kratos modules
 from KratosMultiphysics import *
-from KratosMultiphysics.StructuralApplication import *
 from KratosMultiphysics.IsogeometricApplication import *
 kernel = Kernel()   #defining kernel
 
-dm = DomainManager(1)
+dm = DomainManager2D(1)
 dm.AddXcoord(0.0)
 dm.AddXcoord(0.5)
 dm.AddXcoord(1.0)

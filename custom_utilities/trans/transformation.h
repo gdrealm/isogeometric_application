@@ -19,6 +19,7 @@
 
 // Project includes
 #include "includes/define.h"
+#include "containers/array_1d.h"
 
 namespace Kratos
 {
@@ -56,6 +57,22 @@ public:
     {
         MatrixType temp = prod(rOther.Mat(), this->mTransMat);
         noalias(this->mTransMat) = temp;
+    }
+
+    /// Apply the transformation for a point in 3D
+    template<typename TVectorType>
+    void ApplyTransformation(TVectorType& value) const
+    {
+        double new_value[3];
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+            new_value[i] = 0.0;
+            for (std::size_t j = 0; j < 3; ++j)
+                new_value[i] += mTransMat(i, j) * value[j];
+            new_value[i] += mTransMat(i, 3);
+        }
+        for (std::size_t i = 0; i < 3; ++i)
+            value[i] = new_value[i];
     }
 
     /// overload operator ()

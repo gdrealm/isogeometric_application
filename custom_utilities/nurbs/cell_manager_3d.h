@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 18 Aug 2015 $
 //   Revision:            $Revision: 1.0 $
@@ -16,7 +16,7 @@
 #include <map>
 #include <iostream>
 
-// External includes 
+// External includes
 #include <omp.h>
 
 // Project includes
@@ -57,7 +57,7 @@ public:
     virtual ~CellManager3D()
     {}
 
-    /// Check if the cell exists in the list; ortherwise create new cell and return
+    /// Check if the cell exists in the list; otherwise create new cell and return
 //    virtual cell_t CreateCell(knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp, knot_t pBelow, knot_t pAbove)
     virtual cell_t CreateCell(const std::vector<knot_t>& pKnots)
     {
@@ -76,7 +76,7 @@ public:
                 return *it;
         }
 
-        // ortherwise create new cell
+        // otherwise create new cell
         cell_t p_cell = cell_t(new TCellType(++BaseType::mLastId, pKnots[0], pKnots[1], pKnots[2], pKnots[3], pKnots[4], pKnots[5]));
         BaseType::mpCells.insert(p_cell);
         BaseType::cell_map_is_created = false;

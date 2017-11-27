@@ -57,7 +57,7 @@ public:
     virtual ~CellManager2D()
     {}
 
-    /// Check if the cell exists in the list; ortherwise create new cell and return
+    /// Check if the cell exists in the list; otherwise create new cell and return
 //    virtual cell_t CreateCell(knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
     virtual cell_t CreateCell(const std::vector<knot_t>& pKnots)
     {
@@ -74,7 +74,7 @@ public:
                 return *it;
         }
 
-        // ortherwise create new cell
+        // otherwise create new cell
         cell_t p_cell = cell_t(new TCellType(++BaseType::mLastId, pKnots[0], pKnots[1], pKnots[2], pKnots[3]));
         BaseType::mpCells.insert(p_cell);
         BaseType::cell_map_is_created = false;

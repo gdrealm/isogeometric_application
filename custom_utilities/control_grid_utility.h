@@ -13,18 +13,30 @@
 #include <vector>
 
 // External includes
-#include <boost/array.hpp>
 
 // Project includes
 #include "includes/define.h"
 #include "custom_utilities/control_point.h"
 #include "custom_utilities/control_grid.h"
+#include "custom_utilities/point_based_control_grid.h"
 
 namespace Kratos
 {
 
+
+template<int TDim, typename TDataType>
+struct ControlGridUtility_Helper
+{
+    /// Generate regular control grid with a specific data type
+    static typename ControlGrid<TDataType>::Pointer CreateRegularZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not implemented")
+    }
+};
+
+
 /**
-This class is a library to generate various grid function for typical computational mechanics problems.
+Utility class to manipulate the control grid and Helpers to generate control grid for isogeometric analysis.
  */
 class ControlGridUtility
 {
@@ -41,23 +53,8 @@ public:
     /// Destructor
     virtual ~ControlGridUtility() {}
 
-    /// Generate the regular equidistant control point grid. All the point has unit weight.
-    template<int TDim>
-    static typename ControlGrid<ControlPointType>::Pointer CreateRegularControlPointGrid(
-            const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
-    {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not implemented")
-    }
 
-    /// Generate the regular control point grid based on starting point and the director vector in each direction. All the point has unit weight.
-    template<int TDim>
-    static typename ControlGrid<ControlPointType>::Pointer CreateRegularControlPointGrid(
-            const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<std::vector<double> >& spacing_vectors)
-    {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not implemented")
-    }
-
-    /// Transform a grid function to new grid function by a matrix multiplication.
+    /// Transform a control grid to new control grid by a matrix multiplication.
     template<typename TDataType, typename TMatrixType>
     static void Transform(const TMatrixType& TformMat,
             const ControlGrid<TDataType>& rControlGrid,
@@ -70,9 +67,6 @@ public:
         if (TformMat.size2() != rNewControlGrid.Size())
             KRATOS_THROW_ERROR(std::logic_error, "The second size of the transformation matrix is not compatible with new grid function size", "")
 
-        // get old data
-        const typename ControlGrid<TDataType>::DataContainerType& OldData = rControlGrid.Data();
-
         // compute new data and store
         for (std::size_t i = 0; i < TformMat.size2(); ++i)
         {
@@ -80,11 +74,49 @@ public:
             for (std::size_t j = 0; j < TformMat.size1(); ++j)
             {
                 if (TformMat(j, i) != 0.0)
-                    NewData += TformMat(j, i) * OldData[j];
+                    NewData += TformMat(j, i) * rControlGrid.GetData(j);
             }
             rNewControlGrid.SetData(i, NewData);
         }
     }
+
+
+    /// Apply the homogeneous transformation to a grid of control points
+    template<typename TDataType>
+    static void ApplyTransformation(ControlGrid<ControlPointType>& rControlPointGrid, const Transformation<TDataType>& trans)
+    {
+        for (std::size_t i = 0; i < rControlPointGrid.size(); ++i)
+        {
+            ControlPointType point = rControlPointGrid.GetData(i);
+            point.ApplyTransformation(trans);
+            rControlPointGrid.SetData(i, point);
+        }
+    }
+
+
+
+    /// Apply the homogeneous transformation to a grid of points
+    template<typename TDataType>
+    static void ApplyTransformation(ControlGrid<array_1d<TDataType, 3> >& rControlGrid, const Transformation<TDataType>& trans)
+    {
+        for (std::size_t i = 0; i < rControlGrid.size(); ++i)
+        {
+            array_1d<TDataType, 3> point = rControlGrid.GetData(i);
+            trans.ApplyTransformation(point);
+            rControlGrid.SetData(i, point);
+        }
+    }
+
+
+
+    /// Helper function to create the point-based control grid based on Variable and FESpace
+    template<typename TDataType, class TFESpaceType>
+    static typename ControlGrid<TDataType>::Pointer CreatePointBasedControlGrid(
+            const Variable<TDataType>& rVariable, typename TFESpaceType::Pointer pFESpace)
+    {
+        return PointBasedControlGrid<Variable<TDataType>, TFESpaceType>::Create(rVariable, pFESpace);
+    }
+
 
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
@@ -96,179 +128,6 @@ public:
     {
     }
 };
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility::CreateRegularControlPointGrid<1>(
-        const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
-{
-    typename RegularControlGrid<1, ControlPointType>::Pointer pGrid
-        = typename RegularControlGrid<1, ControlPointType>::Pointer(new RegularControlGrid<1, ControlPointType>(ngrid[0]));
-
-    pGrid->SetName("CONTROL_POINT");
-
-    std::vector<double> spacing = {(end[0] - start[0]) / (ngrid[0]-1),
-                                (end[1] - start[1]) / (ngrid[0]-1),
-                                (end[2] - start[2]) / (ngrid[0]-1)};
-
-    for (std::size_t i = 0; i < ngrid[0]; ++i)
-    {
-        ControlPointType Point;
-        Point.SetCoordinates(start[0] + i*spacing[0], start[1] + i*spacing[1], start[2] + i*spacing[2], 1.0);
-        pGrid->SetValue(i, Point);
-    }
-
-    return pGrid;
-}
-
-template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility::CreateRegularControlPointGrid<2>(
-        const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
-{
-    typename RegularControlGrid<2, ControlPointType>::Pointer pGrid
-        = typename RegularControlGrid<2, ControlPointType>::Pointer(new RegularControlGrid<2, ControlPointType>(ngrid[0], ngrid[1]));
-
-    pGrid->SetName("CONTROL_POINT");
-
-    std::vector<double> spacing = {(end[0] - start[0]) / (ngrid[0]-1), (end[1] - start[1]) / (ngrid[1]-1)};
-
-    for (std::size_t i = 0; i < ngrid[0]; ++i)
-    {
-        for (std::size_t j = 0; j < ngrid[1]; ++j)
-        {
-            ControlPointType Point;
-            Point.SetCoordinates(start[0] + i*spacing[0], start[1] + j*spacing[1], 0.0, 1.0);
-            pGrid->SetValue(i, j, Point);
-        }
-    }
-
-    return pGrid;
-}
-
-template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility::CreateRegularControlPointGrid<3>(
-        const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
-{
-    typename RegularControlGrid<3, ControlPointType>::Pointer pGrid
-        = typename RegularControlGrid<3, ControlPointType>::Pointer(new RegularControlGrid<3, ControlPointType>(ngrid[0], ngrid[1], ngrid[2]));
-
-    pGrid->SetName("CONTROL_POINT");
-
-    std::vector<double> spacing = {(end[0] - start[0]) / (ngrid[0]-1),
-                                (end[1] - start[1]) / (ngrid[1]-1),
-                                (end[2] - start[2]) / (ngrid[2]-1)};
-
-    for (std::size_t i = 0; i < ngrid[0]; ++i)
-    {
-        for (std::size_t j = 0; j < ngrid[1]; ++j)
-        {
-            for (std::size_t k = 0; k < ngrid[2]; ++k)
-            {
-                ControlPointType Point;
-                Point.SetCoordinates(start[0] + i*spacing[0], start[1] + j*spacing[1], start[2] + k*spacing[2], 1.0);
-                pGrid->SetValue(i, j, k, Point);
-            }
-        }
-    }
-
-    return pGrid;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility::CreateRegularControlPointGrid<1>(
-        const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<std::vector<double> >& spacing_vectors)
-{
-    // size check
-    assert(start.size() == 3);
-    assert(ngrid.size() == 1);
-    assert(spacing_vectors.size() > 0);
-    assert(spacing_vectors[0].size() == 3);
-
-    typename RegularControlGrid<1, ControlPointType>::Pointer pGrid
-        = typename RegularControlGrid<1, ControlPointType>::Pointer(new RegularControlGrid<1, ControlPointType>(ngrid[0]));
-
-    pGrid->SetName("CONTROL_POINT");
-
-    for (std::size_t i = 0; i < ngrid[0]; ++i)
-    {
-        ControlPointType Point;
-        Point.SetCoordinates(start[0] + i*spacing_vectors[0][0], start[1] + i*spacing_vectors[0][1], start[2] + i*spacing_vectors[0][2], 1.0);
-        pGrid->SetValue(i, Point);
-    }
-
-    return pGrid;
-}
-
-template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility::CreateRegularControlPointGrid<2>(
-        const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<std::vector<double> >& spacing_vectors)
-{
-    // size check
-    assert(start.size() == 3);
-    assert(ngrid.size() == 2);
-    assert(spacing_vectors.size() > 1);
-    assert(spacing_vectors[0].size() == 3);
-    assert(spacing_vectors[1].size() == 3);
-
-    typename RegularControlGrid<2, ControlPointType>::Pointer pGrid
-        = typename RegularControlGrid<2, ControlPointType>::Pointer(new RegularControlGrid<2, ControlPointType>(ngrid[0], ngrid[1]));
-
-    pGrid->SetName("CONTROL_POINT");
-
-    for (std::size_t i = 0; i < ngrid[0]; ++i)
-    {
-        for (std::size_t j = 0; j < ngrid[1]; ++j)
-        {
-            ControlPointType Point;
-            double x = start[0] + i*spacing_vectors[0][0] + j*spacing_vectors[1][0];
-            double y = start[1] + i*spacing_vectors[0][1] + j*spacing_vectors[1][1];
-            double z = start[2] + i*spacing_vectors[0][2] + j*spacing_vectors[1][2];
-            Point.SetCoordinates(x, y, z, 1.0);
-            pGrid->SetValue(i, j, Point);
-        }
-    }
-
-    return pGrid;
-}
-
-template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridUtility::CreateRegularControlPointGrid<3>(
-        const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<std::vector<double> >& spacing_vectors)
-{
-    // size check
-    assert(start.size() == 3);
-    assert(ngrid.size() == 3);
-    assert(spacing_vectors.size() > 2);
-    assert(spacing_vectors[0].size() == 3);
-    assert(spacing_vectors[1].size() == 3);
-    assert(spacing_vectors[2].size() == 3);
-
-    typename RegularControlGrid<3, ControlPointType>::Pointer pGrid
-        = typename RegularControlGrid<3, ControlPointType>::Pointer(new RegularControlGrid<3, ControlPointType>(ngrid[0], ngrid[1], ngrid[2]));
-
-    pGrid->SetName("CONTROL_POINT");
-
-    for (std::size_t i = 0; i < ngrid[0]; ++i)
-    {
-        for (std::size_t j = 0; j < ngrid[1]; ++j)
-        {
-            for (std::size_t k = 0; k < ngrid[2]; ++k)
-            {
-                ControlPointType Point;
-                double x = start[0] + i*spacing_vectors[0][0] + j*spacing_vectors[1][0] + k*spacing_vectors[2][0];
-                double y = start[1] + i*spacing_vectors[0][1] + j*spacing_vectors[1][1] + k*spacing_vectors[2][1];
-                double z = start[2] + i*spacing_vectors[0][2] + j*spacing_vectors[1][2] + k*spacing_vectors[2][2];
-                Point.SetCoordinates(x, y, z, 1.0);
-                pGrid->SetValue(i, j, k, Point);
-            }
-        }
-    }
-
-    return pGrid;
-}
 
 /// output stream function
 inline std::ostream& operator <<(std::ostream& rOStream, const ControlGridUtility& rThis)

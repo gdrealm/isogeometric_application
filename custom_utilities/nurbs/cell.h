@@ -231,7 +231,7 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "cell{Id:" << Id() << ",range:([" << LeftIndex() << " " << RightIndex() << "];[" << DownIndex() << " " << UpIndex() << "];[" << BelowIndex() << " " << AboveIndex() << "])";
+        rOStream << "{Id:" << Id() << ",range:([" << LeftIndex() << " " << RightIndex() << "];[" << DownIndex() << " " << UpIndex() << "];[" << BelowIndex() << " " << AboveIndex() << "])";
         rOStream << "<=>([" << LeftValue() << " " << RightValue() << "];[" << DownValue() << " " << UpValue() << "];[" << BelowValue() << " " << AboveValue() << "])}";
     }
 
@@ -261,6 +261,7 @@ private:
 /// output stream function
 inline std::ostream& operator <<(std::ostream& rOStream, const Cell& rThis)
 {
+    rOStream << "cell ";
     rThis.PrintInfo(rOStream);
     rThis.PrintData(rOStream);
     return rOStream;

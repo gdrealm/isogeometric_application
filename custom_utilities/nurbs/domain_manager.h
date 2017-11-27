@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 3 June 2015 $
 //   Revision:            $Revision: 1.0 $
@@ -37,21 +37,21 @@ public:
     typedef std::set<double> coords_container_t;
 
     /// Default constructor
-    DomainManager(std::size_t Id) : mId(Id) {}
+    DomainManager(const std::size_t& Id) : mId(Id) {}
 
     /// Destructor
     virtual ~DomainManager() {}
 
     /// Get the Id of this domain manager
-    std::size_t Id() const {return mId;}
+    const std::size_t& Id() const {return mId;}
 
     /// Set the id for this domain manager
-    void SetId(std::size_t Id) {mId = Id;}
+    void SetId(const std::size_t& Id) {mId = Id;}
 
     /// Fill the internal array of X & Y-coordinates. It must be done before cells are added to this container.
-    virtual void AddXcoord(double X) {mXcoords.insert(X);}
-    virtual void AddYcoord(double Y) {mYcoords.insert(Y);}
-    virtual void AddZcoord(double Z) {mZcoords.insert(Z);}
+    virtual void AddXcoord(const double& X) {mXcoords.insert(X);}
+    virtual void AddYcoord(const double& Y) {mYcoords.insert(Y);}
+    virtual void AddZcoord(const double& Z) {mZcoords.insert(Z);}
 
     /// Add the rectangle to the set
     virtual void AddCell(const double& Xmin,
@@ -104,6 +104,7 @@ public:
     virtual void PrintData(std::ostream& rOStream) const {}
 
 protected:
+
     coords_container_t mXcoords;
     coords_container_t mYcoords;
     coords_container_t mZcoords;
