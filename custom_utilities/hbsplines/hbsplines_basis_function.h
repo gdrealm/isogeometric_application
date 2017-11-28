@@ -38,6 +38,36 @@
 namespace Kratos
 {
 
+template<int TDim>
+struct HBSplinesBasisFunction_Helper
+{
+    /// Find the span of knot in the local knot vector
+    /// Remarks: it will give the based-1 index
+    ///          it only works if U is non-repeated
+    template<typename TDataType, class TValuesContainerType>
+    static std::size_t FindSpanLocal(const TDataType& Xi, const TValuesContainerType& U)
+    {
+        if(!U.empty())
+        {
+            if(Xi < U[0])
+                return 0;
+
+            if(Xi > U[U.size()-1])
+                return U.size();
+
+            for(std::size_t i = 0; i < U.size()-1; ++i)
+                if(Xi >= U[i] && Xi < U[i + 1])
+                    return i + 1;
+        }
+
+        return 0;
+    }
+
+    template<typename TVectorType, typename TIArrayType, typename TKnotContainerType, class TCellType>
+    static void ComputeExtractionOperator(TVectorType& Crow, const TIArrayType& orders,
+        const TKnotContainerType& local_knots, const TCellType& r_cell);
+};
+
 /**
     Class represents a basis function in hierarchical B-Splines mesh
 */
@@ -59,6 +89,7 @@ public:
 
     typedef HBCell<HBSplinesBasisFunction<TDim> > CellType;
     typedef typename CellType::Pointer cell_t;
+    typedef typename CellType::ConstPointer const_cell_t;
     typedef std::set<cell_t> cell_container_t;
     typedef typename cell_container_t::iterator cell_iterator;
     typedef typename cell_container_t::const_iterator cell_const_iterator;
@@ -148,8 +179,17 @@ public:
     /// Get the Id of this basis function. Each basis function should have unique Id
     const std::size_t& Id() const {return mId;}
 
-    /// Get the level id of this basis function
+    /// Set the Id for this basis function. One shall use this function only in the enumeration process.
+    void SetId(const std::size_t& Id) {mId = Id;}
+
+    /// Get the level of this basis function
     const std::size_t& Level() const {return mLevel;}
+
+    /// Set the information in each direction
+    void SetInfo(const int& dim, const std::size_t& Order) {mOrders[dim] = Order;}
+
+    /// Get the order in specific direction
+    const std::size_t& Order(const int& dim) const {return mOrders[dim];}
 
     /// Get the local knot vectors
     template<class ValuesContainerType>
@@ -158,7 +198,7 @@ public:
         if(rKnots.size() != mpLocalKnots[dim].size())
             rKnots.resize(mpLocalKnots[dim].size());
         for(std::size_t i = 0; i < mpLocalKnots[dim].size(); ++i)
-            rKnots[i] = mpLocalKnots[dim](i)->Value();
+            rKnots[i] = mpLocalKnots[dim][i]->Value();
     }
 
     /// Get the bounding box (=support domain) of this basis function
@@ -263,6 +303,24 @@ public:
     }
 
     /**************************************************************************
+                            COMPUTATION SUBROUTINES
+    **************************************************************************/
+
+    /// Compute the Bezier extraction operator of this basis function on the cell
+    void ComputeExtractionOperator(Vector& Crow, const_cell_t p_cell)
+    {
+        std::vector<std::vector<double> > LocalKnots(TDim);
+        std::vector<std::size_t> orders(TDim);
+        for (int dim = 0; dim < TDim; ++dim)
+        {
+            orders[dim] = this->Order(dim);
+            this->GetLocalKnots(dim, LocalKnots[dim]);
+        }
+
+        HBSplinesBasisFunction_Helper<TDim>::ComputeExtractionOperator(Crow, orders, LocalKnots, *p_cell);
+    }
+
+    /**************************************************************************
                             COMPARISON SUBROUTINES
     **************************************************************************/
 
@@ -284,7 +342,10 @@ public:
     /// Print information of this basis function
     void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "Bf(id:" << Id() << ")";
+        rOStream << "Bf(id:" << Id() << "), p = (";
+        for (int dim = 0; dim < TDim; ++dim)
+            rOStream << " " << this->Order(dim);
+        rOStream << ")";
     }
 
     /// Print data of this basis function
@@ -324,6 +385,7 @@ private:
 
     std::size_t mId;
     std::size_t mLevel;
+    boost::array<std::size_t, TDim> mOrders;
     bf_container_t mpChilds; // list of refined basis functions that constitute this basis function
     std::map<int, double> mRefinedCoefficients; // store the coefficient of refined basis functions
     cell_container_t mpCells; // list of cells support this basis function at the level of this basis function
@@ -331,28 +393,6 @@ private:
 
     /** A pointer to data related to this basis function. */
     DataValueContainer mData;
-
-    /// Find the span of knot in the local knot vector
-    /// Remarks: it will give the based-1 index
-    ///          it only works if U is non-repeated
-    template<class ValuesContainerType>
-    int FindSpanLocal(double Xi, const ValuesContainerType& U)
-    {
-        if(!U.empty())
-        {
-            if(Xi < U[0])
-                return 0;
-
-            if(Xi > U[U.size()-1])
-                return U.size();
-
-            for(std::size_t i = 0; i < U.size()-1; ++i)
-                if(Xi >= U[i] && Xi < U[i + 1])
-                    return i + 1;
-        }
-
-        return 0;
-    }
 };
 
 /// output stream function
@@ -366,6 +406,8 @@ inline std::ostream& operator <<(std::ostream& rOStream, const HBSplinesBasisFun
 }
 
 }// namespace Kratos.
+
+#include "hbsplines_basis_function.hpp"
 
 #endif // KRATOS_ISOGEOMETRIC_APPLICATION_HBSPLINES_BASIS_FUNCTION_H_INCLUDED
 

@@ -68,7 +68,7 @@ public:
     typedef std::map<std::size_t, bf_t> function_map_t;
 
     /// Default constructor
-    HBSplinesFESpace() : BaseType(), m_function_map_is_created(false), mLastLevel(1), mMaxLevels(5)
+    HBSplinesFESpace() : BaseType(), m_function_map_is_created(false), mLastLevel(1), mMaxLevel(5)
     {
         if (TDim == 2)
         {
@@ -90,6 +90,7 @@ public:
     }
 
     /// Check if the bf exists in the list; otherwise create new bf and return
+    /// The Id is only used when the new bf is created. User must always check the Id of the returned function.
     bf_t CreateBf(const std::size_t& Id, const std::size_t& Level, const std::vector<std::vector<knot_t> >& rpKnots)
     {
         // search in the current list of basis functions, the one that has the same local knot vector with provided ones
@@ -100,11 +101,20 @@ public:
         // create the new bf and add the knot
         bf_t p_bf = bf_t(new BasisFunctionType(Id, Level));
         for (int dim = 0; dim < TDim; ++dim)
+        {
             p_bf->SetLocalKnotVectors(dim, rpKnots[dim]);
+            p_bf->SetInfo(dim, this->Order(dim));
+        }
         mpBasisFuncs.insert(p_bf);
         m_function_map_is_created = false;
 
         return p_bf;
+    }
+
+    /// Remove the basis functions from the container
+    void RemoveBf(bf_t p_bf)
+    {
+        mpBasisFuncs.erase(p_bf);
     }
 
     // Iterators for the basis functions
@@ -113,8 +123,20 @@ public:
     bf_iterator bf_end() {return mpBasisFuncs.end();}
     bf_const_iterator bf_end() const {return mpBasisFuncs.end();}
 
+    /// Get the last id of the basis functions
+    std::size_t LastId() const {bf_const_iterator it = bf_end(); --it; return (*it)->Id();}
+
+    /// Get the last refinement level ain the hierarchical mesh
+    const std::size_t& LastLevel() const {return mLastLevel;}
+
+    /// Set the last level in the hierarchical mesh
+    void SetLastLevel(const std::size_t& LastLevel) {mLastLevel = LastLevel;}
+
+    /// Get the maximum level allowed in the hierarchical mesh
+    const std::size_t& MaxLevel() const {return mMaxLevel;}
+
     /// Set the maximum level allowed in the hierarchical mesh
-    void SetMaxLevels(const std::size_t& MaxLevels) {mMaxLevels = MaxLevels;}
+    void SetMaxLevel(const std::size_t& MaxLevel) {mMaxLevel = MaxLevel;}
 
     /// Set the order for the B-Splines
     void SetInfo(const std::size_t& i, const std::size_t& order) {mOrders[i] = order;}
@@ -123,10 +145,14 @@ public:
     virtual const std::size_t Order(const std::size_t& i) const {return mOrders[i];}
 
     /// Get the number of basis functions defined over the BSplines
-    virtual const std::size_t TotalNumber() const
-    {
-        return mpBasisFuncs.size();
-    }
+    virtual const std::size_t TotalNumber() const {return mpBasisFuncs.size();}
+
+    /// Get the knot vector in i-direction, i=0..Dim
+    /// User must be careful to use this function because it can modify the internal knot vectors
+    knot_container_t& KnotVector(const std::size_t& i) {return mKnotVectors[i];}
+
+    /// Get the knot vector in i-direction, i=0..Dim
+    const knot_container_t& KnotVector(const std::size_t& i) const {return mKnotVectors[i];}
 
     /// Get the string representing the type of the patch
     virtual std::string Type() const
@@ -141,9 +167,6 @@ public:
         ss << "HBSplinesFESpace" << TDim << "D";
         return ss.str();
     }
-
-    /// Get the knot vector in i-direction
-    const knot_container_t& KnotVector(const std::size_t& i) const {return mKnotVectors[i];}
 
     /// Validate the HBSplinesFESpace
     virtual bool Validate() const
@@ -189,6 +212,34 @@ public:
         return true;
     }
 
+    /// Get the refinement history
+    const std::vector<std::size_t>& RefinementHistory() const {return mRefinementHistory;}
+
+    /// Clear the refinement history
+    void ClearRefinementHistory() {mRefinementHistory.clear();}
+
+    /// Add the bf's id to the refinement history
+    void RecordRefinementHistory(const std::size_t& Id) {mRefinementHistory.push_back(Id);}
+
+    /// Enumerate the dofs of each grid function. The enumeration algorithm is pretty straightforward.
+    /// If the dof does not have pre-existing value, which assume it is -1, it will be assigned the incremental value.
+    virtual std::size_t& Enumerate(std::size_t& start)
+    {
+        // enumerate all basis functions
+        BaseType::mGlobalToLocal.clear();
+        BaseType::mFunctionsIds.resize(this->TotalNumber());
+        std::size_t cnt = 0;
+        for (bf_iterator it = bf_begin(); it != bf_end(); ++it)
+        {
+            (*it)->SetId(start++);
+            BaseType::mFunctionsIds[cnt] = (*it)->Id();
+            BaseType::mGlobalToLocal[BaseType::mFunctionsIds[cnt]] = cnt;
+            ++cnt;
+        }
+
+        return start;
+    }
+
     /// Extract the index of the functions on the boundary
     virtual std::vector<std::size_t> ExtractBoundaryFunctionIndices(const BoundarySide& side) const
     {
@@ -228,8 +279,30 @@ public:
     /// Create the cell manager for all the cells in the support domain of the HBSplinesFESpace
     virtual typename BaseType::cell_container_t::Pointer ConstructCellManager() const
     {
-        // TODO convert the cell manager
-        return NULL;
+        // for each cell compute the extraction operator and add to the anchor
+        Vector Crow;
+        for(typename cell_container_t::iterator it_cell = mpCellManager->begin(); it_cell != mpCellManager->end(); ++it_cell)
+        {
+            (*it_cell)->Reset();
+            for(typename CellType::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
+            {
+                (*it_bf)->ComputeExtractionOperator(Crow, *it_cell);
+                (*it_cell)->AddAnchor((*it_bf)->Id(), (*it_bf)->GetValue(CONTROL_POINT).W(), Crow);
+            }
+        }
+
+        // create the compatible cell manager and add to the list
+        typename BaseType::cell_container_t::Pointer pCompatCellManager;
+        if (TDim == 2)
+            pCompatCellManager = CellManager2D<typename BaseType::cell_container_t::CellType>::Create();
+        else if (TDim == 3)
+            pCompatCellManager = CellManager3D<typename BaseType::cell_container_t::CellType>::Create();
+        for(typename cell_container_t::iterator it_cell = mpCellManager->begin(); it_cell != mpCellManager->end(); ++it_cell)
+        {
+            pCompatCellManager->insert(*it_cell);
+        }
+
+        return pCompatCellManager;
     }
 
     /// Overload operator[], this allows to access the basis function randomly based on index
@@ -275,11 +348,21 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << Type() << ", Addr = " << this << ", n = (" << this->TotalNumber() << ")" << std::endl;
-        rOStream << "), p = (";
-        for (std::size_t i = 0; i < TDim; ++i)
-            rOStream << " " << this->Order(i);
-        rOStream << ")";
+        rOStream << Type() << ", Addr = " << this << ", n = " << this->TotalNumber();
+        rOStream << ", p = (";
+        for (std::size_t dim = 0; dim < TDim; ++dim)
+            rOStream << " " << this->Order(dim);
+        rOStream << "), number of levels = " << mLastLevel << std::endl;
+
+        rOStream << "###############Begin knot vectors################" << std::endl;
+        for (int dim = 0; dim < TDim; ++dim)
+        {
+            rOStream << "knot vector " << dim+1 << ":";
+            for (std::size_t i = 0; i < this->KnotVector(dim).size(); ++i)
+                rOStream << " " << this->KnotVector(dim)[i];
+            rOStream << std::endl;
+        }
+        rOStream << "###############End knot vectors##################" << std::endl;
     }
 
     virtual void PrintData(std::ostream& rOStream) const
@@ -288,6 +371,17 @@ public:
         for (bf_const_iterator it = bf_begin(); it != bf_end(); ++it)
         {
             rOStream << *(*it) << std::endl;
+        }
+
+        // print the cells in each level
+        for (std::size_t level = 1; level < mLastLevel+1; ++level)
+        {
+            rOStream << "###############Begin cells at level " << level << "################" << std::endl;
+            std::size_t n = 0;
+            for(typename cell_container_t::iterator it = mpCellManager->begin(); it != mpCellManager->end(); ++it)
+                if((*it)->Level() == level)
+                    rOStream << "(" << ++n << ") " << *(*it) << std::endl;
+            rOStream << "###############End cells at level " << level << "################" << std::endl;
         }
     }
 
@@ -300,7 +394,7 @@ private:
     boost::array<knot_container_t, TDim> mKnotVectors;
 
     std::size_t mLastLevel;
-    std::size_t mMaxLevels;
+    std::size_t mMaxLevel;
 
     typename cell_container_t::Pointer mpCellManager;
 

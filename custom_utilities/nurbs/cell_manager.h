@@ -42,7 +42,8 @@ public:
     typedef Knot<double> KnotType;
     typedef KnotType::Pointer knot_t;
 
-    typedef typename TCellType::Pointer cell_t;
+    typedef TCellType CellType;
+    typedef typename CellType::Pointer cell_t;
     struct cell_compare
     {
         bool operator() (const cell_t& lhs, const cell_t& rhs) const {return lhs->Id() < rhs->Id();}
@@ -50,6 +51,7 @@ public:
     typedef std::set<cell_t, cell_compare> cell_container_t;
     typedef std::map<std::size_t, cell_t> map_t;
     typedef typename cell_container_t::iterator iterator;
+    typedef typename cell_container_t::const_iterator const_iterator;
 
     /// Default constructor
     CellManager() : mTol(1.0e-10), mLastId(0)
@@ -79,9 +81,9 @@ public:
 
     /// Iterators
     iterator begin() {return mpCells.begin();}
-    iterator begin() const {return mpCells.begin();}
+    const_iterator begin() const {return mpCells.begin();}
     iterator end() {return mpCells.end();}
-    iterator end() const {return mpCells.end();}
+    const_iterator end() const {return mpCells.end();}
 
     /// Get the number of cells of this manager
     std::size_t size() const {return mpCells.size();}

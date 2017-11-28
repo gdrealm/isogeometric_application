@@ -42,6 +42,7 @@ public:
     /// Type definitions
     typedef Knot<TDataType> KnotType;
     typedef typename KnotType::Pointer knot_t;
+    typedef typename KnotType::ConstPointer const_knot_t;
     typedef std::deque<knot_t> knot_container_t;
     typedef typename knot_container_t::iterator iterator;
     typedef typename knot_container_t::const_iterator const_iterator;
@@ -62,7 +63,7 @@ public:
         mpKnots.insert(it, p_knot);
 
         // update the index of the knot
-        unsigned int index = 0;
+        std::size_t index = 0;
         for(iterator it = mpKnots.begin(); it != mpKnots.end(); ++it)
         {
             (*it)->UpdateIndex(index);
@@ -88,7 +89,7 @@ public:
     }
 
     /// Get the knot at index i
-    const knot_t pKnotAt(const int& i) const
+    const knot_t pKnotAt(const std::size_t& i) const
     {
         if(i >= 0 && i < mpKnots.size())
             return mpKnots[i];
@@ -97,7 +98,7 @@ public:
     }
 
     /// Get the knot at index i
-    knot_t pKnotAt(const int& i)
+    knot_t pKnotAt(const std::size_t& i)
     {
         if(i >= 0 && i < mpKnots.size())
             return mpKnots[i];
@@ -207,26 +208,33 @@ public:
         return true;
     }
 
+    // overload assignment operator
+    KnotArray1D& operator=(const KnotArray1D& rOther)
+    {
+        this->mpKnots = rOther.mpKnots;
+        return *this;
+    }
+
     // overload operator ()
-    const knot_t operator() (const int& i) const
+    knot_t operator() (const std::size_t& i)
     {
         return pKnotAt(i);
     }
 
     // overload operator ()
-    knot_t operator() (const int& i)
+    const_knot_t operator() (const std::size_t& i) const
     {
         return pKnotAt(i);
     }
 
     // overload operator []
-    TDataType& operator[] (const int& i)
+    TDataType& operator[] (const std::size_t& i)
     {
         return pKnotAt(i)->Value();
     }
 
     // overload operator []
-    const TDataType& operator[] (const int& i) const
+    const TDataType& operator[] (const std::size_t& i) const
     {
         return pKnotAt(i)->Value();
     }

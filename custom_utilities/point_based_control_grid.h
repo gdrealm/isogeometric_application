@@ -112,7 +112,10 @@ public:
 
     virtual void PrintData(std::ostream& rOStream) const
     {
-        rOStream << *mpFESpace;
+        // print out the control values
+        // TODO we shall use the iterator here for more efficiency, especially for hierarchical B-Splines
+        for (std::size_t i = 0; i < this->size(); ++i)
+            rOStream << this->GetData(i) << std::endl;
     }
 
 private:

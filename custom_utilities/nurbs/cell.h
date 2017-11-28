@@ -23,6 +23,14 @@
 namespace Kratos
 {
 
+class Cell;
+
+template<int TDim>
+struct Cell_Helper
+{
+    static bool IsCovered(const Cell& this_cell, const Cell& other_cell);
+};
+
 /**
     Represent a cell in NURBS/hierarchical B-Splines/T-splines mesh topology.
     A cell is the smaller unit in the isogeometric topology mesh (e.g. it represents an element, or Bezier element of the T-splines basis function).
@@ -98,30 +106,10 @@ public:
     }
 
     /// Check if this cell is covered by another cell
-    bool IsCovered(const Cell::Pointer p_cell, const int Dim) const
+    template<int TDim>
+    bool IsCovered(Cell::ConstPointer p_cell) const
     {
-        if(Dim == 2)
-        {
-            if(    LeftValue()  >= p_cell->LeftValue()
-                && RightValue() <= p_cell->RightValue()
-                && DownValue()  >= p_cell->DownValue()
-                && UpValue()    <= p_cell->UpValue() )
-                    return true;
-        }
-        else if(Dim == 3)
-        {
-            if(    LeftValue()  >= p_cell->LeftValue()
-                && RightValue() <= p_cell->RightValue()
-                && DownValue()  >= p_cell->DownValue()
-                && UpValue()    <= p_cell->UpValue()
-                && BelowValue() >= p_cell->BelowValue()
-                && AboveValue() <= p_cell->AboveValue() )
-                    return true;
-        }
-        else
-            KRATOS_THROW_ERROR(std::logic_error, "The dimension must be 2 or 3, Dim =", Dim)
-
-        return false;
+        return Cell_Helper<TDim>::IsCovered(*this, *p_cell);
     }
 
     /// Check if this cell cover a point in knot space
@@ -257,6 +245,33 @@ private:
     std::vector<double> mAnchorWeights; // weight of the anchor
     std::vector<Vector> mCrows; // bezier extraction operator row to each anchor
 };
+
+template<>
+inline bool Cell_Helper<1>::IsCovered(const Cell& this_cell, const Cell& other_cell)
+{
+    if(    this_cell.LeftValue()  >= other_cell.LeftValue() && this_cell.RightValue() <= other_cell.RightValue() )
+        return true;
+    return false;
+}
+
+template<>
+inline bool Cell_Helper<2>::IsCovered(const Cell& this_cell, const Cell& other_cell)
+{
+    if(    this_cell.LeftValue()  >= other_cell.LeftValue() && this_cell.RightValue() <= other_cell.RightValue()
+        && this_cell.DownValue()  >= other_cell.DownValue() && this_cell.UpValue()    <= other_cell.UpValue() )
+        return true;
+    return false;
+}
+
+template<>
+inline bool Cell_Helper<3>::IsCovered(const Cell& this_cell, const Cell& other_cell)
+{
+    if(    this_cell.LeftValue()  >= other_cell.LeftValue() && this_cell.RightValue() <= other_cell.RightValue()
+        && this_cell.DownValue()  >= other_cell.DownValue() && this_cell.UpValue()    <= other_cell.UpValue()
+        && this_cell.BelowValue() >= other_cell.BelowValue() && this_cell.AboveValue() <= other_cell.AboveValue() )
+        return true;
+    return false;
+}
 
 /// output stream function
 inline std::ostream& operator <<(std::ostream& rOStream, const Cell& rThis)

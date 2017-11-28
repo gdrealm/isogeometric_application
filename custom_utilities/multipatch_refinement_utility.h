@@ -29,7 +29,7 @@ namespace Kratos
 {
 
 /**
-This class represents a single NURBS patch in parametric coordinates.
+Utility to control the refinement on multipatch structure
  */
 class MultiPatchRefinementUtility
 {
@@ -75,14 +75,11 @@ public:
     template<int TDim>
     void DegreeElevate(typename Patch<TDim>::Pointer& pPatch, std::set<std::size_t>& refined_patches, const std::vector<std::size_t>& order_increment);
 
-
     /*************************************************************************
                               HIERARCHICAL B-SPLINES
     *************************************************************************/
 
-
-
-
+                                // TODO
 
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const

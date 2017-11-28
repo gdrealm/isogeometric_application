@@ -784,7 +784,7 @@ namespace Kratos
             {
                 for(cell_container_t::iterator it_subcell = pnew_cells->begin(); it_subcell != pnew_cells->end(); ++it_subcell)
                 {
-                    if((*it_subcell)->IsCovered(*it_cell, TDim))
+                    if((*it_subcell)->template IsCovered<TDim>(*it_cell))
                     {
                         for(typename CellType::bf_iterator it_bf = (*it_cell)->bf_begin(); it_bf != (*it_cell)->bf_end(); ++it_bf)
                         {

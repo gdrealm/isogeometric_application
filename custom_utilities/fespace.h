@@ -105,7 +105,7 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// Reset all the dof numbers for each grid function to -1
+    /// Reset all the dof numbers for each grid function to -1.
     void ResetFunctionIndices()
     {
         if (mFunctionsIds.size() != this->TotalNumber())
@@ -113,7 +113,8 @@ public:
         std::fill(mFunctionsIds.begin(), mFunctionsIds.end(), -1);
     }
 
-    /// Reset the function indices to a given values
+    /// Reset the function indices to a given values.
+    /// This is useful when assigning the id for the boundary patch.
     void ResetFunctionIndices(const std::vector<std::size_t>& func_indices)
     {
         assert(func_indices.size() == this->TotalNumber());
@@ -124,7 +125,7 @@ public:
 
     /// Enumerate the dofs of each grid function. The enumeration algorithm is pretty straightforward.
     /// If the dof does not have pre-existing value, which assume it is -1, it will be assigned the incremental value.
-    std::size_t& Enumerate(std::size_t& start)
+    virtual std::size_t& Enumerate(std::size_t& start)
     {
         mGlobalToLocal.clear();
         for (std::size_t i = 0; i < mFunctionsIds.size(); ++i)

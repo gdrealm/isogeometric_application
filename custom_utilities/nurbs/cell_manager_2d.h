@@ -45,6 +45,7 @@ public:
 
     /// Type definitions
     typedef CellManager<TCellType> BaseType;
+    typedef typename BaseType::CellType CellType;
     typedef typename BaseType::cell_t cell_t;
     typedef typename BaseType::knot_t knot_t;
     typedef typename BaseType::iterator iterator;
@@ -56,6 +57,9 @@ public:
     /// Destructor
     virtual ~CellManager2D()
     {}
+
+    /// Helper function to create new instance of cell manager
+    static typename BaseType::Pointer Create() {return typename BaseType::Pointer(new CellManager2D<CellType>());}
 
     /// Check if the cell exists in the list; otherwise create new cell and return
 //    virtual cell_t CreateCell(knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
@@ -144,7 +148,7 @@ public:
         // Currently I use the brute-force approach. I know it is not efficient. I will improve it in the future. TODO
         for(iterator it = BaseType::mpCells.begin(); it != BaseType::mpCells.end(); ++it)
             if(*it != p_cell)
-                if((*it)->IsCovered(p_cell, 2))
+                if((*it)->template IsCovered<2>(p_cell))
                     p_cells.push_back(*it);
         #endif
 
@@ -161,7 +165,7 @@ public:
         {
             cell_t pthis_cell = this->get(OverlappingCells[i]);
             if(pthis_cell != p_cell)
-                if(pthis_cell->IsCovered(p_cell, 2))
+                if(pthis_cell->template IsCovered<2>(p_cell))
                     p_cells.push_back(pthis_cell);
         }
         #endif

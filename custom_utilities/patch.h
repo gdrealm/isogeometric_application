@@ -38,6 +38,13 @@ namespace Kratos
 template<int TDim> class Patch;
 template<int TDim> class MultiPatch;
 
+
+enum IsogeometricEchoFlags
+{
+    ECHO_REFIMENT   = 0b0000000000000001,
+};
+
+
 /**
 This class represents an isogeometric patch in parametric coordinates. An isogeometric patch can be a NURBS patch, a hierarchical BSplines patch, or a T-Splines patch.
  */
@@ -70,6 +77,7 @@ public:
     //                  vertex1     vertex2     vertex3         vertex4     is_boundary
     typedef std::tuple<std::size_t, std::size_t, std::size_t, std::size_t, std::size_t, std::size_t, std::size_t, std::size_t> volume_t;
 
+    typedef FESpace<TDim> FESpaceType;
 
     /// Constructor with id
     Patch(const std::size_t& Id) : mId(Id), mFESpace(NULL)

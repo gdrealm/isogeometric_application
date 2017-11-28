@@ -1037,6 +1037,8 @@ public:
             for (int i = 0; i < new_n1; ++i)
                 ictrl(i, j) = ictrl_u[i];
         }
+
+        return 0;
     }
 
     /// Degree elevation for B-Splines volume
@@ -1142,6 +1144,8 @@ public:
                     ictrl(i, j, k) = ictrl_u[i];
             }
         }
+
+        return 0;
     }
 
     ///@}

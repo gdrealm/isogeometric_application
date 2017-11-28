@@ -323,6 +323,16 @@ typename ControlGrid<typename TVariableType::Type>::Pointer ControlGridLibrary_C
 
 ////////////////////////////////////////
 
+template<int TDim>
+std::size_t FESpace_Enumerate(FESpace<TDim>& rDummy)
+{
+    std::size_t eq_size = 0;
+    eq_size = rDummy.Enumerate(eq_size);
+    return eq_size;
+}
+
+////////////////////////////////////////
+
 BSplinesFESpace<1>::Pointer BSplinesFESpaceLibrary_CreateLinearFESpace(BSplinesFESpaceLibrary& rDummy, const std::size_t& order_u)
 {
     std::vector<std::size_t> orders(1);
@@ -392,6 +402,12 @@ template<class TPatchType>
 typename TPatchType::Pointer Patch_pGetNeighbor(TPatchType& rDummy, const BoundarySide& side)
 {
     return rDummy.pNeighbor(side);
+}
+
+template<class TPatchType>
+typename TPatchType::FESpaceType::Pointer Patch_pFESpace(TPatchType& rDummy)
+{
+    return rDummy.pFESpace();
 }
 
 template<class TPatchType, class TMultiPatchType>
@@ -673,6 +689,7 @@ void IsogeometricApplication_AddFESpacesToPython()
     (ss.str().c_str(), init<>())
     .def("Order", &FESpace<TDim>::Order)
     .def("TotalNumber", &FESpace<TDim>::TotalNumber)
+    .def("Enumerate", &FESpace_Enumerate<TDim>)
     .def(self_ns::str(self))
     ;
 
@@ -744,6 +761,7 @@ void IsogeometricApplication_AddPatchesToPython()
     .def("Order", &Patch<TDim>::Order)
     .def("TotalNumber", &Patch<TDim>::TotalNumber)
     .def("Neighbor", &Patch_pGetNeighbor<Patch<TDim> >)
+    .def("FESpace", &Patch_pFESpace<Patch<TDim> >)
     .def(self_ns::str(self))
     ;
 
@@ -896,6 +914,10 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     .value("Bottom", _BOTTOM_)
     .value("Front", _FRONT_)
     .value("Back", _BACK_)
+    ;
+
+    enum_<IsogeometricEchoFlags>("IsogeometricEchoFlags")
+    .value("ECHO_REFIMENT", ECHO_REFIMENT)
     ;
 
     IsogeometricApplication_AddPatchesToPython<1>();

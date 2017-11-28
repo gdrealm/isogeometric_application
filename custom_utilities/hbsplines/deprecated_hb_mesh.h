@@ -44,11 +44,6 @@
 namespace Kratos
 {
 
-enum HN_ECHO_FLAGS
-{
-    ECHO_REFIMENT   = 0b0000000000000001,
-};
-
 /**
 Hierarchical B-Splines mesh and refinement
 */

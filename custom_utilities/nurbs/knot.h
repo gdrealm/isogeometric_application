@@ -23,9 +23,9 @@ namespace Kratos
 {
 
 /**
-    Represent a knot in isogeometric mesh topology.
-    A knot is determined by its value and its index in the knot vectors. The knot value is fixed when knot is constructed, but the index can be changed if new knot are added to the knot vector
-    The reason to keep the two stage definition is to control the repeated knot values. In case when the two knots have the same value, they will be differentiated by indexing
+Represent a knot in isogeometric mesh topology.
+A knot is determined by its value and its index in the knot vectors. The knot value is fixed when knot is constructed, but the index can be changed if new knot are added to the knot vector
+The reason to keep the two stage definition is to control the repeated knot values. In case when the two knots have the same value, they will be differentiated by indexing
  */
 template<typename TDataType>
 class Knot
@@ -39,8 +39,8 @@ public:
     {}
 
     /// Get and Set for knot index
-    const int& Index() const {return mIndex;}
-    void UpdateIndex(const int& Index) {mIndex = Index;}
+    const std::size_t& Index() const {return mIndex;}
+    void UpdateIndex(const std::size_t& Index) {mIndex = Index;}
 
     /// Get the knot value
     TDataType& Value() {return mValue;}
@@ -57,7 +57,7 @@ public:
     }
 
 private:
-    int mIndex;
+    std::size_t mIndex;
     TDataType mValue;
     bool mIsActive;
 };

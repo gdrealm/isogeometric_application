@@ -57,13 +57,13 @@ def CreateMultiPatch():
 
     return mpatch
 
+def main():
+    #print("############RESULTS###############")
+    mpatch = CreateMultiPatch()
+    print(mpatch)
+    mpatch_export1.Export(mpatch, "mpatch.mesh")
+    mpatch_export2.Export(mpatch, "mpatch.m")
 
-#print("############RESULTS###############")
-mpatch = CreateMultiPatch()
-print(mpatch)
-mpatch_export1.Export(mpatch, "mpatch.mesh")
-mpatch_export2.Export(mpatch, "mpatch.m")
-
-
-#################RESULTS#####################(Validated with Matlab)
+if __name__ == "__main__":
+    main()
 

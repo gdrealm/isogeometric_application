@@ -99,12 +99,6 @@ public:
     /// Number of basis functions that covers this cell
     std::size_t size() const {return mpBasisFuncs.size();}
 
-    /// Check if this cell is covered by another cell
-    bool IsCovered(const HBCell::Pointer p_cell, const int& dim) const
-    {
-        return BaseType::IsCovered(BaseType::Pointer(p_cell), dim);
-    }
-
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {

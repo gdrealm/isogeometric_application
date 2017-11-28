@@ -26,6 +26,7 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "custom_utilities/hbsplines/hbsplines_basis_function.h"
 #include "custom_utilities/hbsplines/hbsplines_fespace.h"
 #include "custom_utilities/hbsplines/hbsplines_patch_utility.h"
+#include "custom_utilities/hbsplines/hbsplines_refinement_utility.h"
 #include "custom_utilities/tsplines/tsmesh_2d.h"
 
 namespace Kratos
@@ -48,6 +49,15 @@ typename Patch<TDim>::Pointer HBSplinesPatchUtility_CreatePatchFromBSplines(HBSp
 ////////////////////////////////////////
 
 template<int TDim>
+void HBSplinesRefinementUtility_Refine(HBSplinesRefinementUtility& rDummy,
+        typename Patch<TDim>::Pointer pPatch, const std::size_t& Id, const int& EchoLevel)
+{
+    rDummy.Refine<TDim>(pPatch, Id, EchoLevel);
+}
+
+////////////////////////////////////////
+
+template<int TDim>
 void IsogeometricApplication_AddHBSplinesToPython()
 {
 
@@ -62,7 +72,7 @@ void IsogeometricApplication_AddHBSplinesToPython()
 
     ss.str(std::string());
     ss << "HBSplinesFESpace" << TDim << "D";
-    class_<HBSplinesFESpace<TDim>, typename HBSplinesFESpace<TDim>::Pointer, boost::noncopyable>
+    class_<HBSplinesFESpace<TDim>, typename HBSplinesFESpace<TDim>::Pointer, bases<FESpace<TDim> >, boost::noncopyable>
     (ss.str().c_str(), init<>())
     .def(self_ns::str(self))
     ;
@@ -137,10 +147,6 @@ void IsogeometricApplication_AddCustomUtilities3ToPython()
     ///////////////////////HIERARCHICAL BSplines/////////////////////
     /////////////////////////////////////////////////////////////////
 
-    enum_<HN_ECHO_FLAGS>("HN_ECHO_FLAGS")
-    .value("ECHO_REFIMENT", ECHO_REFIMENT)
-    ;
-
     IsogeometricApplication_AddHBSplinesToPython<2>();
     IsogeometricApplication_AddHBSplinesToPython<3>();
 
@@ -151,6 +157,12 @@ void IsogeometricApplication_AddCustomUtilities3ToPython()
     .def(self_ns::str(self))
     ;
 
+    class_<HBSplinesRefinementUtility, typename HBSplinesRefinementUtility::Pointer, boost::noncopyable>
+    ("HBSplinesRefinementUtility", init<>())
+    .def("Refine", &HBSplinesRefinementUtility_Refine<2>)
+    .def("Refine", &HBSplinesRefinementUtility_Refine<3>)
+    .def(self_ns::str(self))
+    ;
 }
 
 }  // namespace Python.

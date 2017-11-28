@@ -62,13 +62,17 @@ def CreateMultiPatch():
 
 ######################################################################
 
-mpatch = CreateMultiPatch()
+def main():
+    mpatch = CreateMultiPatch()
 
-mpatch_export2.Export(mpatch, "mpatch.mesh")
+    mpatch_export2.Export(mpatch, "mpatch.mesh")
 
-system_size = mpatch.Enumerate()
-print("system_size:", system_size)
-print(mpatch)
+    system_size = mpatch.Enumerate()
+    print("system_size:", system_size)
+    print(mpatch)
+
+if __name__ == "__main__":
+    main()
 
 #################RESULTS#####################(Validated with Matlab)
 ##>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
