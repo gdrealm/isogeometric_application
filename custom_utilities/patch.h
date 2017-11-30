@@ -208,6 +208,7 @@ public:
     typename GridFunction<TDim, typename TVariableType::Type>::Pointer CreateGridFunction(const TVariableType& rVariable,
             typename ControlGrid<typename TVariableType::Type>::Pointer pControlGrid)
     {
+        pControlGrid->SetName(rVariable.Name());
         return this->CreateGridFunction<typename TVariableType::Type>(pControlGrid);
     }
 
@@ -373,10 +374,38 @@ public:
     {
         typename Patch<TDim-1>::Pointer pBPatch = typename Patch<TDim-1>::Pointer(new Patch<TDim-1>(-1));
 
+        // construct the boundary FESpace
         typename FESpace<TDim-1>::Pointer pBFESpace = this->pFESpace()->ConstructBoundaryFESpace(side);
         pBPatch->SetFESpace(pBFESpace);
 
-        // TODO transfer the control values
+        // extract the local id associated with the boundary indices
+        std::vector<std::size_t> local_ids = this->pFESpace()->LocalId(pBFESpace->FunctionIndices());
+
+        // transfer the control values
+        typename ControlGrid<ControlPointType>::Pointer pBoundaryControlPointGrid = ControlGridUtility::ExtractSubGrid<ControlPointType>(this->pControlPointGridFunction()->pControlGrid(), local_ids);
+        pBPatch->CreateControlPointGridFunction(pBoundaryControlPointGrid);
+
+        // TODO transfer other values
+        for (typename DoubleGridFunctionContainerType::const_iterator it = DoubleGridFunctions().begin();
+                it != DoubleGridFunctions().end(); ++it)
+        {
+            typename ControlGrid<double>::Pointer pBoundaryDoubleControlGrid = ControlGridUtility::ExtractSubGrid<double>((*it)->pControlGrid(), local_ids);
+            pBPatch->CreateGridFunction<double>(pBoundaryDoubleControlGrid);
+        }
+
+        for (typename Array1DGridFunctionContainerType::const_iterator it = Array1DGridFunctions().begin();
+                it != Array1DGridFunctions().end(); ++it)
+        {
+            typename ControlGrid<array_1d<double, 3> >::Pointer pBoundaryArray1DControlGrid = ControlGridUtility::ExtractSubGrid<array_1d<double, 3> >((*it)->pControlGrid(), local_ids);
+            pBPatch->CreateGridFunction<array_1d<double, 3> >(pBoundaryArray1DControlGrid);
+        }
+
+        for (typename VectorGridFunctionContainerType::const_iterator it = VectorGridFunctions().begin();
+                it != VectorGridFunctions().end(); ++it)
+        {
+            typename ControlGrid<Vector>::Pointer pBoundaryVectorControlGrid = ControlGridUtility::ExtractSubGrid<Vector>((*it)->pControlGrid(), local_ids);
+            pBPatch->CreateGridFunction<Vector>(pBoundaryVectorControlGrid);
+        }
 
         return pBPatch;
     }
@@ -687,6 +716,9 @@ public:
     /// Pointer definition
     KRATOS_CLASS_POINTER_DEFINITION(Patch);
 
+    // Type definitions
+    typedef ControlPoint<double> ControlPointType;
+
     /// Default constructor
     Patch() : mId(0) {}
 
@@ -730,6 +762,19 @@ public:
     virtual bool Validate() const
     {
         return true;
+    }
+
+    /// Set the control point grid
+    typename GridFunction<0, ControlPointType>::Pointer CreateControlPointGridFunction(typename ControlGrid<ControlPointType>::Pointer pControlPointGrid)
+    {
+        return NULL;
+    }
+
+    /// Create and add the grid function
+    template<typename TDataType>
+    typename GridFunction<0, TDataType>::Pointer CreateGridFunction(typename ControlGrid<TDataType>::Pointer pControlGrid)
+    {
+        return NULL;
     }
 
     /// Overload comparison operator

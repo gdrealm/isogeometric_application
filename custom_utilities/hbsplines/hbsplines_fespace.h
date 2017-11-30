@@ -142,7 +142,11 @@ public:
     void SetInfo(const std::size_t& i, const std::size_t& order) {mOrders[i] = order;}
 
     /// Get the order of the BSplines patch in specific direction
-    virtual const std::size_t Order(const std::size_t& i) const {return mOrders[i];}
+    virtual const std::size_t Order(const std::size_t& i) const
+    {
+        if (i >= TDim) return 0;
+        else return mOrders[i];
+    }
 
     /// Get the number of basis functions defined over the BSplines
     virtual const std::size_t TotalNumber() const {return mpBasisFuncs.size();}
@@ -220,6 +224,27 @@ public:
 
     /// Add the bf's id to the refinement history
     void RecordRefinementHistory(const std::size_t& Id) {mRefinementHistory.push_back(Id);}
+
+    /// Clear the support domain container
+    void ClearSupportDomain() {mSupportDomains.clear();}
+
+    /// Get the domain manager for support domain for level k. In the case that does not exist, create the new one.
+    domain_t GetSupportDomain(const std::size_t& Level)
+    {
+        domain_container_t::iterator it = mSupportDomains.find(Level);
+        if(it != mSupportDomains.end())
+            return it->second;
+        else
+        {
+            domain_t p_domain;
+            if(TDim == 2)
+                p_domain = domain_t(new DomainManager2D(Level));
+            else if(TDim == 3)
+                p_domain = domain_t(new DomainManager3D(Level));
+            mSupportDomains[Level] = p_domain;
+            return p_domain;
+        }
+    }
 
     /// Enumerate the dofs of each grid function. The enumeration algorithm is pretty straightforward.
     /// If the dof does not have pre-existing value, which assume it is -1, it will be assigned the incremental value.

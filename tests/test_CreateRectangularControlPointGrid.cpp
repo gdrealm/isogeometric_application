@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 
     std::vector<double> end = {1.0, 1.0};
 
-    ControlGrid<ControlPoint<double> >::Pointer pGrid = ControlGridLibrary::CreateRegularControlPointGrid<2>(start, ngrid, end);
+    ControlGrid<ControlPoint<double> >::Pointer pGrid = ControlGridLibrary::CreateStructuredControlPointGrid<2>(start, ngrid, end);
     KRATOS_WATCH(*pGrid)
 
     return 0;

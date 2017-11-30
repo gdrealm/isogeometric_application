@@ -79,8 +79,6 @@ public:
                               HIERARCHICAL B-SPLINES
     *************************************************************************/
 
-                                // TODO
-
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
@@ -110,10 +108,10 @@ private:
 
     template<int TDim>
     void ComputeBsplinesDegreeElevation(
-        const RegularControlGrid<TDim, ControlPoint<double> >& ControlPoints,
+        const StructuredControlGrid<TDim, ControlPoint<double> >& ControlPoints,
         const BSplinesFESpace<TDim>& rFESpace,
         const std::vector<std::size_t>& order_increment,
-        RegularControlGrid<TDim, ControlPoint<double> >& NewControlPoints,
+        StructuredControlGrid<TDim, ControlPoint<double> >& NewControlPoints,
         std::vector<std::vector<double> >& new_knots) const
     {
         std::stringstream ss;

@@ -25,24 +25,24 @@ namespace Kratos
 Base class for control value container by a regular grid
 */
 template<typename TDataType>
-class BaseRegularControlGrid : public ControlGrid<TDataType>
+class BaseStructuredControlGrid : public ControlGrid<TDataType>
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(BaseRegularControlGrid);
+    KRATOS_CLASS_POINTER_DEFINITION(BaseStructuredControlGrid);
 
     /// Type definition
     typedef ControlGrid<TDataType> BaseType;
     typedef std::vector<TDataType> DataContainerType;
 
     /// Default constructor
-    BaseRegularControlGrid() : BaseType() {}
+    BaseStructuredControlGrid() : BaseType() {}
 
     /// Constructor with name
-    BaseRegularControlGrid(const std::string& Name) : BaseType(Name) {}
+    BaseStructuredControlGrid(const std::string& Name) : BaseType(Name) {}
 
     /// Destructor
-    virtual ~BaseRegularControlGrid() {}
+    virtual ~BaseStructuredControlGrid() {}
 
     /************************************/
     /********* INHERIT UPSTREAM *********/
@@ -109,44 +109,44 @@ private:
 Class for control value container by a regular grid
 */
 template<int TDim, typename TDataType>
-class RegularControlGrid : public BaseRegularControlGrid<TDataType>
+class StructuredControlGrid : public BaseStructuredControlGrid<TDataType>
 {
 };
 
 
 template<typename TDataType>
-class RegularControlGrid<1, TDataType> : public BaseRegularControlGrid<TDataType>
+class StructuredControlGrid<1, TDataType> : public BaseStructuredControlGrid<TDataType>
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(RegularControlGrid);
+    KRATOS_CLASS_POINTER_DEFINITION(StructuredControlGrid);
 
     // type definitions
-    typedef BaseRegularControlGrid<TDataType> BaseType;
+    typedef BaseStructuredControlGrid<TDataType> BaseType;
     typedef typename BaseType::DataContainerType DataContainerType;
     typedef typename BaseType::DataType DataType;
 
     /// Constructor with size
-    RegularControlGrid(const std::vector<std::size_t>& sizes) : BaseType(), mSize(sizes[0])
+    StructuredControlGrid(const std::vector<std::size_t>& sizes) : BaseType(), mSize(sizes[0])
     {
         BaseType::Data().resize(sizes[0]);
         std::fill(BaseType::Data().begin(), BaseType::Data().end(), TDataType(0.0));
     }
 
     /// Constructor with size
-    RegularControlGrid(const std::size_t& n) : BaseType(), mSize(n)
+    StructuredControlGrid(const std::size_t& n) : BaseType(), mSize(n)
     {
         BaseType::Data().resize(n);
         std::fill(BaseType::Data().begin(), BaseType::Data().end(), TDataType(0.0));
     }
 
     /// Destructor
-    virtual ~RegularControlGrid() {}
+    virtual ~StructuredControlGrid() {}
 
     /// Create a new control grid pointer
-    static typename RegularControlGrid<1, TDataType>::Pointer Create(const std::vector<std::size_t>& sizes)
+    static typename StructuredControlGrid<1, TDataType>::Pointer Create(const std::vector<std::size_t>& sizes)
     {
-        return typename RegularControlGrid<1, TDataType>::Pointer(new RegularControlGrid<1, TDataType>(sizes));
+        return typename StructuredControlGrid<1, TDataType>::Pointer(new StructuredControlGrid<1, TDataType>(sizes));
     }
 
     /// Get the size of underlying data
@@ -180,7 +180,7 @@ public:
     const TDataType& operator() (const std::size_t& i) const {return BaseType::Data()[i];}
 
     /// Copy the data the other grid function. The size of two grid functions must be equal.
-    virtual void CopyFrom(const RegularControlGrid<1, TDataType>& rOther)
+    virtual void CopyFrom(const StructuredControlGrid<1, TDataType>& rOther)
     {
         if (rOther.Size() != this->Size())
             KRATOS_THROW_ERROR(std::logic_error, "The size of the grid function is incompatible", "")
@@ -189,13 +189,13 @@ public:
     }
 
     /// Copy the data the other grid function
-    virtual void CopyFrom(const typename RegularControlGrid<1, TDataType>::Pointer pOther)
+    virtual void CopyFrom(const typename StructuredControlGrid<1, TDataType>::Pointer pOther)
     {
         this->CopyFrom(*pOther);
     }
 
     /// Copy the data the other grid function. In the case that the source has different size, the grid function is resized.
-    virtual void ResizeAndCopyFrom(const RegularControlGrid<1, TDataType>& rOther)
+    virtual void ResizeAndCopyFrom(const StructuredControlGrid<1, TDataType>& rOther)
     {
         if (rOther.Size() != this->Size())
             BaseType::Data().resize(rOther.Size());
@@ -204,15 +204,15 @@ public:
     }
 
     /// Copy the data the other grid function. In the case that the source has different size, the grid function is resized.
-    virtual void ResizeAndCopyFrom(const typename RegularControlGrid<1, TDataType>::Pointer pOther)
+    virtual void ResizeAndCopyFrom(const typename StructuredControlGrid<1, TDataType>::Pointer pOther)
     {
         this->ResizeAndCopyFrom(*pOther);
     }
 
     /// Clone this grid function
-    virtual typename RegularControlGrid<1, TDataType>::Pointer Clone() const
+    virtual typename ControlGrid<TDataType>::Pointer Clone() const
     {
-        typename RegularControlGrid<1, TDataType>::Pointer pNewControlGrid = typename RegularControlGrid<1, TDataType>::Pointer(new RegularControlGrid<1, TDataType>(mSize));
+        typename StructuredControlGrid<1, TDataType>::Pointer pNewControlGrid = typename StructuredControlGrid<1, TDataType>::Pointer(new StructuredControlGrid<1, TDataType>(mSize));
         pNewControlGrid->CopyFrom(*this);
         return pNewControlGrid;
     }
@@ -220,7 +220,7 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "RegularGrid<1> " << BaseType::Name() << "[" << mSize << "]";
+        rOStream << "StructuredGrid<1> " << BaseType::Name() << "[" << mSize << "]";
     }
 
     virtual void PrintData(std::ostream& rOStream) const
@@ -236,38 +236,38 @@ private:
 };
 
 template<typename TDataType>
-class RegularControlGrid<2, TDataType> : public BaseRegularControlGrid<TDataType>
+class StructuredControlGrid<2, TDataType> : public BaseStructuredControlGrid<TDataType>
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(RegularControlGrid);
+    KRATOS_CLASS_POINTER_DEFINITION(StructuredControlGrid);
 
     // type definitions
-    typedef BaseRegularControlGrid<TDataType> BaseType;
+    typedef BaseStructuredControlGrid<TDataType> BaseType;
     typedef typename BaseType::DataContainerType DataContainerType;
     typedef typename BaseType::DataType DataType;
 
     /// Constructor with size
-    RegularControlGrid(const std::vector<std::size_t>& sizes) : BaseType(), mSize{sizes[0], sizes[1]}
+    StructuredControlGrid(const std::vector<std::size_t>& sizes) : BaseType(), mSize{sizes[0], sizes[1]}
     {
         BaseType::Data().resize(sizes[0]*sizes[1]);
         std::fill(BaseType::Data().begin(), BaseType::Data().end(), TDataType(0.0));
     }
 
     /// Constructor with size
-    RegularControlGrid(const std::size_t& m, const std::size_t& n) : mSize{m, n}
+    StructuredControlGrid(const std::size_t& m, const std::size_t& n) : mSize{m, n}
     {
         BaseType::Data().resize(m*n);
         std::fill(BaseType::Data().begin(), BaseType::Data().end(), TDataType(0.0));
     }
 
     /// Destructor
-    virtual ~RegularControlGrid() {}
+    virtual ~StructuredControlGrid() {}
 
     /// Create a new control grid pointer
-    static typename RegularControlGrid<2, TDataType>::Pointer Create(const std::vector<std::size_t>& sizes)
+    static typename StructuredControlGrid<2, TDataType>::Pointer Create(const std::vector<std::size_t>& sizes)
     {
-        return typename RegularControlGrid<2, TDataType>::Pointer(new RegularControlGrid<2, TDataType>(sizes));
+        return typename StructuredControlGrid<2, TDataType>::Pointer(new StructuredControlGrid<2, TDataType>(sizes));
     }
 
     /// resize the grid
@@ -315,7 +315,7 @@ public:
     const TDataType& operator() (const std::size_t& i, const std::size_t& j) const {return BaseType::Data()[j*mSize[0] + i];}
 
     /// Copy the data the other grid function
-    virtual void CopyFrom(const RegularControlGrid<2, TDataType>& rOther)
+    virtual void CopyFrom(const StructuredControlGrid<2, TDataType>& rOther)
     {
         if ( ( rOther.Size(0) != this->Size(1) ) || ( rOther.Size(1) != this->Size(1) ) )
             KRATOS_THROW_ERROR(std::logic_error, "The size of the grid function is incompatible", "")
@@ -325,13 +325,13 @@ public:
     }
 
     /// Copy the data the other grid function
-    virtual void CopyFrom(const typename RegularControlGrid<2, TDataType>::Pointer pOther)
+    virtual void CopyFrom(const typename StructuredControlGrid<2, TDataType>::Pointer pOther)
     {
         this->CopyFrom(*pOther);
     }
 
     /// Copy the data the other grid function. In the case that the source has different size, the grid function is resized.
-    virtual void ResizeAndCopyFrom(const RegularControlGrid<2, TDataType>& rOther)
+    virtual void ResizeAndCopyFrom(const StructuredControlGrid<2, TDataType>& rOther)
     {
         if ( ( rOther.Size(0) != this->Size(1) ) || ( rOther.Size(1) != this->Size(1) ) )
         {
@@ -343,15 +343,15 @@ public:
     }
 
     /// Copy the data the other grid function. In the case that the source has different size, the grid function is resized.
-    virtual void ResizeAndCopyFrom(const typename RegularControlGrid<2, TDataType>::Pointer pOther)
+    virtual void ResizeAndCopyFrom(const typename StructuredControlGrid<2, TDataType>::Pointer pOther)
     {
         this->ResizeAndCopyFrom(*pOther);
     }
 
     /// Clone this grid function
-    virtual typename RegularControlGrid<2, TDataType>::Pointer Clone() const
+    virtual typename ControlGrid<TDataType>::Pointer Clone() const
     {
-        typename RegularControlGrid<2, TDataType>::Pointer pNewControlGrid = typename RegularControlGrid<2, TDataType>::Pointer(new RegularControlGrid<2, TDataType>(mSize[0], mSize[1]));
+        typename StructuredControlGrid<2, TDataType>::Pointer pNewControlGrid = typename StructuredControlGrid<2, TDataType>::Pointer(new StructuredControlGrid<2, TDataType>(mSize[0], mSize[1]));
         pNewControlGrid->CopyFrom(*this);
         return pNewControlGrid;
     }
@@ -359,7 +359,7 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "RegularGrid<2> " << BaseType::Name() << ": [" << mSize[0] << ", " << mSize[1] << "]";
+        rOStream << "StructuredGrid<2> " << BaseType::Name() << ": [" << mSize[0] << ", " << mSize[1] << "]";
     }
 
     virtual void PrintData(std::ostream& rOStream) const
@@ -382,38 +382,38 @@ private:
 };
 
 template<typename TDataType>
-class RegularControlGrid<3, TDataType> : public BaseRegularControlGrid<TDataType>
+class StructuredControlGrid<3, TDataType> : public BaseStructuredControlGrid<TDataType>
 {
 public:
     /// Pointer definition
-    KRATOS_CLASS_POINTER_DEFINITION(RegularControlGrid);
+    KRATOS_CLASS_POINTER_DEFINITION(StructuredControlGrid);
 
     // type definitions
-    typedef BaseRegularControlGrid<TDataType> BaseType;
+    typedef BaseStructuredControlGrid<TDataType> BaseType;
     typedef typename BaseType::DataContainerType DataContainerType;
     typedef typename BaseType::DataType DataType;
 
     /// Constructor with size
-    RegularControlGrid(const std::vector<std::size_t>& sizes) : BaseType(), mSize{sizes[0], sizes[1], sizes[2]}
+    StructuredControlGrid(const std::vector<std::size_t>& sizes) : BaseType(), mSize{sizes[0], sizes[1], sizes[2]}
     {
         BaseType::Data().resize(sizes[0]*sizes[1]*sizes[2]);
         std::fill(BaseType::Data().begin(), BaseType::Data().end(), TDataType(0.0));
     }
 
     /// Constructor with size
-    RegularControlGrid(const std::size_t& m, const std::size_t& n, const std::size_t& p) : mSize{m, n, p}
+    StructuredControlGrid(const std::size_t& m, const std::size_t& n, const std::size_t& p) : mSize{m, n, p}
     {
         BaseType::Data().resize(m*n*p);
         std::fill(BaseType::Data().begin(), BaseType::Data().end(), TDataType(0.0));
     }
 
     /// Destructor
-    virtual ~RegularControlGrid() {}
+    virtual ~StructuredControlGrid() {}
 
     /// Create a new control grid pointer
-    static typename RegularControlGrid<3, TDataType>::Pointer Create(const std::vector<std::size_t>& sizes)
+    static typename StructuredControlGrid<3, TDataType>::Pointer Create(const std::vector<std::size_t>& sizes)
     {
-        return typename RegularControlGrid<3, TDataType>::Pointer(new RegularControlGrid<3, TDataType>(sizes));
+        return typename StructuredControlGrid<3, TDataType>::Pointer(new StructuredControlGrid<3, TDataType>(sizes));
     }
 
     /// resize the grid
@@ -468,7 +468,7 @@ public:
     }
 
     /// Copy the data the other grid function
-    virtual void CopyFrom(const RegularControlGrid<3, TDataType>& rOther)
+    virtual void CopyFrom(const StructuredControlGrid<3, TDataType>& rOther)
     {
         if ( ( rOther.Size(0) != this->Size(0) )
           || ( rOther.Size(1) != this->Size(1) )
@@ -481,13 +481,13 @@ public:
     }
 
     /// Copy the data the other grid function
-    virtual void CopyFrom(const typename RegularControlGrid<3, TDataType>::Pointer pOther)
+    virtual void CopyFrom(const typename StructuredControlGrid<3, TDataType>::Pointer pOther)
     {
         this->CopyFrom(*pOther);
     }
 
     /// Copy the data the other grid function. In the case that the source has different size, the grid function is resized.
-    virtual void ResizeAndCopyFrom(const RegularControlGrid<3, TDataType>& rOther)
+    virtual void ResizeAndCopyFrom(const StructuredControlGrid<3, TDataType>& rOther)
     {
         if ( ( rOther.Size(0) != this->Size(1) )
           || ( rOther.Size(1) != this->Size(1) )
@@ -500,15 +500,15 @@ public:
     }
 
     /// Copy the data the other grid function. In the case that the source has different size, the grid function is resized.
-    virtual void ResizeAndCopyFrom(const typename RegularControlGrid<3, TDataType>::Pointer pOther)
+    virtual void ResizeAndCopyFrom(const typename StructuredControlGrid<3, TDataType>::Pointer pOther)
     {
         this->ResizeAndCopyFrom(*pOther);
     }
 
     /// Clone this grid function
-    virtual typename RegularControlGrid<3, TDataType>::Pointer Clone() const
+    virtual typename ControlGrid<TDataType>::Pointer Clone() const
     {
-        typename RegularControlGrid<3, TDataType>::Pointer pNewControlGrid = typename RegularControlGrid<3, TDataType>::Pointer(new RegularControlGrid<3, TDataType>(mSize[0], mSize[1], mSize[2]));
+        typename StructuredControlGrid<3, TDataType>::Pointer pNewControlGrid = typename StructuredControlGrid<3, TDataType>::Pointer(new StructuredControlGrid<3, TDataType>(mSize[0], mSize[1], mSize[2]));
         pNewControlGrid->CopyFrom(*this);
         return pNewControlGrid;
     }
@@ -516,7 +516,7 @@ public:
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
-        rOStream << "RegularGrid<3> " << BaseType::Name() << ": [" << mSize[0] << ", " << mSize[1] << ", " << mSize[2] << "]";
+        rOStream << "StructuredGrid<3> " << BaseType::Name() << ": [" << mSize[0] << ", " << mSize[1] << ", " << mSize[2] << "]";
     }
 
     virtual void PrintData(std::ostream& rOStream) const
@@ -544,7 +544,7 @@ private:
 
 /// output stream function
 template<int TDim, typename TDataType>
-inline std::ostream& operator <<(std::ostream& rOStream, const RegularControlGrid<TDim, TDataType>& rThis)
+inline std::ostream& operator <<(std::ostream& rOStream, const StructuredControlGrid<TDim, TDataType>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

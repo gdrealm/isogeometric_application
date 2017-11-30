@@ -133,8 +133,8 @@ template<>
 void MultiNURBSPatchMatlabExporterHelper::WriteMatlabControlPoints<1>(std::ostream& rOStream, Patch<1>::Pointer pPatch, const std::string& var_name)
 {
     typedef Patch<1>::ControlPointType ControlPointType;
-    typename RegularControlGrid<1, ControlPointType>::ConstPointer pControlPointGrid
-        = boost::dynamic_pointer_cast<const RegularControlGrid<1, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
+    typename StructuredControlGrid<1, ControlPointType>::ConstPointer pControlPointGrid
+        = boost::dynamic_pointer_cast<const StructuredControlGrid<1, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
 
     for (std::size_t nu = 0; nu < pControlPointGrid->Size(0); ++nu)
     {
@@ -149,8 +149,8 @@ template<>
 void MultiNURBSPatchMatlabExporterHelper::WriteMatlabControlPoints<2>(std::ostream& rOStream, Patch<2>::Pointer pPatch, const std::string& var_name)
 {
     typedef Patch<2>::ControlPointType ControlPointType;
-    typename RegularControlGrid<2, ControlPointType>::ConstPointer pControlPointGrid
-        = boost::dynamic_pointer_cast<const RegularControlGrid<2, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
+    typename StructuredControlGrid<2, ControlPointType>::ConstPointer pControlPointGrid
+        = boost::dynamic_pointer_cast<const StructuredControlGrid<2, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
 
     for (std::size_t nv = 0; nv < pControlPointGrid->Size(1); ++nv)
     {
@@ -168,8 +168,8 @@ template<>
 void MultiNURBSPatchMatlabExporterHelper::WriteMatlabControlPoints<3>(std::ostream& rOStream, Patch<3>::Pointer pPatch, const std::string& var_name)
 {
     typedef Patch<3>::ControlPointType ControlPointType;
-    typename RegularControlGrid<3, ControlPointType>::ConstPointer pControlPointGrid
-        = boost::dynamic_pointer_cast<const RegularControlGrid<3, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
+    typename StructuredControlGrid<3, ControlPointType>::ConstPointer pControlPointGrid
+        = boost::dynamic_pointer_cast<const StructuredControlGrid<3, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
 
     for (std::size_t nw = 0; nw < pControlPointGrid->Size(2); ++nw)
     {

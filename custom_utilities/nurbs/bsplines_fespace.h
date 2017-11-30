@@ -60,7 +60,11 @@ public:
     }
 
     /// Get the order of the BSplines patch in specific direction
-    virtual const std::size_t Order(const std::size_t& i) const {return mOrders[i];}
+    virtual const std::size_t Order(const std::size_t& i) const
+    {
+        if (i >= TDim) return 0;
+        else return mOrders[i];
+    }
 
     /// Get the number of control points of the BSplines in specific direction
     const std::size_t Number(const std::size_t& i) const {return mNumbers[i];}
@@ -502,7 +506,7 @@ public:
         }
 
         // transfer the function indices
-        std::vector<std::size_t> b_func_indices = ExtractBoundaryFunctionIndices(side);
+        std::vector<std::size_t> b_func_indices = this->ExtractBoundaryFunctionIndices(side);
         pBFESpace->ResetFunctionIndices(b_func_indices);
 
         return pBFESpace;

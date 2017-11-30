@@ -111,8 +111,8 @@ template<>
 void MultiNURBSPatchGeoExporterHelper::WriteGeoControlPoints<1>(std::ostream& rOStream, Patch<1>::Pointer pPatch)
 {
     typedef Patch<1>::ControlPointType ControlPointType;
-    typename RegularControlGrid<1, ControlPointType>::ConstPointer pControlPointGrid
-        = boost::dynamic_pointer_cast<const RegularControlGrid<1, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
+    typename StructuredControlGrid<1, ControlPointType>::ConstPointer pControlPointGrid
+        = boost::dynamic_pointer_cast<const StructuredControlGrid<1, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
 
     rOStream << "#u\n";
     for (std::size_t dim = 0; dim < 3; ++dim)
@@ -131,8 +131,8 @@ template<>
 void MultiNURBSPatchGeoExporterHelper::WriteGeoControlPoints<2>(std::ostream& rOStream, Patch<2>::Pointer pPatch)
 {
     typedef Patch<2>::ControlPointType ControlPointType;
-    typename RegularControlGrid<2, ControlPointType>::ConstPointer pControlPointGrid
-        = boost::dynamic_pointer_cast<const RegularControlGrid<2, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
+    typename StructuredControlGrid<2, ControlPointType>::ConstPointer pControlPointGrid
+        = boost::dynamic_pointer_cast<const StructuredControlGrid<2, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
 
     rOStream << "#u v\n";
     for (std::size_t dim = 0; dim < 2; ++dim)
@@ -153,8 +153,8 @@ template<>
 void MultiNURBSPatchGeoExporterHelper::WriteGeoControlPoints<3>(std::ostream& rOStream, Patch<3>::Pointer pPatch)
 {
     typedef Patch<3>::ControlPointType ControlPointType;
-    typename RegularControlGrid<3, ControlPointType>::ConstPointer pControlPointGrid
-        = boost::dynamic_pointer_cast<const RegularControlGrid<3, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
+    typename StructuredControlGrid<3, ControlPointType>::ConstPointer pControlPointGrid
+        = boost::dynamic_pointer_cast<const StructuredControlGrid<3, ControlPointType> >(pPatch->pControlPointGridFunction()->pControlGrid());
 
     rOStream << "#u v w\n";
     for (std::size_t dim = 0; dim < 3; ++dim)

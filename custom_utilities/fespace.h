@@ -137,7 +137,7 @@ public:
         return start;
     }
 
-    /// Access the function indices
+    /// Access the function indices (aka global ids)
     const std::vector<std::size_t>& FunctionIndices() const {return mFunctionsIds;}
 
     /// Update the function indices using a map. The map shall be the mapping from old index to new index.
@@ -172,6 +172,15 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "The global id does not exist in global_to_local map", "")
 
         return it->second;
+    }
+
+    /// Return the local ids of given global ids
+    std::vector<std::size_t> LocalId(const std::vector<std::size_t>& global_ids) const
+    {
+        std::vector<std::size_t> local_ids(global_ids.size());
+        for (std::size_t i = 0; i < global_ids.size(); ++i)
+            local_ids[i] = this->LocalId(global_ids[i]);
+        return local_ids;
     }
 
     /// Check the compatibility between boundaries of two FESpacees
@@ -362,6 +371,9 @@ public:
         assert(func_indices.size() == 1);
         mFunctionId = func_indices[0];
     }
+
+    /// Get the vector of function indices
+    std::vector<std::size_t> FunctionIndices() const {return std::vector<std::size_t>{mFunctionId};}
 
     /// Check the compatibility between boundaries of two FESpacees
     virtual bool CheckBoundaryCompatibility(const FESpace<0>& rFESpace1, const BoundarySide& side1,

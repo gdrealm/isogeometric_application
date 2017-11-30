@@ -145,9 +145,15 @@ namespace Kratos
 
                 bool is_inside;
                 if(TDim == 2)
-                    is_inside = GetSupportDomain(level)->IsInside(Xmin, Xmax, Ymin, Ymax);
+                {
+                    std::vector<double> bounding_box = {Xmin, Xmax, Ymin, Ymax};
+                    is_inside = GetSupportDomain(level)->IsInside(bounding_box);
+                }
                 else if(TDim == 3)
-                    is_inside = GetSupportDomain(level)->IsInside(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
+                {
+                    std::vector<double> bounding_box = {Xmin, Xmax, Ymin, Ymax, Zmin, Zmax};
+                    is_inside = GetSupportDomain(level)->IsInside(bounding_box);
+                }
 
                 if(is_inside)
                     rK[level].insert(*it);
@@ -202,9 +208,15 @@ namespace Kratos
 
                 bool is_inside;
                 if(TDim == 2)
-                    is_inside = p_domain->IsInside(Xmin, Xmax, Ymin, Ymax);
+                {
+                    std::vector<double> bounding_box = {Xmin, Xmax, Ymin, Ymax};
+                    is_inside = p_domain->IsInside(bounding_box);
+                }
                 else if(TDim == 3)
-                    is_inside = p_domain->IsInside(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
+                {
+                    std::vector<double> bounding_box = {Xmin, Xmax, Ymin, Ymax, Zmin, Zmax};
+                    is_inside = p_domain->IsInside(bounding_box);
+                }
 
                 if(is_inside)
                     std::cout << "bf " << (*it_bf)->Id() << " of level " << level_to_compare << " lie completely in level " << base_level << std::endl;
@@ -215,7 +227,7 @@ namespace Kratos
         KRATOS_WATCH(mBasisFuncs[sample_id]->Level())
         mBasisFuncs[sample_id]->GetBoundingBox(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
         std::cout << "bf " << sample_id << " support domain: " << Xmin << " " << Xmax << " " << Ymin << " " << Ymax << " " << Zmin << " " << Zmax << std::endl;
-        KRATOS_WATCH(GetSupportDomain(2)->IsInside(Xmin, Xmax, Ymin, Ymax))
+        KRATOS_WATCH(GetSupportDomain(2)->IsInside(std::vector<double>{Xmin, Xmax, Ymin, Ymax}))
         KRATOS_WATCH(*GetSupportDomain(2))
 
 //        unsigned int bfs[] = {201, 202, 205, 206, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 308};
@@ -985,9 +997,15 @@ namespace Kratos
                     if((*it_bf)->Level() == next_level)
                         for(DeprecatedHBBasisFunction::cell_iterator it_cell = (*it_bf)->cell_begin(); it_cell != (*it_bf)->cell_end(); ++it_cell)
                             if(TDim == 2)
-                                p_domain->AddCell((*it_cell)->LeftValue(), (*it_cell)->RightValue(), (*it_cell)->DownValue(), (*it_cell)->UpValue());
+                            {
+                                std::vector<double> box = {(*it_cell)->LeftValue(), (*it_cell)->RightValue(), (*it_cell)->DownValue(), (*it_cell)->UpValue()};
+                                p_domain->AddCell(box);
+                            }
                             else if(TDim == 3)
-                                p_domain->AddCell((*it_cell)->LeftValue(), (*it_cell)->RightValue(), (*it_cell)->DownValue(), (*it_cell)->UpValue(), (*it_cell)->BelowValue(), (*it_cell)->AboveValue());
+                            {
+                                std::vector<double> box = {(*it_cell)->LeftValue(), (*it_cell)->RightValue(), (*it_cell)->DownValue(), (*it_cell)->UpValue(), (*it_cell)->BelowValue(), (*it_cell)->AboveValue()};
+                                p_domain->AddCell(box);
+                            }
 
 //            std::cout << "support domain level " << level << *p_domain << std::endl;
         }
@@ -1010,9 +1028,15 @@ namespace Kratos
                 // check if the bf support domain contained in the refined domain managed by the domain manager
                 bool is_inside;
                 if(TDim == 2)
-                    is_inside = p_domain->IsInside(Xmin, Xmax, Ymin, Ymax);
+                {
+                    std::vector<double> bounding_box = {Xmin, Xmax, Ymin, Ymax};
+                    is_inside = p_domain->IsInside(bounding_box);
+                }
                 else if(TDim == 3)
-                    is_inside = p_domain->IsInside(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax);
+                {
+                    std::vector<double> bounding_box = {Xmin, Xmax, Ymin, Ymax, Zmin, Zmax};
+                    is_inside = p_domain->IsInside(bounding_box);
+                }
 
                 if(is_inside)
                     refined_bfs.push_back((*it_bf)->Id());

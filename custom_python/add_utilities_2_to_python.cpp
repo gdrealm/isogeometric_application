@@ -30,7 +30,8 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "custom_utilities/trans/rotation.h"
 #include "custom_utilities/control_point.h"
 #include "custom_utilities/control_grid.h"
-#include "custom_utilities/nurbs/regular_control_grid.h"
+#include "custom_utilities/unstructured_control_grid.h"
+#include "custom_utilities/nurbs/structured_control_grid.h"
 #include "custom_utilities/control_grid_library.h"
 #include "custom_utilities/fespace.h"
 #include "custom_utilities/nurbs/bsplines_fespace.h"
@@ -135,7 +136,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateLinearContr
     end[1] = end_y;
     end[2] = end_z;
 
-    return rDummy.CreateRegularControlPointGrid<1>(start, ngrid, end);
+    return rDummy.CreateStructuredControlPointGrid<1>(start, ngrid, end);
 }
 
 ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateRectangularControlPointGrid1(
@@ -156,7 +157,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateRectangular
     end[0] = end_x;
     end[1] = end_y;
 
-    return rDummy.CreateRegularControlPointGrid<2>(start, ngrid, end);
+    return rDummy.CreateStructuredControlPointGrid<2>(start, ngrid, end);
 }
 
 ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateRectangularControlPointGrid2(
@@ -189,7 +190,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateRectangular
     spacing_vectors[0] = space1;
     spacing_vectors[1] = space2;
 
-    return rDummy.CreateRegularControlPointGrid<2>(start, ngrid, spacing_vectors);
+    return rDummy.CreateStructuredControlPointGrid<2>(start, ngrid, spacing_vectors);
 }
 
 ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateCubicControlPointGrid1(
@@ -213,7 +214,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateCubicContro
     end[1] = end_y;
     end[2] = end_z;
 
-    return rDummy.CreateRegularControlPointGrid<3>(start, ngrid, end);
+    return rDummy.CreateStructuredControlPointGrid<3>(start, ngrid, end);
 }
 
 ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateCubicControlPointGrid2(
@@ -246,7 +247,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateCubicContro
         spacing_vectors.push_back(space_vect);
     }
 
-    return rDummy.CreateRegularControlPointGrid<3>(start, ngrid, spacing_vectors);
+    return rDummy.CreateStructuredControlPointGrid<3>(start, ngrid, spacing_vectors);
 }
 
 // template<typename TDataType>
@@ -257,7 +258,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateCubicContro
 // {
 //     std::vector<std::size_t> ngrid(1);
 //     ngrid[0] = n_points_u;
-//     return rDummy.CreateRegularZeroControlGrid<1>(name, ngrid);
+//     return rDummy.CreateStructuredZeroControlGrid<1>(name, ngrid);
 // }
 
 // template<typename TDataType>
@@ -269,7 +270,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateCubicContro
 //     std::vector<std::size_t> ngrid(2);
 //     ngrid[0] = n_points_u;
 //     ngrid[1] = n_points_v;
-//     return rDummy.CreateRegularZeroControlGrid<2>(name, ngrid);
+//     return rDummy.CreateStructuredZeroControlGrid<2>(name, ngrid);
 // }
 
 // template<typename TDataType>
@@ -282,7 +283,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateCubicContro
 //     ngrid[0] = n_points_u;
 //     ngrid[1] = n_points_v;
 //     ngrid[2] = n_points_w;
-//     return rDummy.CreateRegularZeroControlGrid<3>(name, ngrid);
+//     return rDummy.CreateStructuredZeroControlGrid<3>(name, ngrid);
 // }
 
 template<class TVariableType>
@@ -293,7 +294,7 @@ typename ControlGrid<typename TVariableType::Type>::Pointer ControlGridLibrary_C
 {
     std::vector<std::size_t> ngrid(1);
     ngrid[0] = n_points_u;
-    return rDummy.CreateRegularZeroControlGrid<1, TVariableType>(rVariable, ngrid);
+    return rDummy.CreateStructuredZeroControlGrid<1, TVariableType>(rVariable, ngrid);
 }
 
 template<class TVariableType>
@@ -305,7 +306,7 @@ typename ControlGrid<typename TVariableType::Type>::Pointer ControlGridLibrary_C
     std::vector<std::size_t> ngrid(2);
     ngrid[0] = n_points_u;
     ngrid[1] = n_points_v;
-    return rDummy.CreateRegularZeroControlGrid<2, TVariableType>(rVariable, ngrid);
+    return rDummy.CreateStructuredZeroControlGrid<2, TVariableType>(rVariable, ngrid);
 }
 
 template<class TVariableType>
@@ -318,7 +319,7 @@ typename ControlGrid<typename TVariableType::Type>::Pointer ControlGridLibrary_C
     ngrid[0] = n_points_u;
     ngrid[1] = n_points_v;
     ngrid[2] = n_points_w;
-    return rDummy.CreateRegularZeroControlGrid<3, TVariableType>(rVariable, ngrid);
+    return rDummy.CreateStructuredZeroControlGrid<3, TVariableType>(rVariable, ngrid);
 }
 
 ////////////////////////////////////////
@@ -591,89 +592,111 @@ void IsogeometricApplication_AddControlGrids()
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    class_<BaseRegularControlGrid<ControlPoint<double> >, BaseRegularControlGrid<ControlPoint<double> >::Pointer, bases<ControlGrid<ControlPoint<double> > >, boost::noncopyable>
-    ("BaseRegularControlPointGrid", init<>())
+    class_<BaseStructuredControlGrid<ControlPoint<double> >, BaseStructuredControlGrid<ControlPoint<double> >::Pointer, bases<ControlGrid<ControlPoint<double> > >, boost::noncopyable>
+    ("BaseStructuredControlPointGrid", init<>())
     .def(self_ns::str(self))
     ;
 
-    class_<BaseRegularControlGrid<double>, BaseRegularControlGrid<double>::Pointer, bases<ControlGrid<double> >, boost::noncopyable>
-    ("BaseRegularDoubleControlGrid", init<>())
+    class_<BaseStructuredControlGrid<double>, BaseStructuredControlGrid<double>::Pointer, bases<ControlGrid<double> >, boost::noncopyable>
+    ("BaseStructuredDoubleControlGrid", init<>())
     .def(self_ns::str(self))
     ;
 
-    class_<BaseRegularControlGrid<array_1d<double, 3> >, BaseRegularControlGrid<array_1d<double, 3> >::Pointer, bases<ControlGrid<array_1d<double, 3> > >, boost::noncopyable>
-    ("BaseRegularArray1DControlGrid", init<>())
+    class_<BaseStructuredControlGrid<array_1d<double, 3> >, BaseStructuredControlGrid<array_1d<double, 3> >::Pointer, bases<ControlGrid<array_1d<double, 3> > >, boost::noncopyable>
+    ("BaseStructuredArray1DControlGrid", init<>())
     .def(self_ns::str(self))
     ;
 
-    class_<BaseRegularControlGrid<Vector>, BaseRegularControlGrid<Vector>::Pointer, bases<ControlGrid<Vector> >, boost::noncopyable>
-    ("BaseRegularVectorControlGrid", init<>())
-    .def(self_ns::str(self))
-    ;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    class_<RegularControlGrid<1, ControlPoint<double> >, RegularControlGrid<1, ControlPoint<double> >::Pointer, bases<BaseRegularControlGrid<ControlPoint<double> > >, boost::noncopyable>
-    ("RegularControlPointGrid1D", init<const std::size_t&>())
-    .def(self_ns::str(self))
-    ;
-
-    class_<RegularControlGrid<1, double>, RegularControlGrid<1, double>::Pointer, bases<BaseRegularControlGrid<double> >, boost::noncopyable>
-    ("RegularDoubleControlGrid1D", init<const std::size_t&>())
-    .def(self_ns::str(self))
-    ;
-
-    class_<RegularControlGrid<1, array_1d<double, 3> >, RegularControlGrid<1, array_1d<double, 3> >::Pointer, bases<BaseRegularControlGrid<array_1d<double, 3> > >, boost::noncopyable>
-    ("RegularArray1DControlGrid1D", init<const std::size_t&>())
-    .def(self_ns::str(self))
-    ;
-
-    class_<RegularControlGrid<1, Vector>, RegularControlGrid<1, Vector>::Pointer, bases<BaseRegularControlGrid<Vector> >, boost::noncopyable>
-    ("RegularVectorControlGrid1D", init<const std::size_t&>())
+    class_<BaseStructuredControlGrid<Vector>, BaseStructuredControlGrid<Vector>::Pointer, bases<ControlGrid<Vector> >, boost::noncopyable>
+    ("BaseStructuredVectorControlGrid", init<>())
     .def(self_ns::str(self))
     ;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    class_<RegularControlGrid<2, ControlPoint<double> >, RegularControlGrid<2, ControlPoint<double> >::Pointer, bases<BaseRegularControlGrid<ControlPoint<double> > >, boost::noncopyable>
-    ("RegularControlPointGrid2D", init<const std::size_t&, const std::size_t&>())
+    class_<StructuredControlGrid<1, ControlPoint<double> >, StructuredControlGrid<1, ControlPoint<double> >::Pointer, bases<BaseStructuredControlGrid<ControlPoint<double> > >, boost::noncopyable>
+    ("StructuredControlPointGrid1D", init<const std::size_t&>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<2, double>, RegularControlGrid<2, double>::Pointer, bases<BaseRegularControlGrid<double> >, boost::noncopyable>
-    ("RegularDoubleControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    class_<StructuredControlGrid<1, double>, StructuredControlGrid<1, double>::Pointer, bases<BaseStructuredControlGrid<double> >, boost::noncopyable>
+    ("StructuredDoubleControlGrid1D", init<const std::size_t&>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<2, array_1d<double, 3> >, RegularControlGrid<2, array_1d<double, 3> >::Pointer, bases<BaseRegularControlGrid<array_1d<double, 3> > >, boost::noncopyable>
-    ("RegularArray1DControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    class_<StructuredControlGrid<1, array_1d<double, 3> >, StructuredControlGrid<1, array_1d<double, 3> >::Pointer, bases<BaseStructuredControlGrid<array_1d<double, 3> > >, boost::noncopyable>
+    ("StructuredArray1DControlGrid1D", init<const std::size_t&>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<2, Vector>, RegularControlGrid<2, Vector>::Pointer, bases<BaseRegularControlGrid<Vector> >, boost::noncopyable>
-    ("RegularVectorControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    class_<StructuredControlGrid<1, Vector>, StructuredControlGrid<1, Vector>::Pointer, bases<BaseStructuredControlGrid<Vector> >, boost::noncopyable>
+    ("StructuredVectorControlGrid1D", init<const std::size_t&>())
     .def(self_ns::str(self))
     ;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    class_<RegularControlGrid<3, ControlPoint<double> >, RegularControlGrid<3, ControlPoint<double> >::Pointer, bases<BaseRegularControlGrid<ControlPoint<double> > >, boost::noncopyable>
-    ("RegularControlPointGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    class_<StructuredControlGrid<2, ControlPoint<double> >, StructuredControlGrid<2, ControlPoint<double> >::Pointer, bases<BaseStructuredControlGrid<ControlPoint<double> > >, boost::noncopyable>
+    ("StructuredControlPointGrid2D", init<const std::size_t&, const std::size_t&>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<3, double>, RegularControlGrid<3, double>::Pointer, bases<BaseRegularControlGrid<double> >, boost::noncopyable>
-    ("RegularDoubleControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    class_<StructuredControlGrid<2, double>, StructuredControlGrid<2, double>::Pointer, bases<BaseStructuredControlGrid<double> >, boost::noncopyable>
+    ("StructuredDoubleControlGrid2D", init<const std::size_t&, const std::size_t&>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<3, array_1d<double, 3> >, RegularControlGrid<3, array_1d<double, 3> >::Pointer, bases<BaseRegularControlGrid<array_1d<double, 3> > >, boost::noncopyable>
-    ("RegularArray1DControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    class_<StructuredControlGrid<2, array_1d<double, 3> >, StructuredControlGrid<2, array_1d<double, 3> >::Pointer, bases<BaseStructuredControlGrid<array_1d<double, 3> > >, boost::noncopyable>
+    ("StructuredArray1DControlGrid2D", init<const std::size_t&, const std::size_t&>())
     .def(self_ns::str(self))
     ;
 
-    class_<RegularControlGrid<3, Vector>, RegularControlGrid<3, Vector>::Pointer, bases<BaseRegularControlGrid<Vector> >, boost::noncopyable>
-    ("RegularVectorControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    class_<StructuredControlGrid<2, Vector>, StructuredControlGrid<2, Vector>::Pointer, bases<BaseStructuredControlGrid<Vector> >, boost::noncopyable>
+    ("StructuredVectorControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    class_<StructuredControlGrid<3, ControlPoint<double> >, StructuredControlGrid<3, ControlPoint<double> >::Pointer, bases<BaseStructuredControlGrid<ControlPoint<double> > >, boost::noncopyable>
+    ("StructuredControlPointGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<StructuredControlGrid<3, double>, StructuredControlGrid<3, double>::Pointer, bases<BaseStructuredControlGrid<double> >, boost::noncopyable>
+    ("StructuredDoubleControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<StructuredControlGrid<3, array_1d<double, 3> >, StructuredControlGrid<3, array_1d<double, 3> >::Pointer, bases<BaseStructuredControlGrid<array_1d<double, 3> > >, boost::noncopyable>
+    ("StructuredArray1DControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<StructuredControlGrid<3, Vector>, StructuredControlGrid<3, Vector>::Pointer, bases<BaseStructuredControlGrid<Vector> >, boost::noncopyable>
+    ("StructuredVectorControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    class_<UnstructuredControlGrid<ControlPoint<double> >, UnstructuredControlGrid<ControlPoint<double> >::Pointer, bases<ControlGrid<ControlPoint<double> > >, boost::noncopyable>
+    ("UnstructuredControlPointGrid", init<const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<UnstructuredControlGrid<double>, UnstructuredControlGrid<double>::Pointer, bases<ControlGrid<double> >, boost::noncopyable>
+    ("UnstructuredDoubleControlGrid", init<const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<UnstructuredControlGrid<array_1d<double, 3> >, UnstructuredControlGrid<array_1d<double, 3> >::Pointer, bases<ControlGrid<array_1d<double, 3> > >, boost::noncopyable>
+    ("UnstructuredArray1DControlGrid", init<const std::size_t&>())
+    .def(self_ns::str(self))
+    ;
+
+    class_<UnstructuredControlGrid<Vector>, UnstructuredControlGrid<Vector>::Pointer, bases<ControlGrid<Vector> >, boost::noncopyable>
+    ("UnstructuredVectorControlGrid", init<const std::size_t&>())
     .def(self_ns::str(self))
     ;
 }

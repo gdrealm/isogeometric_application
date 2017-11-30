@@ -90,8 +90,8 @@ public:
 
         // create the new control point grid
         typedef typename Patch<TDim>::ControlPointType ControlPointType;
-        typename RegularControlGrid<TDim-1, ControlPointType>::Pointer pControlPointGrid1
-            = boost::dynamic_pointer_cast<RegularControlGrid<TDim-1, ControlPointType> >(pPatch1->pControlPointGridFunction()->pControlGrid());
+        typename StructuredControlGrid<TDim-1, ControlPointType>::Pointer pControlPointGrid1
+            = boost::dynamic_pointer_cast<StructuredControlGrid<TDim-1, ControlPointType> >(pPatch1->pControlPointGridFunction()->pControlGrid());
         typename ControlGrid<ControlPointType>::Pointer pControlPointGrid2 = pPatch2->pControlPointGridFunction()->pControlGrid();
 
         //// make a size check, it is not necessary anyway
@@ -103,7 +103,7 @@ public:
         for (std::size_t dim = 0; dim < TDim-1; ++dim)
             new_sizes[dim] = pControlPointGrid1->Size(dim);
         new_sizes[TDim-1] = 2;
-        typename RegularControlGrid<TDim, ControlPointType>::Pointer pNewControlPointGrid = RegularControlGrid<TDim, ControlPointType>::Create(new_sizes);
+        typename StructuredControlGrid<TDim, ControlPointType>::Pointer pNewControlPointGrid = StructuredControlGrid<TDim, ControlPointType>::Create(new_sizes);
         for (std::size_t i = 0; i < pControlPointGrid1->size(); ++i)
         {
             pNewControlPointGrid->SetData(i, pControlPointGrid1->GetData(i));
@@ -318,7 +318,7 @@ public:
 
         // create control grid and assign to new patch
         typedef ControlPoint<double> ControlPointType;
-        typename RegularControlGrid<TDim, ControlPointType>::Pointer pControlPointGrid = RegularControlGrid<TDim, ControlPointType>::Create(numbers);
+        typename StructuredControlGrid<TDim, ControlPointType>::Pointer pControlPointGrid = StructuredControlGrid<TDim, ControlPointType>::Create(numbers);
         std::size_t total_number = 1;
         for (int dim = 0; dim < TDim; ++dim)
             total_number *= numbers[dim];

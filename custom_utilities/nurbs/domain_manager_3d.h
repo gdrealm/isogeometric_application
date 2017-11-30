@@ -41,29 +41,19 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(DomainManager3D);
 
     /// Default constructor
-    DomainManager3D(std::size_t Id) : BaseType(Id) {}
+    DomainManager3D(const std::size_t& Id) : BaseType(Id) {}
 
     /// Destructor
     virtual ~DomainManager3D() {}
 
     /// Add the Cuboid to the Cuboid set
-    virtual void AddCell(const double& Xmin,
-                         const double& Xmax,
-                         const double& Ymin,
-                         const double& Ymax,
-                         const double& Zmin,
-                         const double& Zmax);
+    virtual void AddCell(const std::vector<double>& box);
 
     /// Check if a Cuboid if it is contained in the Cuboid set.
-    virtual bool IsInside(const double& Xmin,
-                          const double& Xmax,
-                          const double& Ymin,
-                          const double& Ymax,
-                          const double& Zmin,
-                          const double& Zmax) const;
+    virtual bool IsInside(const std::vector<double>& bounding_box) const;
 
-    /// Export the domain to matlab for visualization
-    virtual void ExportDomain(std::string fn, std::string color, double distance) const;
+    /// Export the domain to Matlab for visualization
+    virtual void ExportDomain(const std::string& fn, const std::string& color, const double& distance) const;
 
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const;

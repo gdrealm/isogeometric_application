@@ -53,50 +53,22 @@ public:
     virtual void AddYcoord(const double& Y) {mYcoords.insert(Y);}
     virtual void AddZcoord(const double& Z) {mZcoords.insert(Z);}
 
-    /// Add the rectangle to the set
-    virtual void AddCell(const double& Xmin,
-                         const double& Xmax,
-                         const double& Ymin,
-                         const double& Ymax)
+    /// Add the cell to the set
+    virtual void AddCell(const std::vector<double>& box)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Call virtual method", __FUNCTION__)
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
     }
 
-    /// Add the cuboid to the set
-    virtual void AddCell(const double& Xmin,
-                         const double& Xmax,
-                         const double& Ymin,
-                         const double& Ymax,
-                         const double& Zmin,
-                         const double& Zmax)
+    /// Check if a cell if it is contained in the set.
+    virtual bool IsInside(const std::vector<double>& bounding_box) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Call virtual method", __FUNCTION__)
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
     }
 
-    /// Check if a rectangle if it is contained in the set.
-    virtual bool IsInside(const double& Xmin,
-                          const double& Xmax,
-                          const double& Ymin,
-                          const double& Ymax) const
+    /// Export the domain to Matlab for visualization
+    virtual void ExportDomain(const std::string& fn, const std::string& color, const double& distance) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Call virtual method", __FUNCTION__)
-    }
-
-    /// Check if a rectangle if it is contained in the set.
-    virtual bool IsInside(const double& Xmin,
-                          const double& Xmax,
-                          const double& Ymin,
-                          const double& Ymax,
-                          const double& Zmin,
-                          const double& Zmax) const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Call virtual method", __FUNCTION__)
-    }
-
-    /// Export the domain to matlab for visualization
-    virtual void ExportDomain(std::string fn, std::string color, double distance) const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Call virtual method", __FUNCTION__)
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
     }
 
     /// Information
@@ -110,6 +82,7 @@ protected:
     coords_container_t mZcoords;
 
 private:
+
     std::size_t mId;
 };
 

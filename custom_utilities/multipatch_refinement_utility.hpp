@@ -56,7 +56,7 @@ void MultiPatchRefinementUtility::InsertKnots(typename Patch<TDim>::Pointer& pPa
         pNewPatch->SetFESpace(pNewFESpace);
 
         // transform and transfer the control points
-        typename ControlGrid<ControlPoint<double> >::Pointer pNewControlPoints = typename ControlGrid<ControlPoint<double> >::Pointer (new RegularControlGrid<TDim, ControlPoint<double> >(new_size));
+        typename ControlGrid<ControlPoint<double> >::Pointer pNewControlPoints = typename ControlGrid<ControlPoint<double> >::Pointer (new StructuredControlGrid<TDim, ControlPoint<double> >(new_size));
         ControlGridUtility::Transform<ControlPoint<double>, Matrix>(T, *(pPatch->pControlPointGridFunction()->pControlGrid()), *pNewControlPoints);
         pNewControlPoints->SetName(pPatch->pControlPointGridFunction()->pControlGrid()->Name());
         pNewPatch->CreateControlPointGridFunction(pNewControlPoints);
@@ -65,7 +65,7 @@ void MultiPatchRefinementUtility::InsertKnots(typename Patch<TDim>::Pointer& pPa
         for (typename Patch<TDim>::DoubleGridFunctionContainerType::const_iterator it = pPatch->DoubleGridFunctions().begin();
                 it != pPatch->DoubleGridFunctions().end(); ++it)
         {
-            typename ControlGrid<double>::Pointer pNewDoubleControlGrid = typename ControlGrid<double>::Pointer (new RegularControlGrid<TDim, double>(new_size));
+            typename ControlGrid<double>::Pointer pNewDoubleControlGrid = typename ControlGrid<double>::Pointer (new StructuredControlGrid<TDim, double>(new_size));
             ControlGridUtility::Transform<double, Matrix>(T, *((*it)->pControlGrid()), *pNewDoubleControlGrid);
             pNewDoubleControlGrid->SetName((*it)->pControlGrid()->Name());
             pNewPatch->template CreateGridFunction<double>(pNewDoubleControlGrid);
@@ -74,7 +74,7 @@ void MultiPatchRefinementUtility::InsertKnots(typename Patch<TDim>::Pointer& pPa
         for (typename Patch<TDim>::Array1DGridFunctionContainerType::const_iterator it = pPatch->Array1DGridFunctions().begin();
                 it != pPatch->Array1DGridFunctions().end(); ++it)
         {
-            typename ControlGrid<array_1d<double, 3> >::Pointer pNewArray1DControlGrid = typename ControlGrid<array_1d<double, 3> >::Pointer (new RegularControlGrid<TDim, array_1d<double, 3> >(new_size));
+            typename ControlGrid<array_1d<double, 3> >::Pointer pNewArray1DControlGrid = typename ControlGrid<array_1d<double, 3> >::Pointer (new StructuredControlGrid<TDim, array_1d<double, 3> >(new_size));
             ControlGridUtility::Transform<array_1d<double, 3>, Matrix>(T, *((*it)->pControlGrid()), *pNewArray1DControlGrid);
             pNewArray1DControlGrid->SetName((*it)->pControlGrid()->Name());
             pNewPatch->template CreateGridFunction<array_1d<double, 3> >(pNewArray1DControlGrid);
@@ -83,7 +83,7 @@ void MultiPatchRefinementUtility::InsertKnots(typename Patch<TDim>::Pointer& pPa
         for (typename Patch<TDim>::VectorGridFunctionContainerType::const_iterator it = pPatch->VectorGridFunctions().begin();
                 it != pPatch->VectorGridFunctions().end(); ++it)
         {
-            typename ControlGrid<Vector>::Pointer pNewVectorControlGrid = typename ControlGrid<Vector>::Pointer (new RegularControlGrid<TDim, Vector>(new_size));
+            typename ControlGrid<Vector>::Pointer pNewVectorControlGrid = typename ControlGrid<Vector>::Pointer (new StructuredControlGrid<TDim, Vector>(new_size));
             ControlGridUtility::Transform<Vector, Matrix>(T, *((*it)->pControlGrid()), *pNewVectorControlGrid);
             pNewVectorControlGrid->SetName((*it)->pControlGrid()->Name());
             pNewPatch->template CreateGridFunction<Vector>(pNewVectorControlGrid);
@@ -275,11 +275,11 @@ void MultiPatchRefinementUtility::DegreeElevate(typename Patch<TDim>::Pointer& p
         for (std::size_t i = 0; i < TDim; ++i)
             new_size[i] = pFESpace->Number(i);
 
-        typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer pControlPoints
-            = boost::dynamic_pointer_cast<RegularControlGrid<TDim, ControlPoint<double> > >(pPatch->pControlPointGridFunction()->pControlGrid());
+        typename StructuredControlGrid<TDim, ControlPoint<double> >::Pointer pControlPoints
+            = boost::dynamic_pointer_cast<StructuredControlGrid<TDim, ControlPoint<double> > >(pPatch->pControlPointGridFunction()->pControlGrid());
 
-        typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer pNewControlPoints
-            = typename RegularControlGrid<TDim, ControlPoint<double> >::Pointer(new RegularControlGrid<TDim, ControlPoint<double> >(new_size)); // note here that the size is just temporary, it will be raised later on.
+        typename StructuredControlGrid<TDim, ControlPoint<double> >::Pointer pNewControlPoints
+            = typename StructuredControlGrid<TDim, ControlPoint<double> >::Pointer(new StructuredControlGrid<TDim, ControlPoint<double> >(new_size)); // note here that the size is just temporary, it will be raised later on.
 
         this->ComputeBsplinesDegreeElevation<TDim>(*pControlPoints, *pFESpace, order_increment, *pNewControlPoints, new_knots);
 
@@ -519,10 +519,10 @@ void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<3>(
 
 template<>
 void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<1>(
-    const RegularControlGrid<1, ControlPoint<double> >& ControlPoints,
+    const StructuredControlGrid<1, ControlPoint<double> >& ControlPoints,
     const BSplinesFESpace<1>& rFESpace,
     const std::vector<std::size_t>& order_increment,
-    RegularControlGrid<1, ControlPoint<double> >& NewControlPoints,
+    StructuredControlGrid<1, ControlPoint<double> >& NewControlPoints,
     std::vector<std::vector<double> >& new_knots) const
 {
     ControlPoint<double> null_control_point(0.0);
@@ -538,10 +538,10 @@ void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<1>(
 
 template<>
 void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<2>(
-    const RegularControlGrid<2, ControlPoint<double> >& ControlPoints,
+    const StructuredControlGrid<2, ControlPoint<double> >& ControlPoints,
     const BSplinesFESpace<2>& rFESpace,
     const std::vector<std::size_t>& order_increment,
-    RegularControlGrid<2, ControlPoint<double> >& NewControlPoints,
+    StructuredControlGrid<2, ControlPoint<double> >& NewControlPoints,
     std::vector<std::vector<double> >& new_knots) const
 {
     ControlPoint<double> null_control_point(0.0);
@@ -557,10 +557,10 @@ void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<2>(
 
 template<>
 void MultiPatchRefinementUtility::ComputeBsplinesDegreeElevation<3>(
-    const RegularControlGrid<3, ControlPoint<double> >& ControlPoints,
+    const StructuredControlGrid<3, ControlPoint<double> >& ControlPoints,
     const BSplinesFESpace<3>& rFESpace,
     const std::vector<std::size_t>& order_increment,
-    RegularControlGrid<3, ControlPoint<double> >& NewControlPoints,
+    StructuredControlGrid<3, ControlPoint<double> >& NewControlPoints,
     std::vector<std::vector<double> >& new_knots) const
 {
     ControlPoint<double> null_control_point(0.0);

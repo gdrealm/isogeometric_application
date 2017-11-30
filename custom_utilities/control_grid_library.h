@@ -18,7 +18,7 @@
 #include "includes/define.h"
 #include "custom_utilities/control_point.h"
 #include "custom_utilities/control_grid.h"
-#include "custom_utilities/nurbs/regular_control_grid.h"
+#include "custom_utilities/nurbs/structured_control_grid.h"
 
 
 namespace Kratos
@@ -28,7 +28,7 @@ template<int TDim, typename TDataType>
 struct ControlGridLibrary_Helper
 {
     /// Generate regular control grid with a specific data type
-    static typename ControlGrid<TDataType>::Pointer CreateRegularZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
+    static typename ControlGrid<TDataType>::Pointer CreateStructuredZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
     {
         KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not implemented")
     }
@@ -56,7 +56,7 @@ public:
 
     /// Generate the regular equidistant control point grid. All the point has unit weight.
     template<int TDim>
-    static ControlGrid<ControlPointType>::Pointer CreateRegularControlPointGrid(
+    static ControlGrid<ControlPointType>::Pointer CreateStructuredControlPointGrid(
             const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
     {
         KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not implemented")
@@ -66,7 +66,7 @@ public:
 
     /// Generate the regular control point grid based on starting point and the director vector in each direction. All the point has unit weight.
     template<int TDim>
-    static ControlGrid<ControlPointType>::Pointer CreateRegularControlPointGrid(
+    static ControlGrid<ControlPointType>::Pointer CreateStructuredControlPointGrid(
             const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<std::vector<double> >& spacing_vectors)
     {
         KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not implemented")
@@ -76,18 +76,18 @@ public:
 
     /// Generate regular control grid with a specific data type
     template<int TDim, typename TDataType>
-    static typename ControlGrid<TDataType>::Pointer CreateRegularZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
+    static typename ControlGrid<TDataType>::Pointer CreateStructuredZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
     {
-        return ControlGridLibrary_Helper<TDim, TDataType>::CreateRegularZeroControlGrid(Name, ngrid);
+        return ControlGridLibrary_Helper<TDim, TDataType>::CreateStructuredZeroControlGrid(Name, ngrid);
     }
 
 
 
     /// Generate regular control grid with variable
     template<int TDim, class TVariableType>
-    static typename ControlGrid<typename TVariableType::Type>::Pointer CreateRegularZeroControlGrid(const TVariableType& rVariable, const std::vector<std::size_t>& ngrid)
+    static typename ControlGrid<typename TVariableType::Type>::Pointer CreateStructuredZeroControlGrid(const TVariableType& rVariable, const std::vector<std::size_t>& ngrid)
     {
-        return CreateRegularZeroControlGrid<TDim, typename TVariableType::Type>(rVariable.Name(), ngrid);
+        return CreateStructuredZeroControlGrid<TDim, typename TVariableType::Type>(rVariable.Name(), ngrid);
     }
 
 
@@ -106,10 +106,10 @@ public:
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularControlPointGrid<1>(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateStructuredControlPointGrid<1>(
         const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
 {
-    RegularControlGrid<1, ControlPointType>::Pointer pGrid = RegularControlGrid<1, ControlPointType>::Create(ngrid);
+    StructuredControlGrid<1, ControlPointType>::Pointer pGrid = StructuredControlGrid<1, ControlPointType>::Create(ngrid);
 
     pGrid->SetName("CONTROL_POINT");
 
@@ -128,10 +128,10 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularCon
 }
 
 template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularControlPointGrid<2>(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateStructuredControlPointGrid<2>(
         const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
 {
-    RegularControlGrid<2, ControlPointType>::Pointer pGrid = RegularControlGrid<2, ControlPointType>::Create(ngrid);
+    StructuredControlGrid<2, ControlPointType>::Pointer pGrid = StructuredControlGrid<2, ControlPointType>::Create(ngrid);
 
     pGrid->SetName("CONTROL_POINT");
 
@@ -151,10 +151,10 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularCon
 }
 
 template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularControlPointGrid<3>(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateStructuredControlPointGrid<3>(
         const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<double>& end)
 {
-    RegularControlGrid<3, ControlPointType>::Pointer pGrid = RegularControlGrid<3, ControlPointType>::Create(ngrid);
+    StructuredControlGrid<3, ControlPointType>::Pointer pGrid = StructuredControlGrid<3, ControlPointType>::Create(ngrid);
 
     pGrid->SetName("CONTROL_POINT");
 
@@ -181,7 +181,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularCon
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularControlPointGrid<1>(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateStructuredControlPointGrid<1>(
         const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<std::vector<double> >& spacing_vectors)
 {
     // size check
@@ -190,8 +190,8 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularCon
     assert(spacing_vectors.size() > 0);
     assert(spacing_vectors[0].size() == 3);
 
-    typename RegularControlGrid<1, ControlPointType>::Pointer pGrid
-        = typename RegularControlGrid<1, ControlPointType>::Pointer(new RegularControlGrid<1, ControlPointType>(ngrid[0]));
+    typename StructuredControlGrid<1, ControlPointType>::Pointer pGrid
+        = typename StructuredControlGrid<1, ControlPointType>::Pointer(new StructuredControlGrid<1, ControlPointType>(ngrid[0]));
 
     pGrid->SetName("CONTROL_POINT");
 
@@ -206,7 +206,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularCon
 }
 
 template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularControlPointGrid<2>(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateStructuredControlPointGrid<2>(
         const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<std::vector<double> >& spacing_vectors)
 {
     // size check
@@ -216,8 +216,8 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularCon
     assert(spacing_vectors[0].size() == 3);
     assert(spacing_vectors[1].size() == 3);
 
-    typename RegularControlGrid<2, ControlPointType>::Pointer pGrid
-        = typename RegularControlGrid<2, ControlPointType>::Pointer(new RegularControlGrid<2, ControlPointType>(ngrid[0], ngrid[1]));
+    typename StructuredControlGrid<2, ControlPointType>::Pointer pGrid
+        = typename StructuredControlGrid<2, ControlPointType>::Pointer(new StructuredControlGrid<2, ControlPointType>(ngrid[0], ngrid[1]));
 
     pGrid->SetName("CONTROL_POINT");
 
@@ -238,7 +238,7 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularCon
 }
 
 template<>
-ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularControlPointGrid<3>(
+ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateStructuredControlPointGrid<3>(
         const std::vector<double>& start, const std::vector<std::size_t>& ngrid, const std::vector<std::vector<double> >& spacing_vectors)
 {
     // size check
@@ -249,8 +249,8 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularCon
     assert(spacing_vectors[1].size() == 3);
     assert(spacing_vectors[2].size() == 3);
 
-    typename RegularControlGrid<3, ControlPointType>::Pointer pGrid
-        = typename RegularControlGrid<3, ControlPointType>::Pointer(new RegularControlGrid<3, ControlPointType>(ngrid[0], ngrid[1], ngrid[2]));
+    typename StructuredControlGrid<3, ControlPointType>::Pointer pGrid
+        = typename StructuredControlGrid<3, ControlPointType>::Pointer(new StructuredControlGrid<3, ControlPointType>(ngrid[0], ngrid[1], ngrid[2]));
 
     pGrid->SetName("CONTROL_POINT");
 
@@ -278,10 +278,10 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary::CreateRegularCon
 template<typename TDataType>
 struct ControlGridLibrary_Helper<1, TDataType>
 {
-    static typename ControlGrid<TDataType>::Pointer CreateRegularZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
+    static typename ControlGrid<TDataType>::Pointer CreateStructuredZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
     {
-        typename RegularControlGrid<1, TDataType>::Pointer pGrid
-            = typename RegularControlGrid<1, TDataType>::Pointer(new RegularControlGrid<1, TDataType>(ngrid[0]));
+        typename StructuredControlGrid<1, TDataType>::Pointer pGrid
+            = typename StructuredControlGrid<1, TDataType>::Pointer(new StructuredControlGrid<1, TDataType>(ngrid[0]));
 
         pGrid->SetName(Name);
 
@@ -298,10 +298,10 @@ struct ControlGridLibrary_Helper<1, TDataType>
 template<typename TDataType>
 struct ControlGridLibrary_Helper<2, TDataType>
 {
-    static typename ControlGrid<TDataType>::Pointer CreateRegularZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
+    static typename ControlGrid<TDataType>::Pointer CreateStructuredZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
     {
-        typename RegularControlGrid<2, TDataType>::Pointer pGrid
-            = typename RegularControlGrid<2, TDataType>::Pointer(new RegularControlGrid<2, TDataType>(ngrid[0], ngrid[1]));
+        typename StructuredControlGrid<2, TDataType>::Pointer pGrid
+            = typename StructuredControlGrid<2, TDataType>::Pointer(new StructuredControlGrid<2, TDataType>(ngrid[0], ngrid[1]));
 
         pGrid->SetName(Name);
 
@@ -321,10 +321,10 @@ struct ControlGridLibrary_Helper<2, TDataType>
 template<typename TDataType>
 struct ControlGridLibrary_Helper<3, TDataType>
 {
-    static typename ControlGrid<TDataType>::Pointer CreateRegularZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
+    static typename ControlGrid<TDataType>::Pointer CreateStructuredZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
     {
-        typename RegularControlGrid<3, TDataType>::Pointer pGrid
-            = typename RegularControlGrid<3, TDataType>::Pointer(new RegularControlGrid<3, TDataType>(ngrid[0], ngrid[1], ngrid[2]));
+        typename StructuredControlGrid<3, TDataType>::Pointer pGrid
+            = typename StructuredControlGrid<3, TDataType>::Pointer(new StructuredControlGrid<3, TDataType>(ngrid[0], ngrid[1], ngrid[2]));
 
         pGrid->SetName(Name);
 

@@ -21,7 +21,7 @@ namespace Kratos
 {
 
 /**
-This class is a container to keep the control values.
+This class is an abstract container to keep the control values.
 TODO implement iterator to iterate through control values.
  */
 template<typename TDataType>
@@ -47,7 +47,7 @@ public:
     static ControlGrid::Pointer Create() {return ControlGrid::Pointer(new ControlGrid());}
 
     /// Clone this grid function
-    virtual typename ControlGrid<TDataType>::Pointer Clone() {return NULL;}
+    virtual typename ControlGrid<TDataType>::Pointer Clone() const {return NULL;}
 
     /// Set the name
     void SetName(const std::string& Name) {mName = Name;}
@@ -80,17 +80,28 @@ public:
         KRATOS_THROW_ERROR(std::logic_error, "Error calling base class function", __FUNCTION__)
     }
 
-    // overload operator []
+    /// overload operator []
     virtual TDataType& operator[] (const std::size_t& i)
     {
         KRATOS_THROW_ERROR(std::logic_error, "Error calling base class function", __FUNCTION__)
     }
 
-    // overload operator []
+    /// overload operator []
     virtual const TDataType& operator[] (const std::size_t& i) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Error calling base class function", __FUNCTION__)
     }
+
+    // /// extract the sub grid, given local indices of the control values
+    // void ControlGrid::Pointer ExtractSubGrid(const std::vector<std::size_t>& local_ids) const
+    // {
+    //     ControlGrid::Pointer pSubControlGrid = Create();
+    //     for (std::size_t i = 0; i < local_ids.size(); ++i)
+    //     {
+
+    //     }
+    //     return pSubControlGrid;
+    // }
 
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const

@@ -101,82 +101,58 @@ public:
         mpModelPart.swap(pNewModelPart);
     }
 
-    /// create the elements out from the patch and add to the model_part
-    void AddElement(typename Patch<TDim>::Pointer pPatch, const std::string& element_name,
+    ModelPart::ElementsContainerType AddElement(typename Patch<TDim>::Pointer pPatch, const std::string& element_name,
             const std::size_t& starting_id, const std::size_t& prop_id)
     {
-        if (IsReady()) return;
-
-        // get the grid function for control points
-        const GridFunction<TDim, ControlPointType>& rControlPointGridFunction = pPatch->ControlPointGridFunction();
-
-        // construct the cell manager out from the FESpace
-        typedef typename FESpace<TDim>::cell_container_t cell_container_t;
-        typename cell_container_t::Pointer pCellManager = pPatch->pFESpace()->ConstructCellManager();
+        if (IsReady()) return ModelPart::ElementsContainerType(); // call BeginModelPart first before adding elements
 
         // get the Properties
         Properties::Pointer p_temp_properties = mpModelPart->pGetProperties(prop_id);
 
-        // get the sample element
-        if(!KratosComponents<Element>::Has(element_name))
+        // get the grid function for control points
+        const GridFunction<TDim, ControlPointType>& rControlPointGridFunction = pPatch->ControlPointGridFunction();
+
+        // create new elements and add to the model_part
+        ModelPart::ElementsContainerType pNewElements = this->CreateEntitiesFromFESpace<Element, FESpace<TDim>, ControlGrid<ControlPointType>, ModelPart::NodesContainerType>(pPatch->pFESpace(), rControlPointGridFunction.pControlGrid(), mpModelPart->Nodes(), element_name, starting_id, p_temp_properties);
+
+        for (ModelPart::ElementsContainerType::ptr_iterator it = pNewElements.ptr_begin(); it != pNewElements.ptr_end(); ++it)
         {
-            std::stringstream buffer;
-            buffer << "Element " << element_name << " is not registered in Kratos.";
-            KRATOS_THROW_ERROR(std::invalid_argument, buffer.str(), "");
-            return;
-        }
-
-        Element const& r_clone_element = KratosComponents<Element>::Get(element_name);
-
-        // loop through each cell in the space
-        Element::NodesArrayType temp_element_nodes;
-        typename IsogeometricGeometryType::Pointer p_temp_geometry;
-        std::size_t cnt = starting_id;
-        Vector dummy;
-        int max_integration_method = 1;
-        if (p_temp_properties->Has(NUM_IGA_INTEGRATION_METHOD))
-            max_integration_method = (*p_temp_properties)[NUM_IGA_INTEGRATION_METHOD];
-        for (typename cell_container_t::iterator it_cell = pCellManager->begin(); it_cell != pCellManager->end(); ++it_cell)
-        {
-            // KRATOS_WATCH(*(*it_cell))
-            // get new nodes
-            temp_element_nodes.clear();
-
-            const std::vector<std::size_t>& anchors = (*it_cell)->GetSupportedAnchors();
-            Vector weights(anchors.size());
-            for (std::size_t i = 0; i < anchors.size(); ++i)
-            {
-                temp_element_nodes.push_back(( *(FindKey(mpModelPart->Nodes(), anchors[i]+1, "Node").base())));
-                weights[i] = rControlPointGridFunction.pControlGrid()->GetData(pPatch->pFESpace()->LocalId(anchors[i])).W();
-            }
-
-            // create the geometry
-            p_temp_geometry = boost::dynamic_pointer_cast<IsogeometricGeometryType>(r_clone_element.GetGeometry().Create(temp_element_nodes));
-
-            p_temp_geometry->AssignGeometryData(dummy,
-                                                dummy,
-                                                dummy,
-                                                weights,
-                                                (*it_cell)->GetExtractionOperator(),
-                                                static_cast<int>(pPatch->Order(0)),
-                                                static_cast<int>(pPatch->Order(1)),
-                                                static_cast<int>(pPatch->Order(2)),
-                                                max_integration_method);
-
-            // create the element and add to the model_part
-            Element::Pointer pNewElement = r_clone_element.Create(cnt++, p_temp_geometry, p_temp_properties);
-            mpModelPart->Elements().push_back(pNewElement);
+            mpModelPart->Elements().push_back(*it);
         }
 
         // sort the element contain and make it consistent
         mpModelPart->Elements().Unique();
+
+        return pNewElements;
     }
 
     /// create the conditions out from the boundary of the patch and add to the model_part
-    void AddCondition(const std::size_t& patch_id, const BoundarySide& side,
+    ModelPart::ConditionsContainerType AddCondition(typename Patch<TDim>::Pointer pPatch, const BoundarySide& side,
             const std::string& condition_name, const std::size_t& starting_id, const std::size_t& prop_id)
     {
-        if (IsReady()) return;
+        if (IsReady()) return ModelPart::ConditionsContainerType(); // call BeginModelPart first before adding conditions
+
+        // construct the boundary patch
+        typename Patch<TDim-1>::Pointer pBoundaryPatch = pPatch->ConstructBoundaryPatch(side);
+
+        // get the Properties
+        Properties::Pointer p_temp_properties = mpModelPart->pGetProperties(prop_id);
+
+        // get the grid function for control points
+        const GridFunction<TDim-1, ControlPointType>& rControlPointGridFunction = pBoundaryPatch->ControlPointGridFunction();
+
+        // create new conditions and add to the model_part
+        ModelPart::ConditionsContainerType pNewConditions = this->CreateEntitiesFromFESpace<Condition, FESpace<TDim-1>, ControlGrid<ControlPointType>, ModelPart::NodesContainerType>(pBoundaryPatch->pFESpace(), rControlPointGridFunction.pControlGrid(), mpModelPart->Nodes(), condition_name, starting_id, p_temp_properties);
+
+        for (ModelPart::ConditionsContainerType::ptr_iterator it = pNewConditions.ptr_begin(); it != pNewConditions.ptr_end(); ++it)
+        {
+            mpModelPart->Conditions().push_back(*it);
+        }
+
+        // sort the element contain and make it consistent
+        mpModelPart->Conditions().Unique();
+
+        return pNewConditions;
     }
 
     /// Finalize the model_part creation process
@@ -235,6 +211,80 @@ private:
         }
 
         return i_result;
+    }
+
+    /// Create entities (elements/conditions) from FESpace
+    /// @param pFESpace the finite element space to provide the cell manager
+    /// @param pControlGrid control grid to provide control points
+    /// @param rNodes model_part Nodes to look up for when creating elements
+    /// @param element_name name of the sample element
+    /// @param starting_id the first id of the newly created entities, from there the id is incremental
+    /// @param p_temp_properties the Properties to create new entities
+    template<class TEntityType, class TFESpace, class TControlGridType, class TNodeContainerType>
+    PointerVectorSet<TEntityType, IndexedObject> CreateEntitiesFromFESpace(typename TFESpace::ConstPointer pFESpace,
+        typename TControlGridType::ConstPointer pControlGrid,
+        TNodeContainerType& rNodes, const std::string& element_name,
+        const std::size_t& starting_id, Properties::Pointer p_temp_properties)
+    {
+        // construct the cell manager out from the FESpace
+        typedef typename TFESpace::cell_container_t cell_container_t;
+        typename cell_container_t::Pointer pCellManager = pFESpace->ConstructCellManager();
+
+        // container for newly created elements
+        PointerVectorSet<TEntityType, IndexedObject> pNewElements;
+
+        // get the sample element
+        if(!KratosComponents<TEntityType>::Has(element_name))
+        {
+            std::stringstream buffer;
+            buffer << "Entity (Element/Condition) " << element_name << " is not registered in Kratos.";
+            KRATOS_THROW_ERROR(std::invalid_argument, buffer.str(), "");
+            return pNewElements;
+        }
+
+        TEntityType const& r_clone_element = KratosComponents<TEntityType>::Get(element_name);
+
+        // loop through each cell in the space
+        typename TEntityType::NodesArrayType temp_element_nodes;
+        typename IsogeometricGeometryType::Pointer p_temp_geometry;
+        std::size_t cnt = starting_id;
+        Vector dummy;
+        int max_integration_method = 1;
+        if (p_temp_properties->Has(NUM_IGA_INTEGRATION_METHOD))
+            max_integration_method = (*p_temp_properties)[NUM_IGA_INTEGRATION_METHOD];
+        for (typename cell_container_t::iterator it_cell = pCellManager->begin(); it_cell != pCellManager->end(); ++it_cell)
+        {
+            // KRATOS_WATCH(*(*it_cell))
+            // get new nodes
+            temp_element_nodes.clear();
+
+            const std::vector<std::size_t>& anchors = (*it_cell)->GetSupportedAnchors();
+            Vector weights(anchors.size());
+            for (std::size_t i = 0; i < anchors.size(); ++i)
+            {
+                temp_element_nodes.push_back(( *(FindKey(rNodes, anchors[i]+1, "Node").base())));
+                weights[i] = pControlGrid->GetData(pFESpace->LocalId(anchors[i])).W();
+            }
+
+            // create the geometry
+            p_temp_geometry = boost::dynamic_pointer_cast<IsogeometricGeometryType>(r_clone_element.GetGeometry().Create(temp_element_nodes));
+
+            p_temp_geometry->AssignGeometryData(dummy,
+                                                dummy,
+                                                dummy,
+                                                weights,
+                                                (*it_cell)->GetExtractionOperator(),
+                                                static_cast<int>(pFESpace->Order(0)),
+                                                static_cast<int>(pFESpace->Order(1)),
+                                                static_cast<int>(pFESpace->Order(2)),
+                                                max_integration_method);
+
+            // create the element and add to the list
+            typename TEntityType::Pointer pNewElement = r_clone_element.Create(cnt++, p_temp_geometry, p_temp_properties);
+            pNewElements.push_back(pNewElement);
+        }
+
+        return pNewElements;
     }
 
 };

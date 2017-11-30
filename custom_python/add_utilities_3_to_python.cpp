@@ -15,7 +15,10 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include <string>
 
 // External includes
+#include <boost/foreach.hpp>
 #include <boost/python.hpp>
+#include <boost/python/stl_iterator.hpp>
+#include <boost/python/operators.hpp>
 
 // Project includes
 #include "includes/define.h"
@@ -53,6 +56,34 @@ void HBSplinesRefinementUtility_Refine(HBSplinesRefinementUtility& rDummy,
         typename Patch<TDim>::Pointer pPatch, const std::size_t& Id, const int& EchoLevel)
 {
     rDummy.Refine<TDim>(pPatch, Id, EchoLevel);
+}
+
+template<int TDim>
+void HBSplinesRefinementUtility_RefineWindow(HBSplinesRefinementUtility& rDummy,
+        typename Patch<TDim>::Pointer pPatch, boost::python::list& window, const int& EchoLevel)
+{
+
+    std::vector<std::vector<double> > window_vector;
+    std::size_t cnt1 = 0, cnt2 = 0;
+    typedef boost::python::stl_input_iterator<boost::python::list> iterator_value_type;
+    BOOST_FOREACH(const iterator_value_type::value_type& vect, std::make_pair(iterator_value_type(window), iterator_value_type() ) )
+    {
+        typedef boost::python::stl_input_iterator<double> iterator_value_type2;
+        std::vector<double> win_vect;
+        BOOST_FOREACH(const iterator_value_type2::value_type& v, std::make_pair(iterator_value_type2(vect), iterator_value_type2() ) )
+        {
+            win_vect.push_back(v);
+        }
+        window_vector.push_back(win_vect);
+    }
+    rDummy.RefineWindow<TDim>(pPatch, window_vector, EchoLevel);
+}
+
+template<int TDim>
+void HBSplinesRefinementUtility_LinearDependencyRefine(HBSplinesRefinementUtility& rDummy,
+        typename Patch<TDim>::Pointer pPatch, const std::size_t& refine_cycle, const int& EchoLevel)
+{
+    rDummy.LinearDependencyRefine<TDim>(pPatch, refine_cycle, EchoLevel);
 }
 
 ////////////////////////////////////////
@@ -161,6 +192,10 @@ void IsogeometricApplication_AddCustomUtilities3ToPython()
     ("HBSplinesRefinementUtility", init<>())
     .def("Refine", &HBSplinesRefinementUtility_Refine<2>)
     .def("Refine", &HBSplinesRefinementUtility_Refine<3>)
+    .def("RefineWindow", &HBSplinesRefinementUtility_RefineWindow<2>)
+    .def("RefineWindow", &HBSplinesRefinementUtility_RefineWindow<3>)
+    .def("LinearDependencyRefine", &HBSplinesRefinementUtility_LinearDependencyRefine<2>)
+    .def("LinearDependencyRefine", &HBSplinesRefinementUtility_LinearDependencyRefine<3>)
     .def(self_ns::str(self))
     ;
 }

@@ -34,7 +34,7 @@ namespace Kratos
 {
 
 /**
-  TODO
+ * Cell Manager in 2D
  */
 template<class TCellType>
 class CellManager2D : public CellManager<TCellType>
@@ -139,7 +139,7 @@ public:
         }
     }
 
-    /// Search the cells coverred in another cell. In return p_cell covers all the cells of std::vector<cell_t>
+    /// Search the cells covered in another cell. In return p_cell covers all the cells of std::vector<cell_t>
     virtual std::vector<cell_t> GetCells(cell_t p_cell)
     {
         std::vector<cell_t> p_cells;

@@ -18,6 +18,7 @@
 #include "includes/define.h"
 #include "custom_utilities/control_point.h"
 #include "custom_utilities/control_grid.h"
+#include "custom_utilities/unstructured_control_grid.h"
 #include "custom_utilities/point_based_control_grid.h"
 
 namespace Kratos
@@ -28,7 +29,7 @@ template<int TDim, typename TDataType>
 struct ControlGridUtility_Helper
 {
     /// Generate regular control grid with a specific data type
-    static typename ControlGrid<TDataType>::Pointer CreateRegularZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
+    static typename ControlGrid<TDataType>::Pointer CreateStructuredZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
     {
         KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not implemented")
     }
@@ -116,6 +117,21 @@ public:
     {
         return PointBasedControlGrid<Variable<TDataType>, TFESpaceType>::Create(rVariable, pFESpace);
     }
+
+
+
+    /// Helper function to extract some control values to a new control grid based on indices
+    /// The returned grid is assumed to be unstructured by default
+    template<typename TDataType>
+    static typename ControlGrid<TDataType>::Pointer ExtractSubGrid(typename ControlGrid<TDataType>::ConstPointer pControlGrid,
+            const std::vector<std::size_t>& indices)
+    {
+        typename UnstructuredControlGrid<TDataType>::Pointer pNewControlGrid = UnstructuredControlGrid<TDataType>::Create(indices.size());
+        for (std::size_t i = 0; i < indices.size(); ++i)
+            pNewControlGrid->SetData(i, pControlGrid->GetData(indices[i]));
+        return pNewControlGrid;
+    }
+
 
 
     /// Information

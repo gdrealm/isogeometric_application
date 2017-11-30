@@ -52,7 +52,7 @@ public:
     }
 
     /// Clone this grid function
-    virtual typename BaseType::Pointer Clone()
+    virtual typename BaseType::Pointer Clone() const
     {
         return PointBasedControlGrid::Pointer(new PointBasedControlGrid(mrVariable, mpFESpace));
     }

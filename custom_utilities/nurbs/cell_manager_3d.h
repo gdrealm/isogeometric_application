@@ -34,7 +34,7 @@ namespace Kratos
 {
 
 /**
-  TODO
+ * Cell Manager in 3D
  */
 template<class TCellType>
 class CellManager3D : public CellManager<TCellType>
@@ -162,7 +162,7 @@ public:
         int nhits = rtree_cells.Search(cmin, cmax, CellManager_RtreeSearchCallback, (void*)(&OverlappingCells));
 //        printf("Search resulted in %d hits\n", nhits);
 
-        // check within overlapping cells the one coverred in p_cell
+        // check within overlapping cells the one covered in p_cell
         for(std::size_t i = 0; i < OverlappingCells.size(); ++i)
         {
             cell_t pthis_cell = this->get(OverlappingCells[i]);

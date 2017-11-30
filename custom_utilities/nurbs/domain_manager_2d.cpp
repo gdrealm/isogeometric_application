@@ -30,15 +30,12 @@ namespace Kratos
         }
     }
 
-    void DomainManager2D::AddCell(const double& Xmin,
-                                  const double& Xmax,
-                                  const double& Ymin,
-                                  const double& Ymax)
+    void DomainManager2D::AddCell(const std::vector<double>& box)
     {
-        coords_container_t::iterator it_x1 = BaseType::mXcoords.find(Xmin);
-        coords_container_t::iterator it_x2 = BaseType::mXcoords.find(Xmax);
-        coords_container_t::iterator it_y1 = BaseType::mYcoords.find(Ymin);
-        coords_container_t::iterator it_y2 = BaseType::mYcoords.find(Ymax);
+        coords_container_t::iterator it_x1 = BaseType::mXcoords.find(box[0]); //Xmin
+        coords_container_t::iterator it_x2 = BaseType::mXcoords.find(box[1]); //Xmax
+        coords_container_t::iterator it_y1 = BaseType::mYcoords.find(box[2]); //Ymin
+        coords_container_t::iterator it_y2 = BaseType::mYcoords.find(box[3]); //Ymax
 
         if(it_x1 == BaseType::mXcoords.end() || it_x2 == BaseType::mXcoords.end())
             KRATOS_THROW_ERROR(std::runtime_error, "Cell does not align with x-coordinates", "")
@@ -52,21 +49,20 @@ namespace Kratos
         std::size_t j2 = std::distance(BaseType::mYcoords.begin(), it_y2);
 
         for(std::size_t i = i1; i < i2; ++i)
+        {
             for(std::size_t j = j1; j < j2; ++j)
                 mActiveCells[i].insert(j);
+        }
     }
 
-    bool DomainManager2D::IsInside(const double& Xmin,
-                                   const double& Xmax,
-                                   const double& Ymin,
-                                   const double& Ymax) const
+    bool DomainManager2D::IsInside(const std::vector<double>& bounding_box) const
     {
         double tol = 1.0e-10;
 
         // find the lower bound for the Xmin and upper bound for Xmax
         std::size_t i1 = 0, i2 = 0;
         for(coords_container_t::iterator it = BaseType::mXcoords.begin(); it != BaseType::mXcoords.end(); ++it)
-            if(Xmin > *it - tol)
+            if(bounding_box[0] > *it - tol)
                 ++i1;
         if(i1 == 0 || i1 == BaseType::mXcoords.size())
             return false;
@@ -75,7 +71,7 @@ namespace Kratos
 
         //
         for(coords_container_t::iterator it = BaseType::mXcoords.begin(); it != BaseType::mXcoords.end(); ++it)
-            if(Xmax > *it + tol)
+            if(bounding_box[1] > *it + tol)
                 ++i2;
         if(i2 == 0 || i2 == BaseType::mXcoords.size())
             return false;
@@ -83,7 +79,7 @@ namespace Kratos
         // find the lower bound for the Ymin and upper bound for Ymax
         std::size_t j1 = 0, j2 = 0;
         for(coords_container_t::iterator it = BaseType::mYcoords.begin(); it != BaseType::mYcoords.end(); ++it)
-            if(Ymin > *it - tol)
+            if(bounding_box[2] > *it - tol)
                 ++j1;
         if(j1 == 0 || j1 == BaseType::mYcoords.size())
             return false;
@@ -92,7 +88,7 @@ namespace Kratos
 
         //
         for(coords_container_t::iterator it = BaseType::mYcoords.begin(); it != BaseType::mYcoords.end(); ++it)
-            if(Ymax > *it + tol)
+            if(bounding_box[3] > *it + tol)
                 ++j2;
         if(j2 == 0 || j2 == BaseType::mYcoords.size())
             return false;
@@ -120,7 +116,7 @@ namespace Kratos
         return true;
     }
 
-    void DomainManager2D::ExportDomain(std::string fn, std::string color, double distance) const
+    void DomainManager2D::ExportDomain(const std::string& fn, const std::string& color, const double& distance) const
     {
         std::ofstream outfile(fn.c_str(), std::ios_base::app);
 
@@ -142,7 +138,7 @@ namespace Kratos
 
 //        this->PrintData(std::cout);
 
-        unsigned int cnt = 0;
+        std::size_t cnt = 0;
         std::size_t start, number_of_patches = 0;
         for(map_t::const_iterator it = mActiveCells.begin(); it != mActiveCells.end(); ++it)
             number_of_patches += it->second.size();
