@@ -19,6 +19,40 @@ namespace Kratos
 {
 
 template<>
+std::vector<double> BSplinesFESpace<1>::GetValue(const std::vector<double>& xi) const
+{
+    // locate the knot span
+    int Span;
+    Span = BSplineUtils::FindSpan(this->Number(0), this->Order(0), xi[0], this->KnotVector(0));
+
+    // compute the non-zero shape function
+    std::vector<double> ShapeFunctionValues(this->Order(0) + 1);
+
+    BSplineUtils::BasisFuns(ShapeFunctionValues, Span, xi[0], this->Order(0), this->KnotVector(0));
+
+    // rearrange the shape functions
+    std::vector<double> results(this->TotalNumber());
+    std::fill(results.begin(), results.end(), 0.0);
+
+    int Start;
+    Start = Span - this->Order(0);
+
+    double N;
+
+    unsigned int i, Index;
+    for(i = Start; i <= Span; ++i)
+    {
+        Index = BSplinesIndexingUtility::Index1D(i+1, this->Number(0));
+
+        N = ShapeFunctionValues[i - Start];
+
+        results[Index] = N;
+    }
+
+    return results;
+}
+
+template<>
 std::vector<double> BSplinesFESpace<2>::GetValue(const std::vector<double>& xi) const
 {
     // locate the knot span
@@ -41,8 +75,7 @@ std::vector<double> BSplinesFESpace<2>::GetValue(const std::vector<double>& xi) 
     Start[0] = Span[0] - this->Order(0);
     Start[1] = Span[1] - this->Order(1);
 
-    double N1;
-    double N2;
+    double N1, N2;
 
     unsigned int i, j, Index;
     for(i = Start[0]; i <= Span[0]; ++i)
@@ -88,9 +121,7 @@ std::vector<double> BSplinesFESpace<3>::GetValue(const std::vector<double>& xi) 
     Start[1] = Span[1] - this->Order(1);
     Start[2] = Span[2] - this->Order(2);
 
-    double N1;
-    double N2;
-    double N3;
+    double N1, N2, N3;
 
     unsigned int i, j, k, Index;
     for(i = Start[0]; i <= Span[0]; ++i)

@@ -25,12 +25,14 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "includes/model_part.h"
 #include "custom_python/add_utilities_to_python.h"
 #include "custom_utilities/patch.h"
+#include "custom_utilities/control_grid_utility.h"
 #include "custom_utilities/hbsplines/deprecated_hb_mesh.h"
 #include "custom_utilities/hbsplines/hbsplines_basis_function.h"
 #include "custom_utilities/hbsplines/hbsplines_fespace.h"
 #include "custom_utilities/hbsplines/hbsplines_patch_utility.h"
 #include "custom_utilities/hbsplines/hbsplines_refinement_utility.h"
 #include "custom_utilities/tsplines/tsmesh_2d.h"
+#include "custom_python/add_point_based_control_grid_to_python.h"
 
 namespace Kratos
 {
@@ -88,6 +90,16 @@ void HBSplinesRefinementUtility_LinearDependencyRefine(HBSplinesRefinementUtilit
 
 ////////////////////////////////////////
 
+template<typename TDataType, class TFESpaceType>
+typename ControlGrid<TDataType>::Pointer ControlGridUtility_CreatePointBasedControlGrid(
+        ControlGridUtility& rDummy,
+        const Variable<TDataType>& rVariable, typename TFESpaceType::Pointer pFESpace)
+{
+    return rDummy.CreatePointBasedControlGrid<TDataType, TFESpaceType>(rVariable, pFESpace);
+}
+
+////////////////////////////////////////
+
 template<int TDim>
 void IsogeometricApplication_AddHBSplinesToPython()
 {
@@ -107,6 +119,10 @@ void IsogeometricApplication_AddHBSplinesToPython()
     (ss.str().c_str(), init<>())
     .def(self_ns::str(self))
     ;
+
+    IsogeometricApplication_AddPointBasedControlGrid_Helper<Variable<double>, HBSplinesFESpace<TDim> >::Execute();
+    IsogeometricApplication_AddPointBasedControlGrid_Helper<Variable<array_1d<double, 3> >, HBSplinesFESpace<TDim> >::Execute();
+    IsogeometricApplication_AddPointBasedControlGrid_Helper<Variable<Vector>, HBSplinesFESpace<TDim> >::Execute();
 
     ////////////////////OLD H-SPLINES////////////////////////
 
@@ -181,6 +197,19 @@ void IsogeometricApplication_AddCustomUtilities3ToPython()
     IsogeometricApplication_AddHBSplinesToPython<2>();
     IsogeometricApplication_AddHBSplinesToPython<3>();
 
+    class_<ControlGridUtility, ControlGridUtility::Pointer, boost::noncopyable>
+    ("PointBasedControlGridUtility", init<>())
+    .def("CreatePointBasedControlGrid", &ControlGridUtility_CreatePointBasedControlGrid<double, HBSplinesFESpace<1> >)
+    .def("CreatePointBasedControlGrid", &ControlGridUtility_CreatePointBasedControlGrid<double, HBSplinesFESpace<2> >)
+    .def("CreatePointBasedControlGrid", &ControlGridUtility_CreatePointBasedControlGrid<double, HBSplinesFESpace<3> >)
+    .def("CreatePointBasedControlGrid", &ControlGridUtility_CreatePointBasedControlGrid<array_1d<double, 3>, HBSplinesFESpace<1> >)
+    .def("CreatePointBasedControlGrid", &ControlGridUtility_CreatePointBasedControlGrid<array_1d<double, 3>, HBSplinesFESpace<2> >)
+    .def("CreatePointBasedControlGrid", &ControlGridUtility_CreatePointBasedControlGrid<array_1d<double, 3>, HBSplinesFESpace<3> >)
+    .def("CreatePointBasedControlGrid", &ControlGridUtility_CreatePointBasedControlGrid<Vector, HBSplinesFESpace<1> >)
+    .def("CreatePointBasedControlGrid", &ControlGridUtility_CreatePointBasedControlGrid<Vector, HBSplinesFESpace<2> >)
+    .def("CreatePointBasedControlGrid", &ControlGridUtility_CreatePointBasedControlGrid<Vector, HBSplinesFESpace<3> >)
+    ;
+
     class_<HBSplinesPatchUtility, HBSplinesPatchUtility::Pointer, boost::noncopyable>
     ("HBSplinesPatchUtility", init<>())
     .def("CreatePatchFromBSplines", &HBSplinesPatchUtility_CreatePatchFromBSplines<2>)
@@ -198,6 +227,7 @@ void IsogeometricApplication_AddCustomUtilities3ToPython()
     .def("LinearDependencyRefine", &HBSplinesRefinementUtility_LinearDependencyRefine<3>)
     .def(self_ns::str(self))
     ;
+
 }
 
 }  // namespace Python.

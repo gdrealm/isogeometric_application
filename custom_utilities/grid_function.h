@@ -67,15 +67,17 @@ public:
     typename ControlGrid<TDataType>::ConstPointer pControlGrid() const {return mpControlGrid;}
 
     /// Get the value of the grid at specific local coordinates
-    TDataType GetValue(const std::vector<double>& xi) const
+    template<typename TCoordinatesType>
+    TDataType GetValue(const TCoordinatesType& xi) const
     {
         // firstly get the values of all the basis functions
         std::vector<double> f_values = pFESpace()->GetValue(xi);
 
         // then interpolate the value at local coordinates using the control values
         const ControlGrid<TDataType>& r_control_grid = *pControlGrid();
-        TDataType v(0.0);
-        for (std::size_t i = 0; i < r_control_grid.size(); ++i)
+
+        TDataType v = f_values[0] * r_control_grid.GetData(0);
+        for (std::size_t i = 1; i < r_control_grid.size(); ++i)
             v += f_values[i] * r_control_grid.GetData(i);
 
         return v;
@@ -106,10 +108,11 @@ public:
     }
 
     /// Information
-    const std::string Info() const
+    std::string Info() const
     {
         std::stringstream ss;
         ss << "GridFunction" << TDim << "D";
+        return ss.str();
     }
 
     virtual void PrintInfo(std::ostream& rOStream) const

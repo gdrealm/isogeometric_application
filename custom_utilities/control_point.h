@@ -34,7 +34,7 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(ControlPoint);
 
     /// Default constructor
-    ControlPoint() : mWX(0.0), mWY(0.0), mWZ(0.0), mW(1.0) {}
+    ControlPoint() : mWX(0.0), mWY(0.0), mWZ(0.0), mW(0.0) {}
 
     /// Constant constructor
     ControlPoint(const double& v) : mWX(v), mWY(v), mWZ(v), mW(v) {}

@@ -68,7 +68,7 @@ public:
     typedef std::map<std::size_t, bf_t> function_map_t;
 
     /// Default constructor
-    HBSplinesFESpace() : BaseType(), m_function_map_is_created(false), mLastLevel(1), mMaxLevel(5)
+    HBSplinesFESpace() : BaseType(), m_function_map_is_created(false), mLastLevel(1), mMaxLevel(10)
     {
         if (TDim == 2)
         {
@@ -286,7 +286,7 @@ public:
     {
         typename HBSplinesFESpace<TDim-1>::Pointer pBFESpace = typename HBSplinesFESpace<TDim-1>::Pointer(new HBSplinesFESpace<TDim-1>());
 
-        // TODO
+        // TODO construct the basis function and cells on the boundary
 
         // transfer the function indices
         std::vector<std::size_t> b_func_indices = ExtractBoundaryFunctionIndices(side);

@@ -56,10 +56,10 @@ public:
     ModelPart::ConstPointer pModelPart() const {return mpModelPart;}
 
     /// Get the underlying multipatch pointer
-    typename MultiPatch<TDim>::Pointer pMultiPatch() {return mpModelPart;}
+    typename MultiPatch<TDim>::Pointer pMultiPatch() {return mpMultiPatch;}
 
     /// Get the underlying multipatch pointer
-    typename MultiPatch<TDim>::ConstPointer pMultiPatch() const {return mpModelPart;}
+    typename MultiPatch<TDim>::ConstPointer pMultiPatch() const {return mpMultiPatch;}
 
     /// Check if the multipatch model_part ready for transferring/transmitting data
     bool IsReady() const {return mpMultiPatch->IsEnumerated() && mIsModelPartReady;}
@@ -69,15 +69,19 @@ public:
     {
         mIsModelPartReady = false;
 
-        // check if the multipatch is enumerated, if not enumerate it.
-        if (!mpMultiPatch->IsEnumerated())
-        {
-            mpMultiPatch->Enumerate();
-        }
+        // always enumerate the multipatch first
+        mpMultiPatch->Enumerate();
 
         // create new model_part
         ModelPart::Pointer pNewModelPart = ModelPart::Pointer(new ModelPart(mpModelPart->Name()));
 
+        // swap the internal model_part with new model_part
+        mpModelPart.swap(pNewModelPart);
+    }
+
+    /// create the nodes from the control points and add to the model_part
+    void CreateNodes()
+    {
         // create new nodes from control points
         for (std::size_t i = 0; i < mpMultiPatch->EquationSystemSize(); ++i)
         {
@@ -85,23 +89,21 @@ public:
 
             const std::size_t& patch_id = std::get<0>(loc);
             const std::size_t& local_id = std::get<1>(loc);
-//            KRATOS_WATCH(patch_id)
-//            KRATOS_WATCH(local_id)
+            // KRATOS_WATCH(patch_id)
+            // KRATOS_WATCH(local_id)
 
             typedef typename Patch<TDim>::ControlPointType ControlPointType;
             const ControlPointType& point = mpMultiPatch->pGetPatch(patch_id)->pControlPointGridFunction()->pControlGrid()->GetData(local_id);
             // KRATOS_WATCH(point)
 
-            ModelPart::NodeType::Pointer pNewNode = pNewModelPart->CreateNewNode(i+1, point.X(), point.Y(), point.Z());
+            ModelPart::NodeType::Pointer pNewNode = mpModelPart->CreateNewNode(i+1, point.X(), point.Y(), point.Z());
 
-            // TODO assign corresponding data to new node
+            // TODO transfer corresponding data from control points to new nodes
         }
-
-        // swap the internal model_part with new model_part
-        mpModelPart.swap(pNewModelPart);
     }
 
-    ModelPart::ElementsContainerType AddElement(typename Patch<TDim>::Pointer pPatch, const std::string& element_name,
+    /// create the conditions out from the patch and add to the model_part
+    ModelPart::ElementsContainerType AddElements(typename Patch<TDim>::Pointer pPatch, const std::string& element_name,
             const std::size_t& starting_id, const std::size_t& prop_id)
     {
         if (IsReady()) return ModelPart::ElementsContainerType(); // call BeginModelPart first before adding elements
@@ -120,20 +122,21 @@ public:
             mpModelPart->Elements().push_back(*it);
         }
 
-        // sort the element contain and make it consistent
+        // sort the element container and make it consistent
         mpModelPart->Elements().Unique();
 
         return pNewElements;
     }
 
     /// create the conditions out from the boundary of the patch and add to the model_part
-    ModelPart::ConditionsContainerType AddCondition(typename Patch<TDim>::Pointer pPatch, const BoundarySide& side,
+    ModelPart::ConditionsContainerType AddConditions(typename Patch<TDim>::Pointer pPatch, const BoundarySide& side,
             const std::string& condition_name, const std::size_t& starting_id, const std::size_t& prop_id)
     {
         if (IsReady()) return ModelPart::ConditionsContainerType(); // call BeginModelPart first before adding conditions
 
         // construct the boundary patch
         typename Patch<TDim-1>::Pointer pBoundaryPatch = pPatch->ConstructBoundaryPatch(side);
+        // KRATOS_WATCH(*pBoundaryPatch)
 
         // get the Properties
         Properties::Pointer p_temp_properties = mpModelPart->pGetProperties(prop_id);
@@ -149,7 +152,7 @@ public:
             mpModelPart->Conditions().push_back(*it);
         }
 
-        // sort the element contain and make it consistent
+        // sort the condition container and make it consistent
         mpModelPart->Conditions().Unique();
 
         return pNewConditions;
@@ -164,7 +167,7 @@ public:
 
     /// Synchronize from multipatch to model_part
     template<class TVariableType>
-    void SynchronizeForward()
+    void SynchronizeForward(const TVariableType& rVariable)
     {
         if (!IsReady())
             return;
@@ -172,10 +175,48 @@ public:
 
     /// Synchronize from model_part to the multipatch
     template<class TVariableType>
-    void SynchronizeBackward()
+    void SynchronizeBackward(const TVariableType& rVariable)
     {
         if (!IsReady())
             return;
+
+        // loop through each patch, we construct a map from each function id to the patch id
+        std::map<std::size_t, std::size_t> func_id_map;
+        for (typename MultiPatch<TDim>::PatchContainerType::iterator it = mpMultiPatch->begin();
+                it != mpMultiPatch->end(); ++it)
+        {
+            const std::vector<std::size_t>& func_ids = it->pFESpace()->FunctionIndices();
+            for (std::size_t i = 0; i < func_ids.size(); ++i)
+                func_id_map[func_ids[i]] = it->Id();
+
+            // check if the grid function existed in the patch
+            if (!it->template HasGridFunction<TVariableType>(rVariable.Name()))
+            {
+                // if not then create the new grid function
+                typename ControlGrid<typename TVariableType::Type>::Pointer pNewControlGrid = UnstructuredControlGrid<typename TVariableType::Type>::Create(it->pFESpace()->TotalNumber());
+                it->template CreateGridFunction<TVariableType>(rVariable, pNewControlGrid);
+            }
+        }
+
+        for (ModelPart::NodesContainerType::const_iterator it = mpModelPart->Nodes().begin(); it != mpModelPart->Nodes().end(); ++it)
+        {
+            std::size_t func_id = it->Id() - 1;
+
+            // get the corresponding patch
+            std::size_t patch_id = func_id_map[func_id];
+            typename Patch<TDim>::Pointer pPatch = mpMultiPatch->pGetPatch(patch_id);
+
+            // find the corresponding control point in the multipatch
+            std::size_t local_id = pPatch->pFESpace()->LocalId(func_id);
+            pPatch->pGetGridFunction(rVariable)->pControlGrid()->SetData(local_id, it->GetSolutionStepValue(rVariable));
+
+            // // compare with the control point
+            // std::cout << "node (" << it->X0() << ", " << it->Y0() << ") is with control point "
+            //           << pPatch->pControlPointGridFunction()->pControlGrid()->GetData(local_id)
+            //           << " and value " << pPatch->pGetGridFunction(rVariable)->pControlGrid()->GetData(local_id)
+            //           << " at local_id " << local_id
+            //           << std::endl;
+        }
     }
 
     /// Information
@@ -252,6 +293,7 @@ private:
         int max_integration_method = 1;
         if (p_temp_properties->Has(NUM_IGA_INTEGRATION_METHOD))
             max_integration_method = (*p_temp_properties)[NUM_IGA_INTEGRATION_METHOD];
+
         for (typename cell_container_t::iterator it_cell = pCellManager->begin(); it_cell != pCellManager->end(); ++it_cell)
         {
             // KRATOS_WATCH(*(*it_cell))

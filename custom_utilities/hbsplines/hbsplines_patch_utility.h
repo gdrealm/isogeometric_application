@@ -165,7 +165,7 @@ inline Patch<2>::Pointer HBSplinesPatchUtility_Helper<2>::CreatePatchFromBSpline
     // set control points grid
     typename ControlGrid<ControlPointType>::Pointer pControlPointGrid
         = ControlGridUtility::CreatePointBasedControlGrid<ControlPointType, HBSplinesFESpace<2> >(CONTROL_POINT, pNewFESpace);
-    pNewPatch->CreateGridFunction(CONTROL_POINT, pControlPointGrid);
+    pNewPatch->CreateControlPointGridFunction(pControlPointGrid);
 
     // TODO set other control grid
 
@@ -263,7 +263,7 @@ inline Patch<3>::Pointer HBSplinesPatchUtility_Helper<3>::CreatePatchFromBSpline
     // set control points grid
     typename ControlGrid<ControlPointType>::Pointer pControlPointGrid
         = ControlGridUtility::CreatePointBasedControlGrid<ControlPointType, HBSplinesFESpace<3> >(CONTROL_POINT, pNewFESpace);
-    pNewPatch->CreateGridFunction(CONTROL_POINT, pControlPointGrid);
+    pNewPatch->CreateControlPointGridFunction(pControlPointGrid);
 
     // TODO set other control grid
 

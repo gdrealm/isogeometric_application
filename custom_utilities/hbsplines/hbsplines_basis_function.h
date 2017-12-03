@@ -69,7 +69,8 @@ struct HBSplinesBasisFunction_Helper
 };
 
 /**
-    Class represents a basis function in hierarchical B-Splines mesh
+Class represents a basis function in hierarchical B-Splines mesh.
+Each basis function associates with a control point via CONTROL_POINT variable.
 */
 template<int TDim>
 class HBSplinesBasisFunction
@@ -191,9 +192,12 @@ public:
     /// Get the order in specific direction
     const std::size_t& Order(const int& dim) const {return mOrders[dim];}
 
+    /// return the internal reference of the knot vectors; use it with care
+    const std::vector<knot_t>& LocalKnots(const int& dim) const {return mpLocalKnots[dim];}
+
     /// Get the local knot vectors
     template<class ValuesContainerType>
-    void GetLocalKnots(const int& dim, ValuesContainerType& rKnots) const
+    void LocalKnots(const int& dim, ValuesContainerType& rKnots) const
     {
         if(rKnots.size() != mpLocalKnots[dim].size())
             rKnots.resize(mpLocalKnots[dim].size());
@@ -265,9 +269,6 @@ public:
         return true;
     }
 
-    /// return the internal reference of the knot vectors; use it with care
-    const std::vector<knot_t>& LocalKnots(const int& dim) const {return mpLocalKnots[dim];}
-
     /**************************************************************************
                             CONTROL VALUES
     **************************************************************************/
@@ -314,7 +315,7 @@ public:
         for (int dim = 0; dim < TDim; ++dim)
         {
             orders[dim] = this->Order(dim);
-            this->GetLocalKnots(dim, LocalKnots[dim]);
+            this->LocalKnots(dim, LocalKnots[dim]);
         }
 
         HBSplinesBasisFunction_Helper<TDim>::ComputeExtractionOperator(Crow, orders, LocalKnots, *p_cell);

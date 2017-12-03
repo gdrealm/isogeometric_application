@@ -17,6 +17,7 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/model_part.h"
 #include "custom_utilities/grid_function.h"
 #include "custom_utilities/patch.h"
 
@@ -42,9 +43,68 @@ public:
 
     /// Create new patch and wrap it with pointer
     template<int TDim>
-    typename Patch<TDim>::Pointer CreatePatchPointer(const std::size_t& Id, typename FESpace<TDim>::Pointer pFESpace) const
+    static typename Patch<TDim>::Pointer CreatePatchPointer(const std::size_t& Id, typename FESpace<TDim>::Pointer pFESpace)
     {
         return typename Patch<TDim>::Pointer(new Patch<TDim>(Id, pFESpace));
+    }
+
+    /// Get the last node id of the model part
+    static std::size_t GetLastNodeId(ModelPart& r_model_part)
+    {
+        std::size_t lastNodeId = 0;
+        for(typename ModelPart::NodesContainerType::iterator it = r_model_part.Nodes().begin();
+                it != r_model_part.Nodes().end(); ++it)
+        {
+            if(it->Id() > lastNodeId)
+                lastNodeId = it->Id();
+        }
+
+        return lastNodeId;
+    }
+
+
+    /// Get the last element id of the model part
+    static std::size_t GetLastElementId(ModelPart& r_model_part)
+    {
+        std::size_t lastElementId = 0;
+        for(typename ModelPart::ElementsContainerType::ptr_iterator it = r_model_part.Elements().ptr_begin();
+                it != r_model_part.Elements().ptr_end(); ++it)
+        {
+            if((*it)->Id() > lastElementId)
+                lastElementId = (*it)->Id();
+        }
+
+        return lastElementId;
+    }
+
+
+    /// Get the last condition id of the model part
+    static std::size_t GetLastConditionId(ModelPart& r_model_part)
+    {
+        std::size_t lastCondId = 0;
+        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = r_model_part.Conditions().ptr_begin();
+                it != r_model_part.Conditions().ptr_end(); ++it)
+        {
+            if((*it)->Id() > lastCondId)
+                lastCondId = (*it)->Id();
+        }
+
+        return lastCondId;
+    }
+
+
+    /// Get the last properties id of the model_part
+    static std::size_t GetLastPropertiesId(ModelPart& r_model_part)
+    {
+        std::size_t lastPropId = 0;
+        for(typename ModelPart::PropertiesContainerType::ptr_iterator it = r_model_part.rProperties().ptr_begin();
+                it != r_model_part.rProperties().ptr_end(); ++it)
+        {
+            if((*it)->Id() > lastPropId)
+                lastPropId = (*it)->Id();
+        }
+
+        return lastPropId;
     }
 
     /// Information

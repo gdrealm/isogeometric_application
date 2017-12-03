@@ -261,6 +261,8 @@ void MultiPatchRefinementUtility::DegreeElevate(typename Patch<TDim>::Pointer& p
     {
         // get the parent multipatch
         typename MultiPatch<TDim>::Pointer pMultiPatch = pPatch->pParentMultiPatch();
+        if (pMultiPatch == NULL)
+            KRATOS_THROW_ERROR(std::logic_error, "The parent multipatch is not defined for patch", pPatch->Id())
 
         // create new patch with same Id
         typename Patch<TDim>::Pointer pNewPatch = typename Patch<TDim>::Pointer(new Patch<TDim>(pPatch->Id()));
@@ -450,15 +452,18 @@ void MultiPatchRefinementUtility::DegreeElevate(typename Patch<TDim>::Pointer& p
             // }
         }
 
+        // set the parent multipatch
+        pNewPatch->pSetParentMultiPatch(pMultiPatch);
+
+        // remove this patch from multipatch
+        pMultiPatch->Patches().erase(pPatch->Id());
+
         // swap
-        // KRATOS_WATCH(*pNewPatch)
-        // std::cout << pPatch << " will be swapped with " << pNewPatch << std::endl;
         pPatch.swap(pNewPatch);
-        // std::cout << "  Input patch now is " << pPatch << ", and the new patch becomes " << pNewPatch << std::endl;
-        // KRATOS_WATCH(*pPatch)
 
         // replace the corresponding patch in multipatch
-        pMultiPatch->Patches()(pPatch->Id()) = pPatch;
+        pMultiPatch->Patches().push_back(pPatch);
+        pMultiPatch->Patches().Unique();
     }
 }
 

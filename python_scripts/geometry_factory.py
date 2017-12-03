@@ -7,7 +7,7 @@ from KratosMultiphysics.IsogeometricApplication import *
 ###
 
 nurbs_fespace_library = BSplinesFESpaceLibrary()
-grid_util = ControlGridUtility()
+grid_lib = ControlGridLibrary()
 multipatch_util = MultiPatchUtility()
 bsplines_patch_util = BSplinesPatchUtility()
 
@@ -16,7 +16,7 @@ bsplines_patch_util = BSplinesPatchUtility()
 def CreateLine(start_point, end_point, order = 1):
     Id = 0
     fes = nurbs_fespace_library.CreateLinearFESpace(order)
-    ctrl_grid = grid_util.CreateLinearControlPointGrid(start_point[0], start_point[1], start_point[2], fes.Number(0), end_point[0], end_point[1], end_point[2])
+    ctrl_grid = grid_lib.CreateLinearControlPointGrid(start_point[0], start_point[1], start_point[2], fes.Number(0), end_point[0], end_point[1], end_point[2])
     patch_ptr = multipatch_util.CreatePatchPointer(Id, fes)
     patch = patch_ptr.GetReference()
     patch.CreateControlPointGridFunction(ctrl_grid)
@@ -28,11 +28,11 @@ def CreateSmallArc(center, axis, radius, start_angle, end_angle):
     ## firstly create an arc in xy plane at (0, 0)
     Id = 0
     fes = nurbs_fespace_library.CreateLinearFESpace(2)
-    ctrl_grid = grid_util.CreateLinearControlPointGrid(0.0, 0.0, 0.0, fes.Number(0), radius, 0.0, 0.0)
+    ctrl_grid = grid_lib.CreateLinearControlPointGrid(0.0, 0.0, 0.0, fes.Number(0), radius, 0.0, 0.0)
 
     sweep = end_angle - start_angle
-    if sweep < 0.0 or sweep > 90:
-        raise ValueError('the open angle must be in [0, 90] degrees, sweep =', sweep)
+    if abs(sweep > 90):
+        raise ValueError('the open angle must be in [-90, 90] degrees, sweep =', sweep)
 
     dsweep = 0.5*sweep/180.0*math.pi
     wm = math.cos(dsweep)

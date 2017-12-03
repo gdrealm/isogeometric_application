@@ -108,6 +108,7 @@ public:
     /// Reset all the dof numbers for each grid function to -1.
     void ResetFunctionIndices()
     {
+        mGlobalToLocal.clear();
         if (mFunctionsIds.size() != this->TotalNumber())
             mFunctionsIds.resize(this->TotalNumber());
         std::fill(mFunctionsIds.begin(), mFunctionsIds.end(), -1);
@@ -117,10 +118,23 @@ public:
     /// This is useful when assigning the id for the boundary patch.
     void ResetFunctionIndices(const std::vector<std::size_t>& func_indices)
     {
-        assert(func_indices.size() == this->TotalNumber());
+        if (func_indices.size() != this->TotalNumber())
+        {
+            KRATOS_WATCH(this->TotalNumber())
+            std::cout << "func_indices:";
+            for (std::size_t i = 0; i < func_indices.size(); ++i)
+                std::cout << " " << func_indices[i];
+            std::cout << std::endl;
+            KRATOS_THROW_ERROR(std::logic_error, "The func_indices vector does not have the same size as total number of basis functions", "")
+        }
         if (mFunctionsIds.size() != this->TotalNumber())
             mFunctionsIds.resize(this->TotalNumber());
-        std::copy(func_indices.begin(), func_indices.end(), mFunctionsIds.begin());
+        // std::copy(func_indices.begin(), func_indices.end(), mFunctionsIds.begin());
+        for (std::size_t i = 0; i < func_indices.size(); ++i)
+        {
+            mFunctionsIds[i] = func_indices[i];
+            mGlobalToLocal[mFunctionsIds[i]] = i;
+        }
     }
 
     /// Enumerate the dofs of each grid function. The enumeration algorithm is pretty straightforward.
@@ -169,7 +183,15 @@ public:
         std::map<std::size_t, std::size_t>::const_iterator it = mGlobalToLocal.find(global_id);
 
         if (it == mGlobalToLocal.end())
+        {
+            KRATOS_WATCH(TDim)
+            KRATOS_WATCH(global_id)
+            std::cout << "mGlobalToLocal:";
+            for(std::map<std::size_t, std::size_t>::const_iterator it2 = mGlobalToLocal.begin(); it2 != mGlobalToLocal.end(); ++it2)
+                std::cout << " " << it2->first << "->" << it2->second;
+            std::cout << std::endl;
             KRATOS_THROW_ERROR(std::logic_error, "The global id does not exist in global_to_local map", "")
+        }
 
         return it->second;
     }
@@ -304,10 +326,14 @@ private:
 
     virtual void save(Serializer& rSerializer) const
     {
+//        rSerializer.save( "mFunctionsIds", mFunctionsIds ); // can't save std::vector
+//        rSerializer.save( "mGlobalToLocal", mGlobalToLocal ); // can't save std::map
     }
 
     virtual void load(Serializer& rSerializer)
     {
+//        rSerializer.load( "mFunctionsIds", mFunctionsIds );
+//        rSerializer.load( "mGlobalToLocal", mGlobalToLocal );
     }
 };
 
@@ -322,6 +348,9 @@ class FESpace<0>
 public:
     /// Pointer definition
     KRATOS_CLASS_POINTER_DEFINITION(FESpace);
+
+    // Type definitions
+    typedef CellManager<Cell> cell_container_t;
 
     /// Default constructor
     FESpace() : mFunctionId(-1) {}
@@ -354,7 +383,7 @@ public:
     }
 
     /// Overload comparison operator
-    virtual bool operator==(const FESpace<0>& rOther)
+    virtual bool operator==(const FESpace<0>& rOther) const
     {
         return true;
     }
@@ -408,6 +437,18 @@ protected:
 
     std::size_t mFunctionId;
 
+private:
+
+    /// Serializer
+    friend class Serializer;
+
+    virtual void save(Serializer& rSerializer) const
+    {
+    }
+
+    virtual void load(Serializer& rSerializer)
+    {
+    }
 };
 
 
@@ -452,7 +493,7 @@ public:
     }
 
     /// Overload comparison operator
-    virtual bool operator==(const FESpace<-1>& rOther)
+    virtual bool operator==(const FESpace<-1>& rOther) const
     {
         return true;
     }
@@ -529,7 +570,7 @@ public:
     }
 
     /// Overload comparison operator
-    virtual bool operator==(const FESpace<-2>& rOther)
+    virtual bool operator==(const FESpace<-2>& rOther) const
     {
         return true;
     }

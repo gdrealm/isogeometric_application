@@ -116,6 +116,11 @@ public:
 
         // TODO create other grid function data
 
+        // enumerate the first time
+        std::size_t start = 0;
+        pNewPatch->pFESpace()->ResetFunctionIndices();
+        start = pNewPatch->pFESpace()->Enumerate(start);
+
         return pNewPatch;
     }
 

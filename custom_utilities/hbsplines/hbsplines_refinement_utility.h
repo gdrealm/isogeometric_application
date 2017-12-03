@@ -119,9 +119,6 @@ inline void HBSplinesRefinementUtility_Helper<TDim>::Refine(typename Patch<TDim>
     typedef typename HBSplinesFESpace<TDim>::cell_container_t cell_container_t;
     typedef typename Patch<TDim>::ControlPointType ControlPointType;
 
-    // TODO get the list of variables in the patch so that it can be transferred during refinement
-
-
     // extract the hierarchical B-Splines space
     typename HBSplinesFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<HBSplinesFESpace<TDim> >(pPatch->pFESpace());
 
@@ -129,6 +126,7 @@ inline void HBSplinesRefinementUtility_Helper<TDim>::Refine(typename Patch<TDim>
     double start = OpenMPUtils::GetCurrentTime();
     #endif
 
+    // get the correct basis function
     bf_t p_bf;
     bool found = false;
     for(typename bf_container_t::iterator it = pFESpace->bf_begin(); it != pFESpace->bf_end(); ++it)
@@ -148,6 +146,11 @@ inline void HBSplinesRefinementUtility_Helper<TDim>::Refine(typename Patch<TDim>
         std::cout << "Maximum level is reached, basis function " << p_bf->Id() << " is skipped" << std::endl;
         return;
     }
+
+    // get the list of variables in the patch
+    std::vector<Variable<double>*> double_variables = pPatch->template ExtractVariables<Variable<double> >();
+    std::vector<Variable<array_1d<double, 3> >*> array_1d_variables = pPatch->template ExtractVariables<Variable<array_1d<double, 3> > >();
+    std::vector<Variable<Vector>*> vector_variables = pPatch->template ExtractVariables<Variable<Vector> >();
 
     /* create a list of basis function in the next level representing this basis function */
     // create a list of new knots
@@ -183,7 +186,7 @@ inline void HBSplinesRefinementUtility_Helper<TDim>::Refine(typename Patch<TDim>
     Vector RefinedCoeffs;
     std::vector<std::vector<double> > local_knots(TDim);
     for(std::size_t dim = 0; dim < TDim; ++dim)
-        p_bf->GetLocalKnots(dim, local_knots[dim]);
+        p_bf->LocalKnots(dim, local_knots[dim]);
 
     std::vector<std::vector<double> > new_knots(TDim);
     if (TDim == 2)
@@ -202,6 +205,7 @@ inline void HBSplinesRefinementUtility_Helper<TDim>::Refine(typename Patch<TDim>
             local_knots[0], local_knots[1], local_knots[2],
             ins_knots[0], ins_knots[1], ins_knots[2]);
     }
+    // KRATOS_WATCH(RefinedCoeffs)
 
     #ifdef ENABLE_PROFILING
     double time_1 = OpenMPUtils::GetCurrentTime() - start;
@@ -248,7 +252,30 @@ inline void HBSplinesRefinementUtility_Helper<TDim>::Refine(typename Patch<TDim>
                 newC += RefinedCoeffs[i_func] * oldC;
                 pnew_bf->SetValue(CONTROL_POINT, newC);
 
-                // TODO transfer other control values from p_bf to pnew_bf
+                // transfer other control values from p_bf to pnew_bf
+                for (std::size_t i = 0; i < double_variables.size(); ++i)
+                {
+                    double old_value = p_bf->GetValue(*double_variables[i]);
+                    double new_value = pnew_bf->GetValue(*double_variables[i]);
+                    new_value += RefinedCoeffs[i_func] * old_value;
+                    pnew_bf->SetValue(*double_variables[i], new_value);
+                }
+
+                for (std::size_t i = 0; i < array_1d_variables.size(); ++i)
+                {
+                    array_1d<double, 3> old_value = p_bf->GetValue(*array_1d_variables[i]);
+                    array_1d<double, 3> new_value = pnew_bf->GetValue(*array_1d_variables[i]);
+                    new_value += RefinedCoeffs[i_func] * old_value;
+                    pnew_bf->SetValue(*array_1d_variables[i], new_value);
+                }
+
+                for (std::size_t i = 0; i < vector_variables.size(); ++i)
+                {
+                    Vector old_value = p_bf->GetValue(*vector_variables[i]);
+                    Vector new_value = pnew_bf->GetValue(*vector_variables[i]);
+                    new_value += RefinedCoeffs[i_func] * old_value;
+                    pnew_bf->SetValue(*vector_variables[i], new_value);
+                }
 
                 // create the cells for the basis function
                 for(std::size_t i1 = 0; i1 < pFESpace->Order(0) + 1; ++i1)
@@ -318,7 +345,30 @@ inline void HBSplinesRefinementUtility_Helper<TDim>::Refine(typename Patch<TDim>
                     newC += RefinedCoeffs[i_func] * oldC;
                     pnew_bf->SetValue(CONTROL_POINT, newC);
 
-                    // TODO transfer other control values from p_bf to pnew_bf
+                    // transfer other control values from p_bf to pnew_bf
+                    for (std::size_t i = 0; i < double_variables.size(); ++i)
+                    {
+                        double old_value = p_bf->GetValue(*double_variables[i]);
+                        double new_value = pnew_bf->GetValue(*double_variables[i]);
+                        new_value += RefinedCoeffs[i_func] * old_value;
+                        pnew_bf->SetValue(*double_variables[i], new_value);
+                    }
+
+                    for (std::size_t i = 0; i < array_1d_variables.size(); ++i)
+                    {
+                        array_1d<double, 3> old_value = p_bf->GetValue(*array_1d_variables[i]);
+                        array_1d<double, 3> new_value = pnew_bf->GetValue(*array_1d_variables[i]);
+                        new_value += RefinedCoeffs[i_func] * old_value;
+                        pnew_bf->SetValue(*array_1d_variables[i], new_value);
+                    }
+
+                    for (std::size_t i = 0; i < vector_variables.size(); ++i)
+                    {
+                        Vector old_value = p_bf->GetValue(*vector_variables[i]);
+                        Vector new_value = pnew_bf->GetValue(*vector_variables[i]);
+                        new_value += RefinedCoeffs[i_func] * old_value;
+                        pnew_bf->SetValue(*vector_variables[i], new_value);
+                    }
 
                     // create the cells for the basis function
                     for(std::size_t i1 = 0; i1 < pFESpace->Order(0) + 1; ++i1)

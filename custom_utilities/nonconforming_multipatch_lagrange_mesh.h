@@ -22,7 +22,7 @@
 #include "custom_utilities/fespace.h"
 #include "custom_utilities/patch.h"
 
-#define DEBUG_MESH_GENERATION
+// #define DEBUG_MESH_GENERATION
 
 namespace Kratos
 {
@@ -89,6 +89,10 @@ public:
     /// Append to model_part, the quad/hex element from patches
     void WriteModelPart(ModelPart& r_model_part) const
     {
+        typedef typename Patch<TDim>::DoubleGridFunctionContainerType DoubleGridFunctionContainerType;
+        typedef typename Patch<TDim>::Array1DGridFunctionContainerType Array1DGridFunctionContainerType;
+        typedef typename Patch<TDim>::VectorGridFunctionContainerType VectorGridFunctionContainerType;
+
         // get the sample element
         std::string element_name = mBaseElementName;
         if (TDim == 2)
@@ -144,21 +148,74 @@ public:
                     {
                         p_ref[1] = ((double) j) / NumDivision2;
 
+                        #ifdef DEBUG_MESH_GENERATION
+                        std::cout << "p_ref: " << p_ref[0] << " " << p_ref[1] << std::endl;
+                        #endif
+
                         p = it->pControlPointGridFunction()->GetValue(p_ref);
 
-                        typename NodeType::Pointer pNewNode( new NodeType( 0, p.X(), p.Y(), p.Z() ) );
-                        pNewNode->SetId(NodeCounter++);
+                        // typename NodeType::Pointer pNewNode( new NodeType( 0, p.X(), p.Y(), p.Z() ) );
+                        // pNewNode->SetId(NodeCounter++);
+                        // r_model_part.AddNode(pNewNode);
+                        // // Giving model part's variables list to the node
+                        // pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
+                        // //set buffer size
+                        // pNewNode->SetBufferSize(r_model_part.GetBufferSize());
+
+                        typename NodeType::Pointer pNewNode = r_model_part.CreateNewNode(NodeCounter++, p.X(), p.Y(), p.Z());
                         #ifdef DEBUG_MESH_GENERATION
                         std::cout << "Node " << pNewNode->Id() << " (" << pNewNode->X() << " " << pNewNode->Y() << " " << pNewNode->Z() << ") is created" << std::endl;
                         #endif
 
-                        // Giving model part's variables list to the node
-                        pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
+                        // transfer the control values
+                        DoubleGridFunctionContainerType DoubleGridFunctions_ = it->DoubleGridFunctions();
+                        for (typename DoubleGridFunctionContainerType::const_iterator it_gf = DoubleGridFunctions_.begin();
+                                it_gf != DoubleGridFunctions_.end(); ++it_gf)
+                        {
+                            typedef double DataType;
+                            typedef Variable<DataType> VariableType;
+                            const std::string& var_name = (*it_gf)->pControlGrid()->Name();
+                            if (KratosComponents<VariableData>::Has(var_name))
+                            {
+                                VariableType* pVariable = dynamic_cast<VariableType*>(&KratosComponents<VariableData>::Get(var_name));
+                                DataType value = (*it_gf)->GetValue(p_ref);
+                                pNewNode->GetSolutionStepValue(*pVariable) = value;
+                            }
+                        }
 
-                        //set buffer size
-                        pNewNode->SetBufferSize(r_model_part.GetBufferSize());
+                        Array1DGridFunctionContainerType Array1DGridFunctions_ = it->Array1DGridFunctions();
+                        for (typename Array1DGridFunctionContainerType::const_iterator it_gf = Array1DGridFunctions_.begin();
+                                it_gf != Array1DGridFunctions_.end(); ++it_gf)
+                        {
+                            typedef array_1d<double, 3> DataType;
+                            typedef Variable<DataType> VariableType;
+                            const std::string& var_name = (*it_gf)->pControlGrid()->Name();
+                            if (KratosComponents<VariableData>::Has(var_name))
+                            {
+                                VariableType* pVariable = dynamic_cast<VariableType*>(&KratosComponents<VariableData>::Get(var_name));
+                                DataType value = (*it_gf)->GetValue(p_ref);
+                                pNewNode->GetSolutionStepValue(*pVariable) = value;
+                                #ifdef DEBUG_MESH_GENERATION
+                                std::cout << "node " << *pNewNode << "[" << var_name << "]: " << value << std::endl;
+                                KRATOS_WATCH(*((*it_gf)->pControlGrid()))
+                                #endif
+                            }
+                        }
 
-                        r_model_part.AddNode(pNewNode);
+                        VectorGridFunctionContainerType VectorGridFunctions_ = it->VectorGridFunctions();
+                        for (typename VectorGridFunctionContainerType::const_iterator it_gf = VectorGridFunctions_.begin();
+                                it_gf != VectorGridFunctions_.end(); ++it_gf)
+                        {
+                            typedef Vector DataType;
+                            typedef Variable<DataType> VariableType;
+                            const std::string& var_name = (*it_gf)->pControlGrid()->Name();
+                            if (KratosComponents<VariableData>::Has(var_name))
+                            {
+                                VariableType* pVariable = dynamic_cast<VariableType*>(&KratosComponents<VariableData>::Get(var_name));
+                                DataType value = (*it_gf)->GetValue(p_ref);
+                                pNewNode->GetSolutionStepValue(*pVariable) = value;
+                            }
+                        }
                     }
                 }
 
@@ -191,13 +248,14 @@ public:
                     }
                 }
 
+                // create and add conditions on the boundary
+                // TODO
+
                 // update the node counter
                 NodeCounter_old = NodeCounter;
 
                 // just to make sure everything is organized properly
                 r_model_part.Elements().Unique();
-
-                // TODO transfer the control values
             }
             else if (TDim == 3)
             {
@@ -287,13 +345,14 @@ public:
                     }
                 }
 
+                // create and add conditions on the boundary
+                // TODO
+
                 // update the node counter
                 NodeCounter_old = NodeCounter;
 
                 // just to make sure everything is organized properly
                 r_model_part.Elements().Unique();
-
-                // TODO transfer the control values
             }
         }
     }

@@ -23,6 +23,7 @@ LICENSE: see isogeometric_application/LICENSE.txt
 // Project includes
 #include "includes/define.h"
 #include "includes/model_part.h"
+#include "custom_python/add_utilities_to_python.h"
 #include "custom_utilities/nurbs/domain_manager.h"
 #include "custom_utilities/nurbs/domain_manager_2d.h"
 #include "custom_utilities/trans/transformation.h"
@@ -34,6 +35,7 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "custom_utilities/nurbs/structured_control_grid.h"
 #include "custom_utilities/control_grid_library.h"
 #include "custom_utilities/fespace.h"
+#include "custom_utilities/weighted_fespace.h"
 #include "custom_utilities/nurbs/bsplines_fespace.h"
 #include "custom_utilities/nurbs/bsplines_fespace_library.h"
 #include "custom_utilities/nurbs/bsplines_patch_utility.h"
@@ -43,7 +45,6 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "custom_utilities/import_export/multi_nurbs_patch_geo_exporter.h"
 #include "custom_utilities/import_export/multi_nurbs_patch_matlab_exporter.h"
 #include "custom_utilities/import_export/multi_nurbs_patch_glvis_exporter.h"
-#include "custom_python/add_utilities_to_python.h"
 
 
 namespace Kratos
@@ -250,42 +251,6 @@ ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateCubicContro
     return rDummy.CreateStructuredControlPointGrid<3>(start, ngrid, spacing_vectors);
 }
 
-// template<typename TDataType>
-// typename ControlGrid<TDataType>::Pointer ControlGridLibrary_CreateLinearZeroControlGrid(
-//         ControlGridLibrary& rDummy,
-//         const std::string& name,
-//         const std::size_t& n_points_u)
-// {
-//     std::vector<std::size_t> ngrid(1);
-//     ngrid[0] = n_points_u;
-//     return rDummy.CreateStructuredZeroControlGrid<1>(name, ngrid);
-// }
-
-// template<typename TDataType>
-// typename ControlGrid<TDataType>::Pointer ControlGridLibrary_CreateRectangularZeroControlGrid(
-//         ControlGridLibrary& rDummy,
-//         const std::string& name,
-//         const std::size_t& n_points_u, const std::size_t& n_points_v)
-// {
-//     std::vector<std::size_t> ngrid(2);
-//     ngrid[0] = n_points_u;
-//     ngrid[1] = n_points_v;
-//     return rDummy.CreateStructuredZeroControlGrid<2>(name, ngrid);
-// }
-
-// template<typename TDataType>
-// typename ControlGrid<TDataType>::Pointer ControlGridLibrary_CreateCubicZeroControlGrid(
-//         ControlGridLibrary& rDummy,
-//         const std::string& name,
-//         const std::size_t& n_points_u, const std::size_t& n_points_v, const std::size_t& n_points_w)
-// {
-//     std::vector<std::size_t> ngrid(3);
-//     ngrid[0] = n_points_u;
-//     ngrid[1] = n_points_v;
-//     ngrid[2] = n_points_w;
-//     return rDummy.CreateStructuredZeroControlGrid<3>(name, ngrid);
-// }
-
 template<class TVariableType>
 typename ControlGrid<typename TVariableType::Type>::Pointer ControlGridLibrary_CreateLinearZeroControlGridWithVariable(
         ControlGridLibrary& rDummy,
@@ -411,6 +376,12 @@ typename TPatchType::FESpaceType::Pointer Patch_pFESpace(TPatchType& rDummy)
     return rDummy.pFESpace();
 }
 
+template<int TDim, typename TDataType>
+typename GridFunction<TDim, TDataType>::Pointer Patch_CreateGridFunction(Patch<TDim>& rDummy, typename ControlGrid<TDataType>::Pointer pControlGrid)
+{
+    return rDummy.template CreateGridFunction<TDataType>(pControlGrid);
+}
+
 template<class TPatchType, class TMultiPatchType>
 typename TPatchType::Pointer MultiPatch_GetItem(TMultiPatchType& rDummy, std::size_t index)
 {
@@ -433,6 +404,27 @@ std::size_t MultiPatch_Enumerate(MultiPatch<TDim>& rDummy)
     KRATOS_WATCH(system_size)
 
     return system_size;
+}
+
+template<int TDim>
+static typename Patch<TDim>::Pointer MultiPatchUtility_CreatePatchPointer(MultiPatchUtility& rDummy, const std::size_t& Id, typename FESpace<TDim>::Pointer pFESpace)
+{
+    return rDummy.template CreatePatchPointer<TDim>(Id, pFESpace);
+}
+
+static std::size_t MultiPatchUtility_GetLastNodeId(MultiPatchUtility& rDummy, ModelPart& r_model_part)
+{
+    return rDummy.GetLastNodeId(r_model_part);
+}
+
+static std::size_t MultiPatchUtility_GetLastElementId(MultiPatchUtility& rDummy, ModelPart& r_model_part)
+{
+    return rDummy.GetLastElementId(r_model_part);
+}
+
+static std::size_t MultiPatchUtility_GetLastConditionId(MultiPatchUtility& rDummy, ModelPart& r_model_part)
+{
+    return rDummy.GetLastConditionId(r_model_part);
 }
 
 template<int TDim>
@@ -567,6 +559,7 @@ void IsogeometricApplication_AddControlGrids()
     class_<ControlGrid<ControlPoint<double> >, ControlGrid<ControlPoint<double> >::Pointer, boost::noncopyable>
     ("ControlPointControlGrid", init<>())
     .def("Size", &ControlGrid<ControlPoint<double> >::Size)
+    .def("size", &ControlGrid<ControlPoint<double> >::Size)
     .def("__setitem__", &ControlGrid_SetItem<ControlPoint<double> >)
     .def("__getitem__", &ControlGrid_GetItem<ControlPoint<double> >)
     .def(self_ns::str(self))
@@ -575,18 +568,27 @@ void IsogeometricApplication_AddControlGrids()
     class_<ControlGrid<double>, ControlGrid<double>::Pointer, boost::noncopyable>
     ("DoubleControlGrid", init<>())
     .def("Size", &ControlGrid<double>::Size)
+    .def("size", &ControlGrid<double>::Size)
+    .def("__setitem__", &ControlGrid_SetItem<double>)
+    .def("__getitem__", &ControlGrid_GetItem<double>)
     .def(self_ns::str(self))
     ;
 
     class_<ControlGrid<array_1d<double, 3> >, ControlGrid<array_1d<double, 3> >::Pointer, boost::noncopyable>
     ("Array1DControlGrid", init<>())
     .def("Size", &ControlGrid<array_1d<double, 3> >::Size)
+    .def("size", &ControlGrid<array_1d<double, 3> >::Size)
+    .def("__setitem__", &ControlGrid_SetItem<array_1d<double, 3> >)
+    .def("__getitem__", &ControlGrid_GetItem<array_1d<double, 3> >)
     .def(self_ns::str(self))
     ;
 
     class_<ControlGrid<Vector>, ControlGrid<Vector>::Pointer, boost::noncopyable>
     ("VectorControlGrid", init<>())
     .def("Size", &ControlGrid<Vector>::Size)
+    .def("size", &ControlGrid<Vector>::Size)
+    .def("__setitem__", &ControlGrid_SetItem<Vector>)
+    .def("__getitem__", &ControlGrid_GetItem<Vector>)
     .def(self_ns::str(self))
     ;
 
@@ -699,6 +701,8 @@ void IsogeometricApplication_AddControlGrids()
     ("UnstructuredVectorControlGrid", init<const std::size_t&>())
     .def(self_ns::str(self))
     ;
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 template<int TDim>
@@ -713,6 +717,13 @@ void IsogeometricApplication_AddFESpacesToPython()
     .def("Order", &FESpace<TDim>::Order)
     .def("TotalNumber", &FESpace<TDim>::TotalNumber)
     .def("Enumerate", &FESpace_Enumerate<TDim>)
+    .def(self_ns::str(self))
+    ;
+
+    ss.str(std::string());
+    ss << "WeightedFESpace" << TDim << "D";
+    class_<WeightedFESpace<TDim>, typename WeightedFESpace<TDim>::Pointer, bases<FESpace<TDim> >, boost::noncopyable>
+    (ss.str().c_str(), init<typename FESpace<TDim>::Pointer, const std::vector<double>&>())
     .def(self_ns::str(self))
     ;
 
@@ -780,6 +791,9 @@ void IsogeometricApplication_AddPatchesToPython()
     .add_property("Id", &Patch_GetId<Patch<TDim> >, &Patch_SetId<Patch<TDim> >)
     .def("WorkingSpaceDimension", &Patch<TDim>::WorkingSpaceDimension)
     .def("CreateControlPointGridFunction", &Patch<TDim>::CreateControlPointGridFunction)
+    .def("CreateGridFunction", &Patch_CreateGridFunction<TDim, double>)
+    .def("CreateGridFunction", &Patch_CreateGridFunction<TDim, array_1d<double, 3> >)
+    .def("CreateGridFunction", &Patch_CreateGridFunction<TDim, Vector>)
     .def("ApplyTransformation", &Patch<TDim>::ApplyTransformation)
     .def("Order", &Patch<TDim>::Order)
     .def("TotalNumber", &Patch<TDim>::TotalNumber)
@@ -892,9 +906,6 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     .def("CreateRectangularControlPointGrid", &ControlGridLibrary_CreateRectangularControlPointGrid2)
     .def("CreateCubicControlPointGrid", &ControlGridLibrary_CreateCubicControlPointGrid1)
     .def("CreateCubicControlPointGrid", &ControlGridLibrary_CreateCubicControlPointGrid2)
-    // .def("CreateLinearZeroDoubleControlGrid", &ControlGridLibrary_CreateLinearZeroControlGrid<double>)
-    // .def("CreateRectangularZeroDoubleControlGrid", &ControlGridLibrary_CreateRectangularZeroControlGrid<double>)
-    // .def("CreateCubicZeroDoubleControlGrid", &ControlGridLibrary_CreateCubicZeroControlGrid<double>)
     .def("CreateLinearZeroDoubleControlGrid", &ControlGridLibrary_CreateLinearZeroControlGridWithVariable<Variable<double> >)
     .def("CreateRectangularZeroDoubleControlGrid", &ControlGridLibrary_CreateRectangularZeroControlGridWithVariable<Variable<double> >)
     .def("CreateCubicZeroDoubleControlGrid", &ControlGridLibrary_CreateCubicZeroControlGridWithVariable<Variable<double> >)
@@ -949,9 +960,12 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
 
     class_<MultiPatchUtility, MultiPatchUtility::Pointer, boost::noncopyable>
     ("MultiPatchUtility", init<>())
-    .def("CreatePatchPointer", &MultiPatchUtility::CreatePatchPointer<1>)
-    .def("CreatePatchPointer", &MultiPatchUtility::CreatePatchPointer<2>)
-    .def("CreatePatchPointer", &MultiPatchUtility::CreatePatchPointer<3>)
+    .def("CreatePatchPointer", &MultiPatchUtility_CreatePatchPointer<1>)
+    .def("CreatePatchPointer", &MultiPatchUtility_CreatePatchPointer<2>)
+    .def("CreatePatchPointer", &MultiPatchUtility_CreatePatchPointer<3>)
+    .def("GetLastNodeId", &MultiPatchUtility_GetLastNodeId)
+    .def("GetLastElementId", &MultiPatchUtility_GetLastElementId)
+    .def("GetLastConditionId", &MultiPatchUtility_GetLastConditionId)
     ;
 
     class_<MultiPatchRefinementUtility, MultiPatchRefinementUtility::Pointer, boost::noncopyable>

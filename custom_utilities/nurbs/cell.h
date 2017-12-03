@@ -47,6 +47,11 @@ public:
     typedef KnotType::Pointer knot_t;
 
     /// Constructor with knots
+    Cell(const std::size_t& Id, knot_t pLeft, knot_t pRight)
+    : mId(Id), mpLeft(pLeft), mpRight(pRight), mpUp(new KnotType(0.0)), mpDown(new KnotType(0.0)), mpAbove(new KnotType(0.0)), mpBelow(new KnotType(0.0))
+    {}
+
+    /// Constructor with knots
     Cell(const std::size_t& Id, knot_t pLeft, knot_t pRight, knot_t pDown, knot_t pUp)
     : mId(Id), mpLeft(pLeft), mpRight(pRight), mpUp(pUp), mpDown(pDown), mpAbove(new KnotType(0.0)), mpBelow(new KnotType(0.0))
     {}
@@ -88,17 +93,57 @@ public:
     double BelowValue() const {return mpBelow->Value();}
 
     /// Check if the cell is covered by knot spans; the comparison is based on indexing, so the knot vectors must be sorted a priori
-    bool IsCovered(const std::vector<int>& rKnotsIndex1, const std::vector<int>& rKnotsIndex2) const
+    template<typename TIndexType>
+    bool IsCovered(const std::vector<TIndexType>& rKnotsIndex1) const
     {
-        int anchor_cover_xi_min  = *std::min_element(rKnotsIndex1.begin(), rKnotsIndex1.end());
-        int anchor_cover_xi_max  = *std::max_element(rKnotsIndex1.begin(), rKnotsIndex1.end());
-        int anchor_cover_eta_min = *std::min_element(rKnotsIndex2.begin(), rKnotsIndex2.end());
-        int anchor_cover_eta_max = *std::max_element(rKnotsIndex2.begin(), rKnotsIndex2.end());
+        TIndexType anchor_cover_xi_min  = *std::min_element(rKnotsIndex1.begin(), rKnotsIndex1.end());
+        TIndexType anchor_cover_xi_max  = *std::max_element(rKnotsIndex1.begin(), rKnotsIndex1.end());
+
+        if(     LeftIndex()  >= anchor_cover_xi_min
+            && RightIndex() <= anchor_cover_xi_max  )
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /// Check if the cell is covered by knot spans; the comparison is based on indexing, so the knot vectors must be sorted a priori
+    template<typename TIndexType>
+    bool IsCovered(const std::vector<TIndexType>& rKnotsIndex1, const std::vector<TIndexType>& rKnotsIndex2) const
+    {
+        TIndexType anchor_cover_xi_min  = *std::min_element(rKnotsIndex1.begin(), rKnotsIndex1.end());
+        TIndexType anchor_cover_xi_max  = *std::max_element(rKnotsIndex1.begin(), rKnotsIndex1.end());
+        TIndexType anchor_cover_eta_min = *std::min_element(rKnotsIndex2.begin(), rKnotsIndex2.end());
+        TIndexType anchor_cover_eta_max = *std::max_element(rKnotsIndex2.begin(), rKnotsIndex2.end());
 
         if(     LeftIndex()  >= anchor_cover_xi_min
             && RightIndex() <= anchor_cover_xi_max
             && DownIndex()  >= anchor_cover_eta_min
             && UpIndex()    <= anchor_cover_eta_max )
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /// Check if the cell is covered by knot spans; the comparison is based on indexing, so the knot vectors must be sorted a priori
+    template<typename TIndexType>
+    bool IsCovered(const std::vector<TIndexType>& rKnotsIndex1, const std::vector<TIndexType>& rKnotsIndex2,
+            const std::vector<TIndexType>& rKnotsIndex3) const
+    {
+        TIndexType anchor_cover_xi_min  = *std::min_element(rKnotsIndex1.begin(), rKnotsIndex1.end());
+        TIndexType anchor_cover_xi_max  = *std::max_element(rKnotsIndex1.begin(), rKnotsIndex1.end());
+        TIndexType anchor_cover_eta_min = *std::min_element(rKnotsIndex2.begin(), rKnotsIndex2.end());
+        TIndexType anchor_cover_eta_max = *std::max_element(rKnotsIndex2.begin(), rKnotsIndex2.end());
+        TIndexType anchor_cover_zeta_min = *std::min_element(rKnotsIndex3.begin(), rKnotsIndex3.end());
+        TIndexType anchor_cover_zeta_max = *std::max_element(rKnotsIndex3.begin(), rKnotsIndex3.end());
+
+        if(     LeftIndex()  >= anchor_cover_xi_min
+            && RightIndex() <= anchor_cover_xi_max
+            && DownIndex()  >= anchor_cover_eta_min
+            && UpIndex()    <= anchor_cover_eta_max
+            && BelowIndex()  >= anchor_cover_zeta_min
+            && AboveIndex()    <= anchor_cover_zeta_max )
         {
             return true;
         }

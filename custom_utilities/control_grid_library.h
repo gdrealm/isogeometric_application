@@ -28,10 +28,7 @@ template<int TDim, typename TDataType>
 struct ControlGridLibrary_Helper
 {
     /// Generate regular control grid with a specific data type
-    static typename ControlGrid<TDataType>::Pointer CreateStructuredZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid)
-    {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not implemented")
-    }
+    static typename ControlGrid<TDataType>::Pointer CreateStructuredZeroControlGrid(const std::string& Name, const std::vector<std::size_t>& ngrid);
 };
 
 /**

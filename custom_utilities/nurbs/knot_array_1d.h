@@ -29,8 +29,9 @@ namespace Kratos
 This container manages the knot array in 1D. It allows for easy insertion, extraction of knot from the array
 
 Short description:
-+   mpKnots is always sorted ascending
-+   the index of knot starts from 0
++   mpKnots is always sorted ascending.
++   the index of knot starts from 0.
++   this container stores the array of pointers to the knot, not the knot value itself.
  */
 template<typename TDataType>
 class KnotArray1D
@@ -41,6 +42,7 @@ public:
 
     /// Type definitions
     typedef Knot<TDataType> KnotType;
+    typedef TDataType value_type; // this is to be in consistent with std::vector
     typedef typename KnotType::Pointer knot_t;
     typedef typename KnotType::ConstPointer const_knot_t;
     typedef std::deque<knot_t> knot_container_t;
