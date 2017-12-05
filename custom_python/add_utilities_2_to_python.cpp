@@ -23,6 +23,7 @@ LICENSE: see isogeometric_application/LICENSE.txt
 // Project includes
 #include "includes/define.h"
 #include "includes/model_part.h"
+#include "includes/variables.h"
 #include "custom_python/add_utilities_to_python.h"
 #include "custom_utilities/nurbs/domain_manager.h"
 #include "custom_utilities/nurbs/domain_manager_2d.h"
@@ -297,6 +298,16 @@ std::size_t FESpace_Enumerate(FESpace<TDim>& rDummy)
     return eq_size;
 }
 
+template<int TDim>
+boost::python::list FESpace_BoundaryFunctionIndices(FESpace<TDim>& rDummy, const BoundarySide& side)
+{
+    boost::python::list indices;
+    std::vector<std::size_t> boundary_indices = rDummy.ExtractBoundaryFunctionIndices(side);
+    for (std::size_t i = 0; i < boundary_indices.size(); ++i)
+        indices.append<int>(static_cast<int>(boundary_indices[i]));
+    return indices;
+}
+
 ////////////////////////////////////////
 
 BSplinesFESpace<1>::Pointer BSplinesFESpaceLibrary_CreateLinearFESpace(BSplinesFESpaceLibrary& rDummy, const std::size_t& order_u)
@@ -349,6 +360,19 @@ void GridFunction_SetControlGrid(GridFunction<TDim, TDataType>& rDummy, typename
     rDummy.SetControlGrid(pNewControlGrid);
 }
 
+template<int TDim, typename TDataType>
+TDataType GridFunction_GetValue(GridFunction<TDim, TDataType>& rDummy, const boost::python::list& xi)
+{
+    std::vector<double> xi_vec;
+    typedef boost::python::stl_input_iterator<double> iterator_value_type;
+    BOOST_FOREACH(const iterator_value_type::value_type& v, std::make_pair(iterator_value_type(xi), iterator_value_type() ) )
+    {
+        xi_vec.push_back(v);
+    }
+
+    return rDummy.GetValue(xi_vec);
+}
+
 ////////////////////////////////////////
 
 
@@ -382,10 +406,22 @@ typename GridFunction<TDim, TDataType>::Pointer Patch_CreateGridFunction(Patch<T
     return rDummy.template CreateGridFunction<TDataType>(pControlGrid);
 }
 
+template<int TDim, class TVariableType>
+typename GridFunction<TDim, typename TVariableType::Type>::Pointer Patch_GridFunction(Patch<TDim>& rDummy, const TVariableType& rVariable)
+{
+    return rDummy.template pGetGridFunction<TVariableType>(rVariable);
+}
+
 template<class TPatchType, class TMultiPatchType>
 typename TPatchType::Pointer MultiPatch_GetItem(TMultiPatchType& rDummy, std::size_t index)
 {
     return rDummy.pGetPatch(index);
+}
+
+template<class TMultiPatchType>
+std::size_t MultiPatch_Len(TMultiPatchType& rDummy)
+{
+    return rDummy.size();
 }
 
 template<int TDim>
@@ -549,6 +585,10 @@ void IsogeometricApplication_AddControlPoint()
     .add_property("W", ControlPoint_GetW, ControlPoint_SetW)
     .def("ApplyTransformation", &ControlPoint_ApplyTransformation)
     .def(self_ns::str(self))
+    ;
+
+    class_<Variable<ControlPoint<double> >, bases<VariableData>, boost::noncopyable >( "ControlPointVariable", no_init )
+    .def( self_ns::str( self ) )
     ;
 }
 
@@ -717,6 +757,7 @@ void IsogeometricApplication_AddFESpacesToPython()
     .def("Order", &FESpace<TDim>::Order)
     .def("TotalNumber", &FESpace<TDim>::TotalNumber)
     .def("Enumerate", &FESpace_Enumerate<TDim>)
+    .def("BoundaryFunctionIndices", &FESpace_BoundaryFunctionIndices<TDim>)
     .def(self_ns::str(self))
     ;
 
@@ -747,6 +788,7 @@ void IsogeometricApplication_AddGridFunctionsToPython()
     (ss.str().c_str(), init<typename FESpace<TDim>::Pointer, typename ControlGrid<ControlPoint<double> >::Pointer>())
     .add_property("FESpace", GridFunction_GetFESpace<TDim, ControlPoint<double> >, GridFunction_SetFESpace<TDim, ControlPoint<double> >)
     .add_property("ControlGrid", GridFunction_GetControlGrid<TDim, ControlPoint<double> >, GridFunction_SetControlGrid<TDim, ControlPoint<double> >)
+    .def("GetValue", &GridFunction_GetValue<TDim, ControlPoint<double> >)
     .def(self_ns::str(self))
     ;
 
@@ -756,6 +798,7 @@ void IsogeometricApplication_AddGridFunctionsToPython()
     (ss.str().c_str(), init<typename FESpace<TDim>::Pointer, typename ControlGrid<double>::Pointer>())
     .add_property("FESpace", GridFunction_GetFESpace<TDim, double>, GridFunction_SetFESpace<TDim, double>)
     .add_property("ControlGrid", GridFunction_GetControlGrid<TDim, double>, GridFunction_SetControlGrid<TDim, double>)
+    .def("GetValue", &GridFunction_GetValue<TDim, double>)
     .def(self_ns::str(self))
     ;
 
@@ -765,6 +808,7 @@ void IsogeometricApplication_AddGridFunctionsToPython()
     (ss.str().c_str(), init<typename FESpace<TDim>::Pointer, typename ControlGrid<array_1d<double, 3> >::Pointer>())
     .add_property("FESpace", GridFunction_GetFESpace<TDim, array_1d<double, 3> >, GridFunction_SetFESpace<TDim, array_1d<double, 3> >)
     .add_property("ControlGrid", GridFunction_GetControlGrid<TDim, array_1d<double, 3> >, GridFunction_SetControlGrid<TDim, array_1d<double, 3> >)
+    .def("GetValue", &GridFunction_GetValue<TDim, array_1d<double, 3> >)
     .def(self_ns::str(self))
     ;
 
@@ -774,6 +818,7 @@ void IsogeometricApplication_AddGridFunctionsToPython()
     (ss.str().c_str(), init<typename FESpace<TDim>::Pointer, typename ControlGrid<Vector>::Pointer>())
     .add_property("FESpace", GridFunction_GetFESpace<TDim, Vector>, GridFunction_SetFESpace<TDim, Vector>)
     .add_property("ControlGrid", GridFunction_GetControlGrid<TDim, Vector>, GridFunction_SetControlGrid<TDim, Vector>)
+    .def("GetValue", &GridFunction_GetValue<TDim, Vector>)
     .def(self_ns::str(self))
     ;
 }
@@ -794,6 +839,10 @@ void IsogeometricApplication_AddPatchesToPython()
     .def("CreateGridFunction", &Patch_CreateGridFunction<TDim, double>)
     .def("CreateGridFunction", &Patch_CreateGridFunction<TDim, array_1d<double, 3> >)
     .def("CreateGridFunction", &Patch_CreateGridFunction<TDim, Vector>)
+    .def("GridFunction", &Patch_GridFunction<TDim, Variable<ControlPoint<double> > >)
+    .def("GridFunction", &Patch_GridFunction<TDim, Variable<double> >)
+    .def("GridFunction", &Patch_GridFunction<TDim, Variable<array_1d<double, 3> > >)
+    .def("GridFunction", &Patch_GridFunction<TDim, Variable<Vector> >)
     .def("ApplyTransformation", &Patch<TDim>::ApplyTransformation)
     .def("Order", &Patch<TDim>::Order)
     .def("TotalNumber", &Patch<TDim>::TotalNumber)
@@ -817,6 +866,7 @@ void IsogeometricApplication_AddPatchesToPython()
     .def("ResetId", &MultiPatch<TDim>::ResetId)
     .def("AddPatch", &MultiPatch<TDim>::AddPatch)
     .def("__getitem__", &MultiPatch_GetItem<Patch<TDim>, MultiPatch<TDim> >)
+    .def("__len__", &MultiPatch_Len<MultiPatch<TDim> >)
     .def("MakeNeighbor", &MultiPatch_MakeNeighbor<TDim>)
     .def("EquationSystemSize", &MultiPatch<TDim>::EquationSystemSize)
     .def("Enumerate", &MultiPatch_Enumerate<TDim>)

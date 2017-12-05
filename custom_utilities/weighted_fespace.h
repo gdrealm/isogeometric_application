@@ -25,7 +25,7 @@ namespace Kratos
 {
 
 /**
- * A weighted FESpace add the weighted information to the FESpace. 
+ * A weighted FESpace add the weighted information to the FESpace.
  */
 template<int TDim>
 class WeightedFESpace : public FESpace<TDim>
@@ -64,6 +64,9 @@ public:
     {
         return mpFESpace->Order(i);
     }
+
+    /// Set the weight vector
+    void SetWeights(const std::vector<double>& Weights) {mWeights = Weights;}
 
     /// Get the weight vector
     const std::vector<double>& Weights() const {return mWeights;}

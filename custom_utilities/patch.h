@@ -29,7 +29,10 @@
 #include "isogeometric_application/isogeometric_application.h"
 
 
-#define DEBUG_DESTROY
+// #define DEBUG_DESTROY
+
+#define CONVERT_INDEX_IGA_TO_KRATOS(n) (n+1)
+#define CONVERT_INDEX_KRATOS_TO_IGA(n) (n-1)
 
 namespace Kratos
 {
@@ -1189,7 +1192,7 @@ public:
     typename PatchContainerType::const_iterator end() const {return mpPatches.end();}
 
     /// Get the number of patches
-    const std::size_t& size() const {return mpPatches.size();}
+    std::size_t size() const {return mpPatches.size();}
 
     /// Enumerate all the patches
     std::size_t Enumerate()

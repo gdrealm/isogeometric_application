@@ -96,7 +96,7 @@ public:
             const ControlPointType& point = mpMultiPatch->pGetPatch(patch_id)->pControlPointGridFunction()->pControlGrid()->GetData(local_id);
             // KRATOS_WATCH(point)
 
-            ModelPart::NodeType::Pointer pNewNode = mpModelPart->CreateNewNode(i+1, point.X(), point.Y(), point.Z());
+            ModelPart::NodeType::Pointer pNewNode = mpModelPart->CreateNewNode(CONVERT_INDEX_IGA_TO_KRATOS(i), point.X(), point.Y(), point.Z());
 
             // TODO transfer corresponding data from control points to new nodes
         }
@@ -200,7 +200,7 @@ public:
 
         for (ModelPart::NodesContainerType::const_iterator it = mpModelPart->Nodes().begin(); it != mpModelPart->Nodes().end(); ++it)
         {
-            std::size_t func_id = it->Id() - 1;
+            std::size_t func_id = CONVERT_INDEX_KRATOS_TO_IGA(it->Id());
 
             // get the corresponding patch
             std::size_t patch_id = func_id_map[func_id];
@@ -209,6 +209,8 @@ public:
             // find the corresponding control point in the multipatch
             std::size_t local_id = pPatch->pFESpace()->LocalId(func_id);
             pPatch->pGetGridFunction(rVariable)->pControlGrid()->SetData(local_id, it->GetSolutionStepValue(rVariable));
+            // KRATOS_WATCH(local_id)
+            // KRATOS_WATCH(it->GetSolutionStepValue(rVariable))
 
             // // compare with the control point
             // std::cout << "node (" << it->X0() << ", " << it->Y0() << ") is with control point "

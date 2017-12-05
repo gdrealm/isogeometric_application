@@ -124,6 +124,11 @@ private:
         // rOStream << "ylabel('y');\n";
         // rOStream << "zlabel('z');\n";
 
+        rOStream << patch_name << "_number = [";
+        for (std::size_t i = 0; i < pPatch->pFESpace()->FunctionIndices().size(); ++i)
+            rOStream << " " << CONVERT_INDEX_IGA_TO_KRATOS(pPatch->pFESpace()->FunctionIndices()[i]);
+        rOStream << "];\n";
+
         rOStream << std::endl;
     }
 

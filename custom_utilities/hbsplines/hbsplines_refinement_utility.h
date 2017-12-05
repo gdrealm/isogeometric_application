@@ -405,6 +405,33 @@ inline void HBSplinesRefinementUtility_Helper<TDim>::Refine(typename Patch<TDim>
         }
     }
 
+    // update the weight information for all the grid functions (except the control point grid function)
+    std::vector<double> Weights = pFESpace->GetWeights();
+
+    typename Patch<TDim>::DoubleGridFunctionContainerType DoubleGridFunctions_ = pPatch->DoubleGridFunctions();
+    for (typename Patch<TDim>::DoubleGridFunctionContainerType::iterator it = DoubleGridFunctions_.begin();
+            it != DoubleGridFunctions_.end(); ++it)
+    {
+        typename WeightedFESpace<TDim>::Pointer pThisFESpace = boost::dynamic_pointer_cast<WeightedFESpace<TDim> >(*it);
+        pThisFESpace->SetWeights(Weights);
+    }
+
+    typename Patch<TDim>::Array1DGridFunctionContainerType Array1DGridFunctions_ = pPatch->Array1DGridFunctions();
+    for (typename Patch<TDim>::Array1DGridFunctionContainerType::iterator it = Array1DGridFunctions_.begin();
+            it != Array1DGridFunctions_.end(); ++it)
+    {
+        typename WeightedFESpace<TDim>::Pointer pThisFESpace = boost::dynamic_pointer_cast<WeightedFESpace<TDim> >(*it);
+        pThisFESpace->SetWeights(Weights);
+    }
+
+    typename Patch<TDim>::VectorGridFunctionContainerType VectorGridFunctions_ = pPatch->VectorGridFunctions();
+    for (typename Patch<TDim>::VectorGridFunctionContainerType::iterator it = VectorGridFunctions_.begin();
+            it != VectorGridFunctions_.end(); ++it)
+    {
+        typename WeightedFESpace<TDim>::Pointer pThisFESpace = boost::dynamic_pointer_cast<WeightedFESpace<TDim> >(*it);
+        pThisFESpace->SetWeights(Weights);
+    }
+
     #ifdef ENABLE_PROFILING
     double time_2 = OpenMPUtils::GetCurrentTime() - start;
     start = OpenMPUtils::GetCurrentTime();

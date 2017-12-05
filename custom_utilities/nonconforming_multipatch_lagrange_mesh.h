@@ -117,6 +117,7 @@ public:
         std::size_t NodeCounter_old = NodeCounter;
         std::size_t ElementCounter = mLastElemId;
         std::size_t PropertiesCounter = mLastPropId;
+        std::vector<double> p_ref(TDim);
         for (typename MultiPatch<TDim>::PatchContainerType::iterator it = mpMultiPatch->begin();
                 it != mpMultiPatch->end(); ++it)
         {
@@ -138,9 +139,6 @@ public:
                 KRATOS_WATCH(NumDivision2)
                 #endif
 
-                std::vector<double> p_ref(2);
-                typename Patch<TDim>::ControlPointType p;
-
                 for (std::size_t i = 0; i <= NumDivision1; ++i)
                 {
                     p_ref[0] = ((double) i) / NumDivision1;
@@ -152,70 +150,7 @@ public:
                         std::cout << "p_ref: " << p_ref[0] << " " << p_ref[1] << std::endl;
                         #endif
 
-                        p = it->pControlPointGridFunction()->GetValue(p_ref);
-
-                        // typename NodeType::Pointer pNewNode( new NodeType( 0, p.X(), p.Y(), p.Z() ) );
-                        // pNewNode->SetId(NodeCounter++);
-                        // r_model_part.AddNode(pNewNode);
-                        // // Giving model part's variables list to the node
-                        // pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
-                        // //set buffer size
-                        // pNewNode->SetBufferSize(r_model_part.GetBufferSize());
-
-                        typename NodeType::Pointer pNewNode = r_model_part.CreateNewNode(NodeCounter++, p.X(), p.Y(), p.Z());
-                        #ifdef DEBUG_MESH_GENERATION
-                        std::cout << "Node " << pNewNode->Id() << " (" << pNewNode->X() << " " << pNewNode->Y() << " " << pNewNode->Z() << ") is created" << std::endl;
-                        #endif
-
-                        // transfer the control values
-                        DoubleGridFunctionContainerType DoubleGridFunctions_ = it->DoubleGridFunctions();
-                        for (typename DoubleGridFunctionContainerType::const_iterator it_gf = DoubleGridFunctions_.begin();
-                                it_gf != DoubleGridFunctions_.end(); ++it_gf)
-                        {
-                            typedef double DataType;
-                            typedef Variable<DataType> VariableType;
-                            const std::string& var_name = (*it_gf)->pControlGrid()->Name();
-                            if (KratosComponents<VariableData>::Has(var_name))
-                            {
-                                VariableType* pVariable = dynamic_cast<VariableType*>(&KratosComponents<VariableData>::Get(var_name));
-                                DataType value = (*it_gf)->GetValue(p_ref);
-                                pNewNode->GetSolutionStepValue(*pVariable) = value;
-                            }
-                        }
-
-                        Array1DGridFunctionContainerType Array1DGridFunctions_ = it->Array1DGridFunctions();
-                        for (typename Array1DGridFunctionContainerType::const_iterator it_gf = Array1DGridFunctions_.begin();
-                                it_gf != Array1DGridFunctions_.end(); ++it_gf)
-                        {
-                            typedef array_1d<double, 3> DataType;
-                            typedef Variable<DataType> VariableType;
-                            const std::string& var_name = (*it_gf)->pControlGrid()->Name();
-                            if (KratosComponents<VariableData>::Has(var_name))
-                            {
-                                VariableType* pVariable = dynamic_cast<VariableType*>(&KratosComponents<VariableData>::Get(var_name));
-                                DataType value = (*it_gf)->GetValue(p_ref);
-                                pNewNode->GetSolutionStepValue(*pVariable) = value;
-                                #ifdef DEBUG_MESH_GENERATION
-                                std::cout << "node " << *pNewNode << "[" << var_name << "]: " << value << std::endl;
-                                KRATOS_WATCH(*((*it_gf)->pControlGrid()))
-                                #endif
-                            }
-                        }
-
-                        VectorGridFunctionContainerType VectorGridFunctions_ = it->VectorGridFunctions();
-                        for (typename VectorGridFunctionContainerType::const_iterator it_gf = VectorGridFunctions_.begin();
-                                it_gf != VectorGridFunctions_.end(); ++it_gf)
-                        {
-                            typedef Vector DataType;
-                            typedef Variable<DataType> VariableType;
-                            const std::string& var_name = (*it_gf)->pControlGrid()->Name();
-                            if (KratosComponents<VariableData>::Has(var_name))
-                            {
-                                VariableType* pVariable = dynamic_cast<VariableType*>(&KratosComponents<VariableData>::Get(var_name));
-                                DataType value = (*it_gf)->GetValue(p_ref);
-                                pNewNode->GetSolutionStepValue(*pVariable) = value;
-                            }
-                        }
+                        this->CreateNode(p_ref, *it, r_model_part, NodeCounter);
                     }
                 }
 
@@ -273,9 +208,6 @@ public:
                 KRATOS_WATCH(NumDivision3)
                 #endif
 
-                std::vector<double> p_ref(3);
-                typename Patch<TDim>::ControlPointType p;
-
                 for (std::size_t i = 0; i <= NumDivision1; ++i)
                 {
                     p_ref[0] = ((double) i) / NumDivision1;
@@ -286,21 +218,7 @@ public:
                         {
                             p_ref[2] = ((double) k) / NumDivision3;
 
-                            p = it->pControlPointGridFunction()->GetValue(p_ref);
-
-                            typename NodeType::Pointer pNewNode( new NodeType( 0, p.X(), p.Y(), p.Z() ) );
-                            pNewNode->SetId(NodeCounter++);
-                            #ifdef DEBUG_MESH_GENERATION
-                            std::cout << "Node " << pNewNode->Id() << " (" << pNewNode->X() << " " << pNewNode->Y() << " " << pNewNode->Z() << ") is created" << std::endl;
-                            #endif
-
-                            // Giving model part's variables list to the node
-                            pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
-
-                            //set buffer size
-                            pNewNode->SetBufferSize(r_model_part.GetBufferSize());
-
-                            r_model_part.AddNode(pNewNode);
+                            this->CreateNode(p_ref, *it, r_model_part, NodeCounter);
                         }
                     }
                 }
@@ -392,6 +310,79 @@ private:
         }
 
         return i_result;
+    }
+
+    /// Helper function to create new node from patch and add to the model_part. The control values will be carried.
+    void CreateNode(const std::vector<double>& p_ref, const Patch<TDim>& rPatch, ModelPart& r_model_part, std::size_t& NodeCounter) const
+    {
+        typedef typename Patch<TDim>::DoubleGridFunctionContainerType DoubleGridFunctionContainerType;
+        typedef typename Patch<TDim>::Array1DGridFunctionContainerType Array1DGridFunctionContainerType;
+        typedef typename Patch<TDim>::VectorGridFunctionContainerType VectorGridFunctionContainerType;
+
+        typename Patch<TDim>::ControlPointType p = rPatch.pControlPointGridFunction()->GetValue(p_ref);
+
+        // typename NodeType::Pointer pNewNode( new NodeType( 0, p.X(), p.Y(), p.Z() ) );
+        // pNewNode->SetId(NodeCounter++);
+        // r_model_part.AddNode(pNewNode);
+        // // Giving model part's variables list to the node
+        // pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
+        // //set buffer size
+        // pNewNode->SetBufferSize(r_model_part.GetBufferSize());
+
+        typename NodeType::Pointer pNewNode = r_model_part.CreateNewNode(NodeCounter++, p.X(), p.Y(), p.Z());
+        #ifdef DEBUG_MESH_GENERATION
+        std::cout << "Node " << pNewNode->Id() << " (" << pNewNode->X() << " " << pNewNode->Y() << " " << pNewNode->Z() << ") is created" << std::endl;
+        #endif
+
+        // transfer the control values
+        DoubleGridFunctionContainerType DoubleGridFunctions_ = rPatch.DoubleGridFunctions();
+        for (typename DoubleGridFunctionContainerType::const_iterator it_gf = DoubleGridFunctions_.begin();
+                it_gf != DoubleGridFunctions_.end(); ++it_gf)
+        {
+            typedef double DataType;
+            typedef Variable<DataType> VariableType;
+            const std::string& var_name = (*it_gf)->pControlGrid()->Name();
+            if (KratosComponents<VariableData>::Has(var_name))
+            {
+                VariableType* pVariable = dynamic_cast<VariableType*>(&KratosComponents<VariableData>::Get(var_name));
+                DataType value = (*it_gf)->GetValue(p_ref);
+                pNewNode->GetSolutionStepValue(*pVariable) = value;
+            }
+        }
+
+        Array1DGridFunctionContainerType Array1DGridFunctions_ = rPatch.Array1DGridFunctions();
+        for (typename Array1DGridFunctionContainerType::const_iterator it_gf = Array1DGridFunctions_.begin();
+                it_gf != Array1DGridFunctions_.end(); ++it_gf)
+        {
+            typedef array_1d<double, 3> DataType;
+            typedef Variable<DataType> VariableType;
+            const std::string& var_name = (*it_gf)->pControlGrid()->Name();
+            if (KratosComponents<VariableData>::Has(var_name))
+            {
+                VariableType* pVariable = dynamic_cast<VariableType*>(&KratosComponents<VariableData>::Get(var_name));
+                DataType value = (*it_gf)->GetValue(p_ref);
+                pNewNode->GetSolutionStepValue(*pVariable) = value;
+                #ifdef DEBUG_MESH_GENERATION
+                std::cout << "node " << *pNewNode << "[" << var_name << "]: " << value << std::endl;
+                KRATOS_WATCH(*((*it_gf)->pControlGrid()))
+                #endif
+            }
+        }
+
+        VectorGridFunctionContainerType VectorGridFunctions_ = rPatch.VectorGridFunctions();
+        for (typename VectorGridFunctionContainerType::const_iterator it_gf = VectorGridFunctions_.begin();
+                it_gf != VectorGridFunctions_.end(); ++it_gf)
+        {
+            typedef Vector DataType;
+            typedef Variable<DataType> VariableType;
+            const std::string& var_name = (*it_gf)->pControlGrid()->Name();
+            if (KratosComponents<VariableData>::Has(var_name))
+            {
+                VariableType* pVariable = dynamic_cast<VariableType*>(&KratosComponents<VariableData>::Get(var_name));
+                DataType value = (*it_gf)->GetValue(p_ref);
+                pNewNode->GetSolutionStepValue(*pVariable) = value;
+            }
+        }
     }
 
 };

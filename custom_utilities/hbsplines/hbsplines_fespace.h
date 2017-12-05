@@ -158,6 +158,18 @@ public:
     /// Get the knot vector in i-direction, i=0..Dim
     const knot_container_t& KnotVector(const std::size_t& i) const {return mKnotVectors[i];}
 
+    /// Get the weights of all the basis functions
+    std::vector<double> GetWeights() const
+    {
+        std::vector<double> weights(this->TotalNumber());
+        std::size_t cnt = 0;
+        for (bf_iterator it = bf_begin(); it != bf_end(); ++it)
+        {
+            weights[cnt++] = (*it)->GetValue(CONTROL_POINT).W();
+        }
+        return weights;
+    }
+
     /// Get the string representing the type of the patch
     virtual std::string Type() const
     {

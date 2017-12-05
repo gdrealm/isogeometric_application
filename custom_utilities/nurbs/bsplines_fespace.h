@@ -27,7 +27,7 @@
 #include "custom_utilities/nurbs/cell_manager_2d.h"
 #include "custom_utilities/nurbs/cell_manager_3d.h"
 
-#define DEBUG_GEN_CELL
+// #define DEBUG_GEN_CELL
 
 namespace Kratos
 {
