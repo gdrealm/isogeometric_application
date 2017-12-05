@@ -23,54 +23,58 @@ if ~isfield(params,'label')
     params.label = 'off';
 end
 
+if ~isfield(params,'axis')
+    params.axis = 'off';
+end
+
+if ~isfield(params,'number')
+    params.number = 1:(u_dim*v_dim);
+end
+
 %%
 cnt = 1;
-    for j = 1:v_dim
-        for k = 1:u_dim
-            point = nurbs.coefs(:, k, j);
-            point(1:3) = point(1:3) / point(4);
-            scatter3(point(1), point(2), point(3), params.point_color);
-            if strcmp(params.label,'on')
-                text(point(1), point(2), point(3), num2str(cnt), 'HorizontalAlignment', 'right', 'VerticalAlignment', 'cap');
-            end
-            cnt = cnt + 1;
-            if k > 1
-                if k == 2
-                    L = quiver3(old_point_u(1), old_point_u(2), old_point_u(3), point(1)-old_point_u(1), point(2)-old_point_u(2), point(3)-old_point_u(3));
-                else
-                    L = line([old_point_u(1) point(1)], [old_point_u(2) point(2)], [old_point_u(3) point(3)]);
-                end
-                set(L, 'color', u_color);
-            end
-            old_point_u = point;
+for j = 1:v_dim
+    for k = 1:u_dim
+        point = nurbs.coefs(:, k, j);
+        point(1:3) = point(1:3) / point(4);
+        scatter3(point(1), point(2), point(3), params.point_color);
+        if strcmp(params.label,'on')
+            text(point(1), point(2), point(3), num2str(params.number(cnt)), 'HorizontalAlignment', 'right', 'VerticalAlignment', 'cap');
         end
+        cnt = cnt + 1;
+        if k > 1
+            if k == 2
+                L = quiver3(old_point_u(1), old_point_u(2), old_point_u(3), point(1)-old_point_u(1), point(2)-old_point_u(2), point(3)-old_point_u(3));
+            else
+                L = line([old_point_u(1) point(1)], [old_point_u(2) point(2)], [old_point_u(3) point(3)]);
+            end
+            set(L, 'color', u_color);
+        end
+        old_point_u = point;
     end
+end
 
 
 %%
-    for k = 1:u_dim
-        for j = 1:v_dim
-            point = nurbs.coefs(:, k, j);
-            point(1:3) = point(1:3) / point(4);
-            if j > 1
-                if j == 2
-                    L = quiver3(old_point_v(1), old_point_v(2), old_point_v(3), point(1)-old_point_v(1), point(2)-old_point_v(2), point(3)-old_point_v(3));
-                else
-                    L = line([old_point_v(1) point(1)], [old_point_v(2) point(2)], [old_point_v(3) point(3)]);
-                end
-                set(L, 'color', v_color);
+for k = 1:u_dim
+    for j = 1:v_dim
+        point = nurbs.coefs(:, k, j);
+        point(1:3) = point(1:3) / point(4);
+        if j > 1
+            if j == 2
+                L = quiver3(old_point_v(1), old_point_v(2), old_point_v(3), point(1)-old_point_v(1), point(2)-old_point_v(2), point(3)-old_point_v(3));
+            else
+                L = line([old_point_v(1) point(1)], [old_point_v(2) point(2)], [old_point_v(3) point(3)]);
             end
-            old_point_v = point;
+            set(L, 'color', v_color);
         end
+        old_point_v = point;
     end
+end
 
 u = plot(0,0,u_color);
 v = plot(0,0,v_color);
 legend([u,v], 'u-dim', 'v-dim');
-
-if ~isfield(params,'axis')
-    params.axis = 'off';
-end
 
 xlabel('x');
 ylabel('y');

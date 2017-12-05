@@ -32,7 +32,11 @@ if ~isfield(params,'label')
 end
 
 if ~isfield(params,'axis')
-    params.label = 'off';
+    params.axis = 'off';
+end
+
+if ~isfield(params,'number')
+    params.number = 1:(u_dim*v_dim*w_dim);
 end
 
 if ~isfield(params,'text_dc')
@@ -48,7 +52,7 @@ for i = 1:w_dim
             point(1:3) = point(1:3) / point(4);
             scatter3(point(1), point(2), point(3), params.point_color);
             if strcmp(params.label,'on')
-                text(point(1)*params.text_dc, point(2)*params.text_dc, point(3)*params.text_dc, num2str(cnt));
+                text(point(1)*params.text_dc, point(2)*params.text_dc, point(3)*params.text_dc, num2str(params.number(cnt)));
             end
             cnt = cnt + 1;
             if k > 1
