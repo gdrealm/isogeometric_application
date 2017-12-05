@@ -37,10 +37,14 @@ class StraightLiningGenerator():
         ring = []
         keystone_ptr = self.CreateSegment(x, ksangle, keangle)
         ring.append(keystone_ptr)
-        sweep = (360.0 - (keangle-ksangle)) / nsegment
+        sweep = (360.0 - abs(keangle-ksangle)) / nsegment
+        if keangle > ksangle:
+            dir = 1.0
+        else:
+            dir = -1.0
         for i in range(0, nsegment):
-            sangle = keangle + i*sweep
-            eangle = sangle + sweep
+            sangle = keangle + dir*i*sweep
+            eangle = sangle + dir*sweep
             segment_ptr = self.CreateSegment(x, sangle, eangle)
             ring.append(segment_ptr)
         return ring
