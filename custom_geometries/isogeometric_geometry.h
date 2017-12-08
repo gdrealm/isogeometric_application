@@ -246,6 +246,9 @@ public:
     ///@{
 
     IsogeometricGeometry() : BaseType()
+    #ifndef ENABLE_PRECOMPUTE
+    , mIsInitialized(false)
+    #endif
     {
     }
 
@@ -265,7 +268,10 @@ public:
     */
     IsogeometricGeometry( const PointsArrayType& ThisPoints,
               GeometryData const* pThisGeometryData = 0 )
-        : BaseType( ThisPoints, pThisGeometryData )
+    : BaseType( ThisPoints, pThisGeometryData )
+    #ifndef ENABLE_PRECOMPUTE
+    , mIsInitialized(false)
+    #endif
     {
     }
 
@@ -278,7 +284,10 @@ public:
     source geometry's points too.
     */
     IsogeometricGeometry( const IsogeometricGeometry& rOther )
-        : BaseType( rOther )
+    : BaseType( rOther )
+    #ifndef ENABLE_PRECOMPUTE
+    , mIsInitialized(false)
+    #endif
     {
     }
 
@@ -294,7 +303,10 @@ public:
     source geometry's points too.
     */
     template<class TOtherPointType> IsogeometricGeometry( IsogeometricGeometry<TOtherPointType> const & rOther )
-        : BaseType( rOther.begin(), rOther.end() )
+    : BaseType( rOther.begin(), rOther.end() )
+    #ifndef ENABLE_PRECOMPUTE
+    , mIsInitialized(false)
+    #endif
     {
     }
 
@@ -499,9 +511,13 @@ public:
     virtual void Initialize(IntegrationMethod ThisMethod)
     {
         #ifndef ENABLE_PRECOMPUTE
-        mpInternal_Ncontainer = boost::shared_ptr<Matrix>(new Matrix());
-        mpInternal_DN_De = boost::shared_ptr<ShapeFunctionsGradientsType>(new ShapeFunctionsGradientsType());
-        this->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(*mpInternal_Ncontainer, *mpInternal_DN_De, ThisMethod);
+        if(!mIsInitialized)
+        {
+            mpInternal_Ncontainer = boost::shared_ptr<Matrix>(new Matrix());
+            mpInternal_DN_De = boost::shared_ptr<ShapeFunctionsGradientsType>(new ShapeFunctionsGradientsType());
+            this->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(*mpInternal_Ncontainer, *mpInternal_DN_De, ThisMethod);
+            mIsInitialized = true;
+        }
         #endif
     }
 
@@ -510,6 +526,7 @@ public:
         #ifndef ENABLE_PRECOMPUTE
         mpInternal_DN_De.reset();
         mpInternal_Ncontainer.reset();
+        mIsInitialized = false;
         #endif
     }
 
@@ -662,6 +679,7 @@ private:
     ///@{
 
     #ifndef ENABLE_PRECOMPUTE
+    bool mIsInitialized;
     boost::shared_ptr<ShapeFunctionsGradientsType> mpInternal_DN_De;
     boost::shared_ptr<Matrix> mpInternal_Ncontainer;
     #endif
