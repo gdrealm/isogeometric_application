@@ -52,6 +52,9 @@ namespace Kratos
     KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS( LOCAL_COORDINATES )
 
     KratosIsogeometricApplication::KratosIsogeometricApplication()
+    : mDummyConditionBezier2D( 0, Element::GeometryType::Pointer( new Geo2dBezier<Node<3> >() ) )
+    , mDummyConditionBezier2D3( 0, Element::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
+    , mDummyConditionBezier3D( 0, Element::GeometryType::Pointer( new Geo3dBezier<Node<3> >() ) )
     {}
 
  	void KratosIsogeometricApplication::Register()
@@ -97,6 +100,11 @@ namespace Kratos
 
         Geo3dBezier<Node<3> > Geo3dBezierPrototype;
         Serializer::Register( "Geo3dBezier", Geo3dBezierPrototype );
+
+        // register conditions
+        KRATOS_REGISTER_CONDITION( "DummyConditionBezier2D", mDummyConditionBezier2D )
+        KRATOS_REGISTER_CONDITION( "DummyConditionBezier2D3", mDummyConditionBezier2D3 )
+        KRATOS_REGISTER_CONDITION( "DummyConditionBezier3D", mDummyConditionBezier3D )
  	}
 
 }  // namespace Kratos.

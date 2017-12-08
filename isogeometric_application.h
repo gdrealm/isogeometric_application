@@ -24,6 +24,7 @@
 #include "includes/kratos_application.h"
 #include "includes/variables.h"
 #include "custom_utilities/control_point.h"
+#include "custom_conditions/dummy_isogeometric_condition.h"
 
 namespace Kratos
 {
@@ -203,6 +204,10 @@ namespace Kratos
 		///@}
 		///@name Member Variables
 		///@{
+
+        const DummyIsogeometricCondition mDummyConditionBezier2D;
+        const DummyIsogeometricCondition mDummyConditionBezier2D3;
+        const DummyIsogeometricCondition mDummyConditionBezier3D;
 
 
 		///@}
