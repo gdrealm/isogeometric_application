@@ -33,15 +33,13 @@ void MultiPatchRefinementUtility::InsertKnots(typename Patch<TDim>::Pointer& pPa
         // compute the transformation matrix
         Matrix T;
         std::vector<std::vector<double> > new_knots(TDim);
-        std::vector<double> new_weights;
-        std::vector<double> weights = pPatch->GetControlWeights();
 
         typename BSplinesFESpace<TDim>::Pointer pFESpace = boost::dynamic_pointer_cast<BSplinesFESpace<TDim> >(pPatch->pFESpace());
         typename BSplinesFESpace<TDim>::Pointer pNewFESpace = typename BSplinesFESpace<TDim>::Pointer(new BSplinesFESpace<TDim>());
 
         std::vector<std::size_t> new_size(TDim);
 
-        this->ComputeNURBSKnotInsertionCoefficients<TDim>(T, new_knots, new_weights, pFESpace, ins_knots, weights);
+        this->ComputeBsplinesKnotInsertionCoefficients<TDim>(T, new_knots, pFESpace, ins_knots);
 
         for (std::size_t dim = 0; dim < TDim; ++dim)
         {
@@ -60,31 +58,45 @@ void MultiPatchRefinementUtility::InsertKnots(typename Patch<TDim>::Pointer& pPa
         ControlGridUtility::Transform<ControlPoint<double>, Matrix>(T, *(pPatch->pControlPointGridFunction()->pControlGrid()), *pNewControlPoints);
         pNewControlPoints->SetName(pPatch->pControlPointGridFunction()->pControlGrid()->Name());
         pNewPatch->CreateControlPointGridFunction(pNewControlPoints);
+//        KRATOS_WATCH(*pNewControlPoints)
+
+        std::vector<double> old_weights = pPatch->GetControlWeights();
+        std::vector<double> new_weights = pNewPatch->GetControlWeights();
+
+        typename Patch<TDim>::DoubleGridFunctionContainerType DoubleGridFunctions_ = pPatch->DoubleGridFunctions();
+
+        typename Patch<TDim>::Array1DGridFunctionContainerType Array1DGridFunctions_ = pPatch->Array1DGridFunctions();
+
+        typename Patch<TDim>::VectorGridFunctionContainerType VectorGridFunctions_ = pPatch->VectorGridFunctions();
 
         // transfer the grid function
-        for (typename Patch<TDim>::DoubleGridFunctionContainerType::const_iterator it = pPatch->DoubleGridFunctions().begin();
-                it != pPatch->DoubleGridFunctions().end(); ++it)
+        // here to transfer correctly we apply a two-step process:
+        // + firstly the old control values is multiplied with weight to make it weighted control values
+        // + secondly the control values will be transferred
+        // + the new control values will be divided by the new weight to make it unweighted
+        for (typename Patch<TDim>::DoubleGridFunctionContainerType::const_iterator it = DoubleGridFunctions_.begin();
+                it != DoubleGridFunctions_.end(); ++it)
         {
             typename ControlGrid<double>::Pointer pNewDoubleControlGrid = typename ControlGrid<double>::Pointer (new StructuredControlGrid<TDim, double>(new_size));
-            ControlGridUtility::Transform<double, Matrix>(T, *((*it)->pControlGrid()), *pNewDoubleControlGrid);
+            ControlGridUtility::Transform<double, Matrix>(T, old_weights, *((*it)->pControlGrid()), new_weights, *pNewDoubleControlGrid);
             pNewDoubleControlGrid->SetName((*it)->pControlGrid()->Name());
             pNewPatch->template CreateGridFunction<double>(pNewDoubleControlGrid);
         }
 
-        for (typename Patch<TDim>::Array1DGridFunctionContainerType::const_iterator it = pPatch->Array1DGridFunctions().begin();
-                it != pPatch->Array1DGridFunctions().end(); ++it)
+        for (typename Patch<TDim>::Array1DGridFunctionContainerType::const_iterator it = Array1DGridFunctions_.begin();
+                it != Array1DGridFunctions_.end(); ++it)
         {
             typename ControlGrid<array_1d<double, 3> >::Pointer pNewArray1DControlGrid = typename ControlGrid<array_1d<double, 3> >::Pointer (new StructuredControlGrid<TDim, array_1d<double, 3> >(new_size));
-            ControlGridUtility::Transform<array_1d<double, 3>, Matrix>(T, *((*it)->pControlGrid()), *pNewArray1DControlGrid);
+            ControlGridUtility::Transform<array_1d<double, 3>, Matrix>(T, old_weights, *((*it)->pControlGrid()), new_weights, *pNewArray1DControlGrid);
             pNewArray1DControlGrid->SetName((*it)->pControlGrid()->Name());
             pNewPatch->template CreateGridFunction<array_1d<double, 3> >(pNewArray1DControlGrid);
         }
 
-        for (typename Patch<TDim>::VectorGridFunctionContainerType::const_iterator it = pPatch->VectorGridFunctions().begin();
-                it != pPatch->VectorGridFunctions().end(); ++it)
+        for (typename Patch<TDim>::VectorGridFunctionContainerType::const_iterator it = VectorGridFunctions_.begin();
+                it != VectorGridFunctions_.end(); ++it)
         {
             typename ControlGrid<Vector>::Pointer pNewVectorControlGrid = typename ControlGrid<Vector>::Pointer (new StructuredControlGrid<TDim, Vector>(new_size));
-            ControlGridUtility::Transform<Vector, Matrix>(T, *((*it)->pControlGrid()), *pNewVectorControlGrid);
+            ControlGridUtility::Transform<Vector, Matrix>(T, old_weights, *((*it)->pControlGrid()), new_weights, *pNewVectorControlGrid);
             pNewVectorControlGrid->SetName((*it)->pControlGrid()->Name());
             pNewPatch->template CreateGridFunction<Vector>(pNewVectorControlGrid);
         }
@@ -469,57 +481,45 @@ void MultiPatchRefinementUtility::DegreeElevate(typename Patch<TDim>::Pointer& p
 
 
 template<>
-void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<1>(
+void MultiPatchRefinementUtility::ComputeBsplinesKnotInsertionCoefficients<1>(
     Matrix& T,
     std::vector<std::vector<double> >& new_knots,
-    std::vector<double>& new_weights,
     typename BSplinesFESpace<1>::Pointer& pFESpace,
-    const std::vector<std::vector<double> >& ins_knots,
-    const std::vector<double>& weights) const
+    const std::vector<std::vector<double> >& ins_knots) const
 {
-    BSplineUtils::ComputeNURBSKnotInsertionCoefficients1D(T,
+    BSplineUtils::ComputeBsplinesKnotInsertionCoefficients1D(T,
             new_knots[0],
-            new_weights,
             pFESpace->Order(0),
             pFESpace->KnotVector(0),
-            ins_knots[0],
-            weights);
+            ins_knots[0]);
 }
 
 template<>
-void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<2>(
+void MultiPatchRefinementUtility::ComputeBsplinesKnotInsertionCoefficients<2>(
     Matrix& T,
     std::vector<std::vector<double> >& new_knots,
-    std::vector<double>& new_weights,
     typename BSplinesFESpace<2>::Pointer& pFESpace,
-    const std::vector<std::vector<double> >& ins_knots,
-    const std::vector<double>& weights) const
+    const std::vector<std::vector<double> >& ins_knots) const
 {
-    BSplineUtils::ComputeNURBSKnotInsertionCoefficients2D(T,
+    BSplineUtils::ComputeBsplinesKnotInsertionCoefficients2D(T,
             new_knots[0], new_knots[1],
-            new_weights,
             pFESpace->Order(0), pFESpace->Order(1),
             pFESpace->KnotVector(0), pFESpace->KnotVector(1),
-            ins_knots[0], ins_knots[1],
-            weights);
+            ins_knots[0], ins_knots[1]);
 }
 
 template<>
-void MultiPatchRefinementUtility::ComputeNURBSKnotInsertionCoefficients<3>(
+void MultiPatchRefinementUtility::ComputeBsplinesKnotInsertionCoefficients<3>(
     Matrix& T,
     std::vector<std::vector<double> >& new_knots,
-    std::vector<double>& new_weights,
     typename BSplinesFESpace<3>::Pointer& pFESpace,
-    const std::vector<std::vector<double> >& ins_knots,
-    const std::vector<double>& weights) const
+    const std::vector<std::vector<double> >& ins_knots) const
 {
-    BSplineUtils::ComputeNURBSKnotInsertionCoefficients3D(T,
+    BSplineUtils::ComputeBsplinesKnotInsertionCoefficients3D(T,
             new_knots[0], new_knots[1], new_knots[2],
-            new_weights,
             pFESpace->Order(0), pFESpace->Order(1), pFESpace->Order(2),
             pFESpace->KnotVector(0), pFESpace->KnotVector(1), pFESpace->KnotVector(2),
-            ins_knots[0], ins_knots[1], ins_knots[2],
-            weights);
+            ins_knots[0], ins_knots[1], ins_knots[2]);
 }
 
 template<>

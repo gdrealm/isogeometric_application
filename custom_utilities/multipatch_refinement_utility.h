@@ -93,13 +93,11 @@ private:
 
     /// Compute the transformation matrix for knot insertion (NURBS version)
     template<int TDim>
-    void ComputeNURBSKnotInsertionCoefficients(
+    void ComputeBsplinesKnotInsertionCoefficients(
         Matrix& T,
         std::vector<std::vector<double> >& new_knots,
-        std::vector<double>& new_weights,
         typename BSplinesFESpace<TDim>::Pointer& pFESpace,
-        const std::vector<std::vector<double> >& ins_knots,
-        const std::vector<double>& weights) const
+        const std::vector<std::vector<double> >& ins_knots) const
     {
         std::stringstream ss;
         ss << __FUNCTION__ << " is not implemented for dimension " << TDim;
