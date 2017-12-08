@@ -48,7 +48,7 @@ for i = 1:v_dim
     for j = 1:u_dim
         point = nurbs.coefs(:, j, i);
         point(1:3) = point(1:3) / point(4);
-        fprintf(fid, '\t\tcurrent_nodal_set[%d] = [%f, %f, %f]\n', cnt, point(1), point(2), point(3));
+        fprintf(fid, '\t\tcurrent_nodal_set[%d] = [%.10f, %.10f, %.10f]\n', cnt, point(1), point(2), point(3));
         cnt = cnt + 1;
     end
 end
@@ -143,7 +143,7 @@ for i = 1:ne1
                id1 = i + i1 - 1 + sum_mul1;
                id2 = j + j1 - 1 + sum_mul2;
                 point = nurbs.coefs(:, id1, id2);
-                fprintf(fid, '%f', point(4));
+                fprintf(fid, '%.10f', point(4));
                 if (i1==p1+1) && (j1==p2+1)
                     fprintf(fid, ']\n');
                 else
@@ -171,7 +171,7 @@ for k1 = 1:ne1
                 if i == 1 %change to modified compressed sparse row matrix
                     fprintf(fid, ' %d', Ce(i, j));
                 else
-                    fprintf(fid, ' %f', Ce(i, j));
+                    fprintf(fid, ' %.10f', Ce(i, j));
                 end
                 if (j==sc2)
                     fprintf(fid, ']');
