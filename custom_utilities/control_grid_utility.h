@@ -71,13 +71,51 @@ public:
         // compute new data and store
         for (std::size_t i = 0; i < TformMat.size2(); ++i)
         {
-            TDataType NewData(0.0);
-            for (std::size_t j = 0; j < TformMat.size1(); ++j)
+            TDataType NewData = TformMat(0, i) * rControlGrid.GetData(0);
+
+            for (std::size_t j = 1; j < TformMat.size1(); ++j)
             {
                 if (TformMat(j, i) != 0.0)
                     NewData += TformMat(j, i) * rControlGrid.GetData(j);
             }
             rNewControlGrid.SetData(i, NewData);
+        }
+    }
+
+
+    /// Transform a control grid to new control grid by a matrix multiplication.
+    /// Weight is incorporated to make sure in the case that control grid is part of a grid function with weighted FESpace
+    template<typename TDataType, typename TMatrixType, typename TVectorType>
+    static void Transform(const TMatrixType& TformMat,
+            const TVectorType& rOldWeights,
+            const ControlGrid<TDataType>& rControlGrid,
+            const TVectorType& rNewWeights,
+            ControlGrid<TDataType>& rNewControlGrid)
+    {
+        // ensure the transformation matrix size is compatible
+        if (TformMat.size1() != rControlGrid.Size())
+            KRATOS_THROW_ERROR(std::logic_error, "The first size of the transformation matrix is not compatible with old grid function size", "")
+
+        if (rOldWeights.size() != rControlGrid.Size())
+            KRATOS_THROW_ERROR(std::logic_error, "The size of the old weights is not compatible with the old grid function size", "")
+
+        if (TformMat.size2() != rNewControlGrid.Size())
+            KRATOS_THROW_ERROR(std::logic_error, "The second size of the transformation matrix is not compatible with new grid function size", "")
+
+        if (rNewWeights.size() != rControlGrid.Size())
+            KRATOS_THROW_ERROR(std::logic_error, "The size of the new weights is not compatible with the new grid function size", "")
+
+        // compute new data and store
+        for (std::size_t i = 0; i < TformMat.size2(); ++i)
+        {
+            TDataType NewData = TformMat(0, i) * rControlGrid.GetData(0) * rOldWeights[0];
+
+            for (std::size_t j = 1; j < TformMat.size1(); ++j)
+            {
+                if (TformMat(j, i) != 0.0)
+                    NewData += TformMat(j, i) * rControlGrid.GetData(j) * rOldWeights[j];
+            }
+            rNewControlGrid.SetData(i, NewData/rNewWeights[i]);
         }
     }
 
