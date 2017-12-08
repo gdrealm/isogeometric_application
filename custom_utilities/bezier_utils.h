@@ -959,7 +959,7 @@ public:
 
             for(j1 = 0; j1 < BaseRule[offset1].size(); ++j1)
             {
-                IntegrationPointType& temp1 = BaseRule[offset1][j1];
+                const IntegrationPointType& temp1 = BaseRule[offset1][j1];
 
                 IntegrationPointType temp;
 
@@ -1004,11 +1004,11 @@ public:
 
             for(j1 = 0; j1 < BaseRule[offset1].size(); ++j1)
             {
-                IntegrationPointType& temp1 = BaseRule[offset1][j1];
+                const IntegrationPointType& temp1 = BaseRule[offset1][j1];
 
                 for(j2 = 0; j2 < BaseRule[offset2].size(); ++j2)
                 {
-                    IntegrationPointType& temp2 = BaseRule[offset2][j2];
+                    const IntegrationPointType& temp2 = BaseRule[offset2][j2];
 
                     IntegrationPointType temp;
 
@@ -1066,15 +1066,15 @@ public:
 
             for(j1 = 0; j1 < BaseRule[offset1].size(); ++j1)
             {
-                IntegrationPointType& temp1 = BaseRule[offset1][j1];
+                const IntegrationPointType& temp1 = BaseRule[offset1][j1];
 
                 for(j2 = 0; j2 < BaseRule[offset2].size(); ++j2)
                 {
-                    IntegrationPointType& temp2 = BaseRule[offset2][j2];
+                    const IntegrationPointType& temp2 = BaseRule[offset2][j2];
 
                     for(j3 = 0; j3 < BaseRule[offset3].size(); ++j3)
                     {
-                        IntegrationPointType& temp3 = BaseRule[offset3][j3];
+                        const IntegrationPointType& temp3 = BaseRule[offset3][j3];
 
                         IntegrationPointType temp;
 
