@@ -650,9 +650,9 @@ public:
             // BezierUtils::bezier_extraction_3d(C, ne1, ne2, ne3,
             //     this->KnotVector(0), this->KnotVector(1), this->KnotVector(2),
             //     this->Order(0), this->Order(1), this->Order(2));
-            BezierUtils::bezier_extraction_3d(C, ne1, ne2, ne3,
-                this->KnotVector(0), this->KnotVector(1), this->KnotVector(2),
-                this->Order(0), this->Order(1), this->Order(2)); // we rotate the order of input
+            BezierUtils::bezier_extraction_3d(C, ne3, ne2, ne1,
+                this->KnotVector(2), this->KnotVector(1), this->KnotVector(0),
+                this->Order(2), this->Order(1), this->Order(0)); // we rotate the order of input
 
             // construct cells and add to the manager
             std::size_t n1 = this->Number(0);
