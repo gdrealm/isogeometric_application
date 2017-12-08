@@ -190,7 +190,7 @@ public:
                 func_id_map[func_ids[i]] = it->Id();
 
             // check if the grid function existed in the patch
-            if (!it->template HasGridFunction<TVariableType>(rVariable.Name()))
+            if (!it->template HasGridFunction<TVariableType>(rVariable))
             {
                 // if not then create the new grid function
                 typename ControlGrid<typename TVariableType::Type>::Pointer pNewControlGrid = UnstructuredControlGrid<typename TVariableType::Type>::Create(it->pFESpace()->TotalNumber());
@@ -306,9 +306,21 @@ private:
             Vector weights(anchors.size());
             for (std::size_t i = 0; i < anchors.size(); ++i)
             {
-                temp_element_nodes.push_back(( *(FindKey(rNodes, anchors[i]+1, "Node").base())));
+                temp_element_nodes.push_back(( *(FindKey(rNodes, CONVERT_INDEX_IGA_TO_KRATOS(anchors[i]), "Node").base())));
                 weights[i] = pControlGrid->GetData(pFESpace->LocalId(anchors[i])).W();
             }
+
+            #ifdef DEBUG_GEN_ENTITY
+            std::cout << "anchors:";
+            for (std::size_t i = 0; i < anchors.size(); ++i)
+                std::cout << " " << CONVERT_INDEX_IGA_TO_KRATOS(anchors[i]);
+            std::cout << std::endl;
+            KRATOS_WATCH(weights)
+            KRATOS_WATCH((*it_cell)->GetExtractionOperator())
+            KRATOS_WATCH(pFESpace->Order(0))
+            KRATOS_WATCH(pFESpace->Order(1))
+            KRATOS_WATCH(pFESpace->Order(2))
+            #endif
 
             // create the geometry
             p_temp_geometry = boost::dynamic_pointer_cast<IsogeometricGeometryType>(r_clone_element.GetGeometry().Create(temp_element_nodes));
@@ -344,6 +356,8 @@ inline std::ostream& operator <<(std::ostream& rOStream, const MultiPatchModelPa
 }
 
 } // namespace Kratos.
+
+#undef DEBUG_GEN_ENTITY
 
 #endif // KRATOS_ISOGEOMETRIC_APPLICATION_MULTIPATCH_MODEL_PART_H_INCLUDED
 

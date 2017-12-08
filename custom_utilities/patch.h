@@ -283,11 +283,11 @@ public:
 
     /// Check if the grid function with name existed in the patch
     template<class TVariableType>
-    bool HasGridFunction(const std::string& Name) const
+    bool HasGridFunction(const TVariableType& rVariable) const
     {
         std::vector<TVariableType*> var_list = this->ExtractVariables<TVariableType>();
         for (std::size_t i = 0; i < var_list.size(); ++i)
-            if (var_list[i]->Name() == Name)
+            if (*(var_list[i]) == rVariable)
                 return true;
         return false;
     }
