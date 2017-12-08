@@ -330,10 +330,10 @@ public:
 
         IndexType NumberOfIntegrationPoints = this->IntegrationPointsNumber(ThisMethod);
 
-        shape_functions_values.resize(NumberOfIntegrationPoints, this->PointsNumber());
+        shape_functions_values.resize(NumberOfIntegrationPoints, this->PointsNumber(), false);
 
         shape_functions_local_gradients.resize(NumberOfIntegrationPoints);
-        std::fill(shape_functions_local_gradients.begin(), shape_functions_local_gradients.end(), MatrixType());
+        std::fill(shape_functions_local_gradients.begin(), shape_functions_local_gradients.end(), MatrixType(this->PointsNumber(), 2));
 
         #ifdef DEBUG_LEVEL3
         KRATOS_WATCH(NumberOfIntegrationPoints)
@@ -341,6 +341,7 @@ public:
         KRATOS_WATCH(mExtractionOperator)
         KRATOS_WATCH(mNumber1)
         KRATOS_WATCH(mNumber2)
+        KRATOS_WATCH(this->PointsNumber())
         #endif
 
         const MatrixType& bezier_functions_values
@@ -351,13 +352,18 @@ public:
 //                = this->ShapeFunctionsLocalGradients(ThisMethod); // this is correct but dangerous
             = mpBezierGeometryData->ShapeFunctionsLocalGradients( ThisMethod );
 
+        VectorType temp_bezier_values(bezier_functions_values.size2());
+        VectorType bezier_weights(mExtractionOperator.size2());
+        double denom, tmp1, tmp2;
+        VectorType tmp_gradients1(this->PointsNumber());
+        VectorType tmp_gradients2(this->PointsNumber());
         for(IndexType i = 0; i < NumberOfIntegrationPoints; ++i)
         {
-            VectorType temp_bezier_values = row(bezier_functions_values, i);
+            noalias(temp_bezier_values) = row(bezier_functions_values, i);
 
             //compute the Bezier weight
-            VectorType bezier_weights = prod(trans(mExtractionOperator), mCtrlWeights);
-            double denom = inner_prod(temp_bezier_values, bezier_weights);
+            noalias(bezier_weights) = prod(trans(mExtractionOperator), mCtrlWeights);
+            denom = inner_prod(temp_bezier_values, bezier_weights);
 
             //compute the shape function values
             VectorType temp_values = prod(mExtractionOperator, temp_bezier_values);
@@ -365,23 +371,15 @@ public:
                 shape_functions_values(i, j) = (temp_values(j) * mCtrlWeights(j)) / denom;
 
             //compute the shape function local gradients
-            shape_functions_local_gradients[i].resize(this->PointsNumber(), 2);
-            double tmp1 = inner_prod(row(bezier_functions_local_gradients[i], 0), bezier_weights);
-            double tmp2 = inner_prod(row(bezier_functions_local_gradients[i], 1), bezier_weights);
+//            shape_functions_local_gradients[i].resize(this->PointsNumber(), 2, false); // is not necessary when fill is used above
+            tmp1 = inner_prod(row(bezier_functions_local_gradients[i], 0), bezier_weights);
+            tmp2 = inner_prod(row(bezier_functions_local_gradients[i], 1), bezier_weights);
 
-            VectorType tmp_gradients1 =
-                prod(
-                    mExtractionOperator,
-                        (1 / denom) * row(bezier_functions_local_gradients[i], 0) -
-                            (tmp1 / pow(denom, 2)) * temp_bezier_values
-                );
+            noalias(tmp_gradients1) = prod(mExtractionOperator,
+                    (1 / denom) * row(bezier_functions_local_gradients[i], 0) - (tmp1 / pow(denom, 2)) * temp_bezier_values );
 
-            VectorType tmp_gradients2 =
-                prod(
-                    mExtractionOperator,
-                        (1 / denom) * row(bezier_functions_local_gradients[i], 1) -
-                            (tmp2 / pow(denom, 2)) * temp_bezier_values
-                );
+            noalias(tmp_gradients2) = prod(mExtractionOperator,
+                    (1 / denom) * row(bezier_functions_local_gradients[i], 1) - (tmp2 / pow(denom, 2)) * temp_bezier_values );
 
             for(IndexType j = 0; j < this->PointsNumber(); ++j)
             {
@@ -519,7 +517,7 @@ public:
 //
 //        if ( rResults.size() != J.size() )
 //        {
-//            rResults.resize(J.size());
+//            rResults.resize(J.size(), false);
 //        }
 
 //        for ( unsigned int pnt = 0; pnt < J.size(); ++pnt )
@@ -541,7 +539,7 @@ public:
 //
 //        if ( rResults.size() != J.size() )
 //        {
-//            rResults.resize(J.size());
+//            rResults.resize(J.size(), false);
 //        }
 
 //        for ( unsigned int pnt = 0; pnt < J.size(); ++pnt )
@@ -629,7 +627,7 @@ public:
 
         //compute the shape function values
         if(rResults.size() != this->PointsNumber())
-            rResults.resize(this->PointsNumber());
+            rResults.resize(this->PointsNumber(), false);
         noalias( rResults ) = prod(mExtractionOperator, bezier_functions_values);
         for(IndexType i = 0; i < this->PointsNumber(); ++i)
             rResults(i) *= (mCtrlWeights(i) / denom);
@@ -690,7 +688,7 @@ public:
         double denom = inner_prod(bezier_functions_values, bezier_weights);
 
         //compute the shape function local gradients
-        rResults.resize(this->PointsNumber(), 2);
+        rResults.resize(this->PointsNumber(), 2, false);
         double tmp1 = inner_prod(bezier_functions_local_derivatives1, bezier_weights);
         double tmp2 = inner_prod(bezier_functions_local_derivatives2, bezier_weights);
         VectorType tmp_gradients1 =
@@ -799,7 +797,7 @@ public:
         double denom = inner_prod(bezier_functions_values, bezier_weights);
 
         //compute the shape function local second gradients
-        rResults.resize(this->PointsNumber());
+        rResults.resize(this->PointsNumber(), false);
         double aux1 = inner_prod(bezier_functions_local_derivatives1, bezier_weights);
         double aux2 = inner_prod(bezier_functions_local_derivatives2, bezier_weights);
         double auxs11 = inner_prod(bezier_functions_local_second_derivatives11, bezier_weights);
@@ -1036,13 +1034,13 @@ private:
         double denom = inner_prod(bezier_functions_values, bezier_weights);
 
         //compute the shape function values
-        shape_functions_values.resize(this->PointsNumber());
+        shape_functions_values.resize(this->PointsNumber(), false);
         noalias( shape_functions_values ) = prod(mExtractionOperator, bezier_functions_values);
         for(IndexType i = 0; i < this->PointsNumber(); ++i)
             shape_functions_values(i) *= (mCtrlWeights(i) / denom);
 
         //compute the shape function local gradients
-        shape_functions_local_gradients.resize(this->PointsNumber(), 2);
+        shape_functions_local_gradients.resize(this->PointsNumber(), 2, false);
         double tmp1 = inner_prod(bezier_functions_local_derivatives1, bezier_weights);
         double tmp2 = inner_prod(bezier_functions_local_derivatives2, bezier_weights);
         VectorType tmp_gradients1 =

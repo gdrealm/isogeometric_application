@@ -453,7 +453,7 @@ public:
 
         if ( rResults.size() != J.size() )
         {
-            rResults.resize(J.size());
+            rResults.resize(J.size(), false);
         }
 
         MatrixType JtJ(2, 2);
