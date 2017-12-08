@@ -12,6 +12,7 @@
 // System includes
 #include <vector>
 #include <fstream>
+#include <iomanip>
 
 // External includes
 
@@ -55,6 +56,7 @@ public:
     {
         std::ofstream outfile;
         outfile.open(filename, std::ios::out);
+        outfile << std::setprecision(BaseType::Accuracy());
 
         outfile << "MFEM NURBS mesh v1.0\n\n";
 

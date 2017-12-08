@@ -12,6 +12,7 @@
 // System includes
 #include <vector>
 #include <fstream>
+#include <iomanip>
 
 // External includes
 
@@ -60,6 +61,7 @@ public:
     {
         std::ofstream outfile;
         outfile.open(filename, std::ios::out);
+        outfile << std::setprecision(BaseType::Accuracy());
 
         this->ExportMatlab(outfile, pPatch, std::string("nurbs"));
 
@@ -72,6 +74,7 @@ public:
     {
         std::ofstream outfile;
         outfile.open(filename, std::ios::out);
+        outfile << std::setprecision(BaseType::Accuracy());
 
         for (typename MultiPatch<TDim>::PatchContainerType::ptr_const_iterator it = pMultiPatch->Patches().ptr_begin(); it != pMultiPatch->Patches().ptr_end(); ++it)
         {

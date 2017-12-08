@@ -37,10 +37,16 @@ public:
     typedef typename knot_container_t::knot_t knot_t;
 
     /// Default constructor
-    MultiPatchExporter() {}
+    MultiPatchExporter() : mAccuracy(15) {}
 
     /// Destructor
     virtual ~MultiPatchExporter() {}
+
+    /// Set the accuracy
+    void SetAccuracy(const std::size_t& Accuracy) {mAccuracy = Accuracy;}
+
+    /// Get the accuracy
+    const std::size_t& Accuracy() const {return mAccuracy;}
 
     /// Export a single patch
     virtual void Export(typename Patch<TDim>::Pointer pPatch, const std::string& filename) const
@@ -63,6 +69,10 @@ public:
     virtual void PrintData(std::ostream& rOStream) const
     {
     }
+
+private:
+
+    std::size_t mAccuracy; // the number of digits after comma
 
 }; // end class MultiPatchExporter
 

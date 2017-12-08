@@ -12,6 +12,7 @@
 // System includes
 #include <vector>
 #include <fstream>
+#include <iomanip>
 
 // External includes
 
@@ -59,6 +60,7 @@ public:
     {
         std::ofstream outfile;
         outfile.open(filename, std::ios::out);
+        outfile << std::setprecision(BaseType::Accuracy());
 
         if (pPatch->pFESpace()->Type() != BSplinesFESpace<TDim>::StaticType())
             KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "does not support non-NURBS patch")
