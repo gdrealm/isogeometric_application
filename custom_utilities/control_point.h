@@ -183,7 +183,7 @@ public:
     virtual void PrintData(std::ostream& rOStream) const
     {
         // print the control point in homogeneous coordinates
-        rOStream << "(" << WX() << ", " << WY() << ", " << WZ() << ", " << W() << ")";
+        rOStream << "(X: " << X() << ", Y: " << Y() << ", Z: " << Z() << ", W: " << W() << ")";
     }
 
 private:
