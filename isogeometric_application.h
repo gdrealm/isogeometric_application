@@ -205,6 +205,7 @@ namespace Kratos
 		///@name Member Variables
 		///@{
 
+        const DummyIsogeometricCondition mDummyConditionBezier;
         const DummyIsogeometricCondition mDummyConditionBezier2D;
         const DummyIsogeometricCondition mDummyConditionBezier2D3;
         const DummyIsogeometricCondition mDummyConditionBezier3D;
