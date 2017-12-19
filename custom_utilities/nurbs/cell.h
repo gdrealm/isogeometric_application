@@ -15,6 +15,7 @@
 #include <iostream>
 
 // External includes
+#include <boost/numeric/ublas/vector_sparse.hpp>
 
 // Project includes
 #include "includes/define.h"
@@ -45,6 +46,8 @@ public:
     /// Type definitions
     typedef Knot<double> KnotType;
     typedef KnotType::Pointer knot_t;
+    typedef boost::numeric::ublas::mapped_vector<double> SparseVectorType;
+    // typedef boost::numeric::ublas::vector<double> SparseVectorType;
 
     /// Constructor with knots
     Cell(const std::size_t& Id, knot_t pLeft, knot_t pRight)
@@ -202,7 +205,16 @@ public:
     {
         mSupportedAnchors.push_back(Id);
         mAnchorWeights.push_back(W);
-        mCrows.push_back(Crow);
+
+        std::vector<std::size_t> inz;
+        inz.reserve(Crow.size());
+        for (std::size_t i = 0; i < Crow.size(); ++i)
+            if (Crow[i] != 0.0)
+                inz.push_back(i);
+        SparseVectorType Crow_sparse(Crow.size(), inz.size());
+        for (std::size_t i = 0; i < inz.size(); ++i)
+            Crow_sparse[inz[i]] = Crow[inz[i]];
+        mCrows.push_back(Crow_sparse);
     }
 
     /// Get the number of supported anchors of this cell. In the other language, it is the number of basis functions that the support domain includes this cell.
@@ -227,6 +239,18 @@ public:
         M.resize(mCrows.size(), mCrows[0].size());
         for(std::size_t i = 0; i < mCrows.size(); ++i)
             noalias(row(M, i)) = mCrows[i];
+        return M;
+    }
+
+    /// Get the extraction as compressed matrix
+    CompressedMatrix GetCompressedExtractionOperator() const
+    {
+        CompressedMatrix M;
+        M.resize(mCrows.size(), mCrows[0].size());
+        // here we just naively copy the data. However we shall initialize the compressed matrix properly as in the kernel (TODO)
+        for(std::size_t i = 0; i < mCrows.size(); ++i)
+            noalias(row(M, i)) = mCrows[i];
+        M.complete_index1_data();
         return M;
     }
 
@@ -288,7 +312,7 @@ private:
     knot_t mpBelow;
     std::vector<std::size_t> mSupportedAnchors;
     std::vector<double> mAnchorWeights; // weight of the anchor
-    std::vector<Vector> mCrows; // bezier extraction operator row to each anchor
+    std::vector<SparseVectorType> mCrows; // bezier extraction operator row to each anchor
 };
 
 template<>
