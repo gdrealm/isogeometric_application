@@ -393,8 +393,8 @@ public:
     template<class ValuesContainerType>
     static inline void bernstein(ValuesContainerType& rS,
                                  ValuesContainerType& rD,
-                                 int p,
-                                 double x)
+                                 const int& p,
+                                 const double& x)
     {
         for(int i = 0; i < p + 1; ++i)
         {
@@ -473,7 +473,7 @@ public:
             //insert value to map
             mIntegrationMethods.insert(PairType(Key, pNewGeometryData));
 
-            std::cout << "Registerred BezierGeometryData " << Key << " successfully" << std::endl;
+            std::cout << "Registered BezierGeometryData " << Key << " successfully" << std::endl;
         }
     }
 
@@ -527,7 +527,7 @@ public:
             //insert value to map
             mIntegrationMethods.insert(PairType(Key, pNewGeometryData));
 
-            std::cout << "Registerred BezierGeometryData " << Key << " successfully" << std::endl;
+            std::cout << "Registered BezierGeometryData " << Key << " successfully" << std::endl;
         }
     }
 
@@ -584,7 +584,7 @@ public:
             //insert value to map
             mIntegrationMethods.insert(PairType(Key, pNewGeometryData));
 
-            std::cout << "Registerred BezierGeometryData " << Key << " successfully" << std::endl;
+            std::cout << "Registered BezierGeometryData " << Key << " successfully" << std::endl;
         }
     }
 
@@ -749,8 +749,8 @@ public:
             Geometry handling routines
      ********************************************************/
     /*Important remarks: this function only works correctly with Geo2dBezier and Geo3dBezier */
-    template<class T>
-    static PointType& ComputeCentroid(typename T::Pointer& pElem, PointType& P)
+    template<class TElementType>
+    static PointType& ComputeCentroid(typename TElementType::Pointer pElem, PointType& P)
     {
 //        KRATOS_WATCH(typeid(*pElem).name())
 //        GeometryType& Geom = *(pElem->pGetGeometry());
@@ -763,7 +763,7 @@ public:
         IntegrationMethod ThisIntegrationMethod = Geom.GetDefaultIntegrationMethod();
         const GeometryType::IntegrationPointsArrayType& integration_points = Geom.IntegrationPoints(ThisIntegrationMethod);
 
-        //initializing the Jacobian, the inverse Jacobian and Jacobians determinant in the reference configuration
+        //initializing the Jacobian, the inverse Jacobian and Jacobian determinant in the reference configuration
         GeometryType::JacobiansType J0(integration_points.size());
 
         //calculating the Jacobian
