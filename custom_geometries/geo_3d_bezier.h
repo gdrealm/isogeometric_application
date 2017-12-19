@@ -313,7 +313,7 @@ public:
     }
 
     /**
-     * This method calculates and returns Length or charactereistic
+     * This method calculates and returns Length or characteristic
      * length of this geometry depending on it's dimension. For one
      * dimensional geometry for example Line it returns length of it
      * and for the other geometries it gives Characteristic length

@@ -170,6 +170,7 @@ public:
      * Type of Matrix
      */
     typedef typename BaseType::MatrixType MatrixType;
+    typedef boost::numeric::ublas::compressed_matrix<typename MatrixType::value_type> CompressedMatrixType;
 
     /**
      * Type of Vector
@@ -804,24 +805,21 @@ public:
         double auxs12 = inner_prod(bezier_functions_local_second_derivatives12, bezier_weights);
         double auxs22 = inner_prod(bezier_functions_local_second_derivatives22, bezier_weights);
         VectorType tmp_gradients11 =
-            prod(
-                mExtractionOperator,
+            prod(mExtractionOperator,
                     (1 / denom) * bezier_functions_local_second_derivatives11
                     - (aux1 / pow(denom, 2)) * bezier_functions_local_derivatives1 * 2
                     - (auxs11 / pow(denom, 2)) * bezier_functions_values
                     + 2.0 * pow(aux1, 2) / pow(denom, 3) * bezier_functions_values
             );
         VectorType tmp_gradients12 =
-            prod(
-                mExtractionOperator,
+            prod(mExtractionOperator,
                     (1 / denom) * bezier_functions_local_second_derivatives12
                     - ((aux1 + aux2) / pow(denom, 2)) * bezier_functions_local_derivatives1
                     - (auxs12 / pow(denom, 2)) * bezier_functions_values
                     + 2.0 * aux1 * aux2 / pow(denom, 3) * bezier_functions_values
             );
         VectorType tmp_gradients22 =
-            prod(
-                mExtractionOperator,
+            prod(mExtractionOperator,
                     (1 / denom) * bezier_functions_local_second_derivatives22
                     - (aux2 / pow(denom, 2)) * bezier_functions_local_derivatives2 * 2
                     - (auxs22 / pow(denom, 2)) * bezier_functions_values
@@ -917,6 +915,7 @@ public:
         mOrder2 = Degree2;
         mNumber1 = mOrder1 + 1;
         mNumber2 = mOrder2 + 1;
+        // TODO we have to check here if the compressed_matrix copy is called or not. Otherwise, maybe the full matrix is populated.
         mExtractionOperator = ExtractionOperator;
 
         // size checking
@@ -942,6 +941,7 @@ protected:
     GeometryData::Pointer mpBezierGeometryData;
 
     MatrixType mExtractionOperator;
+    // CompressedMatrixType mExtractionOperator;
 
     ValuesContainerType mCtrlWeights; //weight of control points
 
