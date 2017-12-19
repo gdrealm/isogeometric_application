@@ -17,9 +17,12 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/model_part.h"
+#include "utilities/openmp_utils.h"
 #include "custom_utilities/patch.h"
 #include "custom_geometries/isogeometric_geometry.h"
 #include "isogeometric_application/isogeometric_application.h"
+
+#define ENABLE_PROFILING
 
 namespace Kratos
 {
@@ -82,6 +85,10 @@ public:
     /// create the nodes from the control points and add to the model_part
     void CreateNodes()
     {
+        #ifdef ENABLE_PROFILING
+        double start = OpenMPUtils::GetCurrentTime();
+        #endif
+
         // create new nodes from control points
         for (std::size_t i = 0; i < mpMultiPatch->EquationSystemSize(); ++i)
         {
@@ -100,13 +107,24 @@ public:
 
             // TODO transfer corresponding data from control points to new nodes
         }
+
+        #ifdef ENABLE_PROFILING
+        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s" << std::endl;
+        #else
+        std::cout << __FUNCTION__ << " completed" << std::endl;
+        #endif
     }
 
     /// create the conditions out from the patch and add to the model_part
+    /// TODO find the way to parallelize this
     ModelPart::ElementsContainerType AddElements(typename Patch<TDim>::Pointer pPatch, const std::string& element_name,
             const std::size_t& starting_id, const std::size_t& prop_id)
     {
         if (IsReady()) return ModelPart::ElementsContainerType(); // call BeginModelPart first before adding elements
+
+        #ifdef ENABLE_PROFILING
+        double start = OpenMPUtils::GetCurrentTime();
+        #endif
 
         // get the Properties
         Properties::Pointer p_temp_properties = mpModelPart->pGetProperties(prop_id);
@@ -125,6 +143,12 @@ public:
         // sort the element container and make it consistent
         mpModelPart->Elements().Unique();
 
+        #ifdef ENABLE_PROFILING
+        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewElements.size() << " elements are generated" << std::endl;
+        #else
+        std::cout << __FUNCTION__ << " completed" << std::endl;
+        #endif
+
         return pNewElements;
     }
 
@@ -133,6 +157,10 @@ public:
             const std::string& condition_name, const std::size_t& starting_id, const std::size_t& prop_id)
     {
         if (IsReady()) return ModelPart::ConditionsContainerType(); // call BeginModelPart first before adding conditions
+
+        #ifdef ENABLE_PROFILING
+        double start = OpenMPUtils::GetCurrentTime();
+        #endif
 
         // construct the boundary patch
         typename Patch<TDim-1>::Pointer pBoundaryPatch = pPatch->ConstructBoundaryPatch(side);
@@ -154,6 +182,12 @@ public:
 
         // sort the condition container and make it consistent
         mpModelPart->Conditions().Unique();
+
+        #ifdef ENABLE_PROFILING
+        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewConditions.size() << " conditions are generated" << std::endl;
+        #else
+        std::cout << __FUNCTION__ << " completed" << std::endl;
+        #endif
 
         return pNewConditions;
     }
@@ -186,8 +220,6 @@ public:
                 it != mpMultiPatch->end(); ++it)
         {
             const std::vector<std::size_t>& func_ids = it->pFESpace()->FunctionIndices();
-            for (std::size_t i = 0; i < func_ids.size(); ++i)
-                func_id_map[func_ids[i]] = it->Id();
 
             // check if the grid function existed in the patch
             if (!it->template HasGridFunction<TVariableType>(rVariable))
@@ -196,28 +228,18 @@ public:
                 typename ControlGrid<typename TVariableType::Type>::Pointer pNewControlGrid = UnstructuredControlGrid<typename TVariableType::Type>::Create(it->pFESpace()->TotalNumber());
                 it->template CreateGridFunction<TVariableType>(rVariable, pNewControlGrid);
             }
-        }
 
-        for (ModelPart::NodesContainerType::const_iterator it = mpModelPart->Nodes().begin(); it != mpModelPart->Nodes().end(); ++it)
-        {
-            std::size_t func_id = CONVERT_INDEX_KRATOS_TO_IGA(it->Id());
+            // get the control grid
+            typename ControlGrid<typename TVariableType::Type>::Pointer pControlGrid = it->pGetGridFunction(rVariable)->pControlGrid();
 
-            // get the corresponding patch
-            std::size_t patch_id = func_id_map[func_id];
-            typename Patch<TDim>::Pointer pPatch = mpMultiPatch->pGetPatch(patch_id);
+            // set the data for the control grid
+            for (std::size_t i = 0; i < pControlGrid->size(); ++i)
+            {
+                std::size_t global_id = func_ids[i];
+                std::size_t node_id = CONVERT_INDEX_IGA_TO_KRATOS(global_id);
 
-            // find the corresponding control point in the multipatch
-            std::size_t local_id = pPatch->pFESpace()->LocalId(func_id);
-            pPatch->pGetGridFunction(rVariable)->pControlGrid()->SetData(local_id, it->GetSolutionStepValue(rVariable));
-            // KRATOS_WATCH(local_id)
-            // KRATOS_WATCH(it->GetSolutionStepValue(rVariable))
-
-            // // compare with the control point
-            // std::cout << "node (" << it->X0() << ", " << it->Y0() << ") is with control point "
-            //           << pPatch->pControlPointGridFunction()->pControlGrid()->GetData(local_id)
-            //           << " and value " << pPatch->pGetGridFunction(rVariable)->pControlGrid()->GetData(local_id)
-            //           << " at local_id " << local_id
-            //           << std::endl;
+                pControlGrid->SetData(i, mpModelPart->Nodes()[node_id].GetSolutionStepValue(rVariable));
+            }
         }
     }
 
@@ -269,9 +291,18 @@ private:
         TNodeContainerType& rNodes, const std::string& element_name,
         const std::size_t& starting_id, Properties::Pointer p_temp_properties)
     {
+        #ifdef ENABLE_PROFILING
+        double start = OpenMPUtils::GetCurrentTime();
+        #endif
+
         // construct the cell manager out from the FESpace
         typedef typename TFESpace::cell_container_t cell_container_t;
         typename cell_container_t::Pointer pCellManager = pFESpace->ConstructCellManager();
+
+        #ifdef ENABLE_PROFILING
+        std::cout << "  >> ConstructCellManager: " << OpenMPUtils::GetCurrentTime()-start << " s" << std::endl;
+        start = OpenMPUtils::GetCurrentTime();
+        #endif
 
         // container for newly created elements
         PointerVectorSet<TEntityType, IndexedObject> pNewElements;
@@ -316,7 +347,8 @@ private:
                 std::cout << " " << CONVERT_INDEX_IGA_TO_KRATOS(anchors[i]);
             std::cout << std::endl;
             KRATOS_WATCH(weights)
-            KRATOS_WATCH((*it_cell)->GetExtractionOperator())
+            // KRATOS_WATCH((*it_cell)->GetExtractionOperator())
+            KRATOS_WATCH((*it_cell)->GetCompressedExtractionOperator())
             KRATOS_WATCH(pFESpace->Order(0))
             KRATOS_WATCH(pFESpace->Order(1))
             KRATOS_WATCH(pFESpace->Order(2))
@@ -329,7 +361,8 @@ private:
                                                 dummy,
                                                 dummy,
                                                 weights,
-                                                (*it_cell)->GetExtractionOperator(),
+                                                // (*it_cell)->GetExtractionOperator(),
+                                                (*it_cell)->GetCompressedExtractionOperator(),
                                                 static_cast<int>(pFESpace->Order(0)),
                                                 static_cast<int>(pFESpace->Order(1)),
                                                 static_cast<int>(pFESpace->Order(2)),
@@ -339,6 +372,11 @@ private:
             typename TEntityType::Pointer pNewElement = r_clone_element.Create(cnt++, p_temp_geometry, p_temp_properties);
             pNewElements.push_back(pNewElement);
         }
+
+        #ifdef ENABLE_PROFILING
+        std::cout << "  >> generate entities: " << OpenMPUtils::GetCurrentTime()-start << " s" << std::endl;
+        start = OpenMPUtils::GetCurrentTime();
+        #endif
 
         return pNewElements;
     }
@@ -358,6 +396,7 @@ inline std::ostream& operator <<(std::ostream& rOStream, const MultiPatchModelPa
 } // namespace Kratos.
 
 #undef DEBUG_GEN_ENTITY
+#undef ENABLE_PROFILING
 
 #endif // KRATOS_ISOGEOMETRIC_APPLICATION_MULTIPATCH_MODEL_PART_H_INCLUDED
 

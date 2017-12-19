@@ -39,7 +39,7 @@ line1_ptr = geometry_factory.CreateLine([b1, 0.0, 0.0], [b1, b1, 0.0], arc1.Orde
 line1 = line1_ptr.GetReference()
 
 # create patch 1
-patch1_ptr = bsplines_patch_util.CreateConnectedPatch(arc1, line1)
+patch1_ptr = bsplines_patch_util.CreateConnectedPatch(line1, arc1)
 patch1 = patch1_ptr.GetReference()
 patch1.Id = 1
 
@@ -52,16 +52,17 @@ line2_ptr = geometry_factory.CreateLine([b1, b1, 0.0], [0.0, b1, 0.0], arc2.Orde
 line2 = line2_ptr.GetReference()
 
 # create patch 2
-patch2_ptr = bsplines_patch_util.CreateConnectedPatch(arc2, line2)
+patch2_ptr = bsplines_patch_util.CreateConnectedPatch(line2, arc2)
 patch2 = patch2_ptr.GetReference()
 patch2.Id = 2
 
 ######create multipatch
 mpatch = MultiPatch2D()
-mpatch.AddPatch(patch1)
-mpatch.AddPatch(patch2)
+mpatch.AddPatch(patch1_ptr)
+mpatch.AddPatch(patch2_ptr)
 mpatch.MakeNeighbor(patch1, BoundarySide.Right, patch2, BoundarySide.Left)
 multipatch_refine_util.DegreeElevate(patch1_ptr, [1, 1])
+multipatch_refine_util.InsertKnots(patch1_ptr, [[0.5], [0.5]])
 print(mpatch)
 
 mpatch_export.Export(mpatch, "plate_with_hole.m")

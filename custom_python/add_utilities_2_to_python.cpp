@@ -24,6 +24,7 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "includes/define.h"
 #include "includes/model_part.h"
 #include "includes/variables.h"
+#include "python/pointer_vector_set_python_interface.h"
 #include "custom_python/add_utilities_to_python.h"
 #include "custom_utilities/nurbs/domain_manager.h"
 #include "custom_utilities/nurbs/domain_manager_2d.h"
@@ -308,6 +309,16 @@ boost::python::list FESpace_BoundaryFunctionIndices(FESpace<TDim>& rDummy, const
     return indices;
 }
 
+template<int TDim>
+boost::python::list FESpace_BoundaryShiftedFunctionIndices(FESpace<TDim>& rDummy, const BoundarySide& side)
+{
+    boost::python::list indices;
+    std::vector<std::size_t> boundary_indices = rDummy.ExtractBoundaryFunctionIndices(side);
+    for (std::size_t i = 0; i < boundary_indices.size(); ++i)
+        indices.append<int>(static_cast<int>(boundary_indices[i] + 1));
+    return indices;
+}
+
 ////////////////////////////////////////
 
 BSplinesFESpace<1>::Pointer BSplinesFESpaceLibrary_CreateLinearFESpace(BSplinesFESpaceLibrary& rDummy, const std::size_t& order_u)
@@ -412,6 +423,12 @@ typename GridFunction<TDim, typename TVariableType::Type>::Pointer Patch_GridFun
     return rDummy.template pGetGridFunction<TVariableType>(rVariable);
 }
 
+template<class TMultiPatchType>
+typename TMultiPatchType::PatchContainerType MultiPatch_GetPatches(TMultiPatchType& rDummy)
+{
+    return rDummy.Patches();
+}
+
 template<class TPatchType, class TMultiPatchType>
 typename TPatchType::Pointer MultiPatch_GetItem(TMultiPatchType& rDummy, std::size_t index)
 {
@@ -468,25 +485,27 @@ void MultiPatchRefinementUtility_InsertKnots(MultiPatchRefinementUtility& rDummy
        typename Patch<TDim>::Pointer& pPatch,
        boost::python::list ins_knots)
 {
-   std::vector<std::vector<double> > ins_knots_array(TDim);
-   std::size_t dim = 0;
+    std::vector<std::vector<double> > ins_knots_array(TDim);
+    std::size_t dim = 0;
 
-   typedef boost::python::stl_input_iterator<boost::python::list> iterator_value_type;
-   BOOST_FOREACH(const iterator_value_type::value_type& ins_knots_x,
-               std::make_pair(iterator_value_type(ins_knots), // begin
-               iterator_value_type() ) ) // end
-   {
-       std::vector<double> knots;
+    typedef boost::python::stl_input_iterator<boost::python::list> iterator_value_type;
+    BOOST_FOREACH(const iterator_value_type::value_type& ins_knots_x,
+                std::make_pair(iterator_value_type(ins_knots), // begin
+                iterator_value_type() ) ) // end
+    {
+        std::vector<double> knots;
 
-       typedef boost::python::stl_input_iterator<double> iterator_value_type2;
-       BOOST_FOREACH(const iterator_value_type2::value_type& knot,
-                   std::make_pair(iterator_value_type2(ins_knots_x), // begin
-                   iterator_value_type2() ) ) // end
-       {
-           knots.push_back(knot);
-       }
+        typedef boost::python::stl_input_iterator<double> iterator_value_type2;
+        BOOST_FOREACH(const iterator_value_type2::value_type& knot,
+                    std::make_pair(iterator_value_type2(ins_knots_x), // begin
+                    iterator_value_type2() ) ) // end
+        {
+            knots.push_back(knot);
+        }
 
-       ins_knots_array[dim++] = knots;
+        ins_knots_array[dim++] = knots;
+        if (dim == TDim)
+            break;
    }
 
    rDummy.InsertKnots<TDim>(pPatch, ins_knots_array);
@@ -506,6 +525,8 @@ void MultiPatchRefinementUtility_DegreeElevate(MultiPatchRefinementUtility& rDum
                iterator_value_type() ) ) // end
    {
        order_incr_array[dim++] = static_cast<std::size_t>(t);
+       if (dim == TDim)
+            break;
    }
 
    rDummy.DegreeElevate<TDim>(pPatch, order_incr_array);
@@ -758,6 +779,7 @@ void IsogeometricApplication_AddFESpacesToPython()
     .def("TotalNumber", &FESpace<TDim>::TotalNumber)
     .def("Enumerate", &FESpace_Enumerate<TDim>)
     .def("BoundaryFunctionIndices", &FESpace_BoundaryFunctionIndices<TDim>)
+    .def("BoundaryShiftedFunctionIndices", &FESpace_BoundaryShiftedFunctionIndices<TDim>)
     .def(self_ns::str(self))
     ;
 
@@ -860,11 +882,17 @@ void IsogeometricApplication_AddPatchesToPython()
     ;
 
     ss.str(std::string());
+    ss << "Patch" << TDim << "DContainer";
+    PointerVectorSetPythonInterface<typename MultiPatch<TDim>::PatchContainerType>::CreateInterface(ss.str())
+    ;
+
+    ss.str(std::string());
     ss << "MultiPatch" << TDim << "D";
     class_<MultiPatch<TDim>, typename MultiPatch<TDim>::Pointer, boost::noncopyable>
     (ss.str().c_str(), init<>())
-    .def("ResetId", &MultiPatch<TDim>::ResetId)
+    // .def("ResetId", &MultiPatch<TDim>::ResetId) // this function is not really useful. One shall keep control over the id of the patch.
     .def("AddPatch", &MultiPatch<TDim>::AddPatch)
+    .def("Patches", &MultiPatch_GetPatches<MultiPatch<TDim> >)
     .def("__getitem__", &MultiPatch_GetItem<Patch<TDim>, MultiPatch<TDim> >)
     .def("__len__", &MultiPatch_Len<MultiPatch<TDim> >)
     .def("MakeNeighbor", &MultiPatch_MakeNeighbor<TDim>)

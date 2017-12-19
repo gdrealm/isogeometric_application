@@ -249,15 +249,18 @@ void MultiPatchRefinementUtility::InsertKnots(typename Patch<TDim>::Pointer& pPa
             // }
         }
 
+        // set the parent multipatch
+        pNewPatch->pSetParentMultiPatch(pMultiPatch);
+
+        // remove this patch from multipatch
+        pMultiPatch->Patches().erase(pPatch->Id());
+
         // swap
-        // KRATOS_WATCH(*pNewPatch)
-        // std::cout << pPatch << " will be swapped with " << pNewPatch << std::endl;
         pPatch.swap(pNewPatch);
-        // std::cout << "  Input patch now is " << pPatch << ", and the new patch becomes " << pNewPatch << std::endl;
-        // KRATOS_WATCH(*pPatch)
 
         // replace the corresponding patch in multipatch
-        pMultiPatch->Patches()(pPatch->Id()) = pPatch;
+        pMultiPatch->Patches().push_back(pPatch);
+        pMultiPatch->Patches().Unique();
 
         // TODO re-generate the connection topology
         // 

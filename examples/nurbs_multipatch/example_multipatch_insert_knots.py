@@ -45,9 +45,11 @@ def CreateMultiPatch():
 #    print(patch2)
     mpatch_export1.Export(patch2, "patch2.txt")
 
-    mpatch.AddPatch(patch1)
-    mpatch.AddPatch(patch2)
-    mpatch.ResetId()
+    mpatch.AddPatch(patch1_ptr)
+    mpatch.AddPatch(patch2_ptr)
+    patch1.Id = 1
+    patch2.Id = 1
+#    mpatch.ResetId()
     mpatch.MakeNeighbor(patch1, BoundarySide.Right, patch2, BoundarySide.Left)
     #print(mpatch)
 
