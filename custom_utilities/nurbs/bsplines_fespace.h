@@ -495,14 +495,14 @@ public:
                 pBFESpace->SetKnotVector(0, KnotVector(0));
                 pBFESpace->SetKnotVector(1, KnotVector(2));
                 pBFESpace->SetInfo(0, Number(0), Order(0));
-                pBFESpace->SetInfo(1, Number(1), Order(2));
+                pBFESpace->SetInfo(1, Number(2), Order(2));
             }
             else if (side == _BACK_)
             {
                 pBFESpace->SetKnotVector(0, KnotVector(0));
                 pBFESpace->SetKnotVector(1, KnotVector(2));
                 pBFESpace->SetInfo(0, Number(0), Order(0));
-                pBFESpace->SetInfo(1, Number(1), Order(2));
+                pBFESpace->SetInfo(1, Number(2), Order(2));
             }
         }
 
