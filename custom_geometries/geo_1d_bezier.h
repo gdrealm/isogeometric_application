@@ -954,85 +954,6 @@ public:
         rOStream << "    Jacobian in the origin\t : " << jacobian;
     }
 
-    /**
-     * TO BE CALLED BY ELEMENT
-     */
-    virtual void GenerateGeometryData(
-        const ValuesContainerType& Knots1, //not used
-        const ValuesContainerType& Knots2, //not used
-        const ValuesContainerType& Knots3, //not used
-        const ValuesContainerType& Weights,
-        const MatrixType& ExtractionOperator,
-        const int& Degree1,
-        const int& Degree2, //not used
-        const int& Degree3, //not used
-        const int& NumberOfIntegrationMethod
-    )
-    {
-        mCtrlWeights = Weights;
-        mOrder = Degree1;
-        mNumber = mCtrlWeights.size();
-
-        // select the type of extraction operator to save in memory
-        if(ExtractionOperator.size1() == 2 && ExtractionOperator.size2() != 2)
-        // extraction operator is stored as compressed matrix
-        {
-            unsigned int size_ex_n = (unsigned int)(ExtractionOperator(0, 0) - 1);
-            unsigned int size_ex_nz = ExtractionOperator.size2() - 1;
-            if( ( (double)(size_ex_nz) ) / (size_ex_n * size_ex_n) < 0.2 )
-            {
-                mExtractionOperator = IsogeometricMathUtils::MCSR2CSR(ExtractionOperator);
-            }
-            else
-                mExtractionOperator = IsogeometricMathUtils::MCSR2MAT(ExtractionOperator);
-        }
-        else if((ExtractionOperator.size1() != 2) && (ExtractionOperator.size1() == ExtractionOperator.size2()))
-        // extraction operator is stored as full matrix
-            mExtractionOperator = ExtractionOperator;
-        else
-            KRATOS_THROW_ERROR(std::logic_error, "Invalid extraction operator", __FUNCTION__)
-
-
-        // size checking
-        if(mNumber != this->size())
-        {
-            KRATOS_THROW_ERROR(std::logic_error, "The parametric parameters is not compatible, knots.length != n+p+1.", __FUNCTION__)
-        }
-
-        //TODO: calculate everything related to geometry data here
-        //generate all integration points
-        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(NumberOfIntegrationMethod);
-
-        //generate all shape function values and derivatives
-        ShapeFunctionsValuesContainerType shape_functions_values;
-        ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
-
-        for (unsigned int i = 0; i < NumberOfIntegrationMethod; ++i)
-        {
-            CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients
-            (
-                shape_functions_values[i],
-                shape_functions_local_gradients[i],
-                all_integration_points[i]
-            );
-        }
-
-        GeometryData::Pointer pNewGeometryData = GeometryData::Pointer(
-            new GeometryData(
-                3,  //ThisDimension
-                3,  //ThisWorkingSpaceDimension
-                1,  //ThisLocalSpaceDimension
-                GeometryData::GI_GAUSS_2,           //ThisDefaultMethod
-                all_integration_points,             //ThisIntegrationPoints
-                shape_functions_values,             //ThisShapeFunctionsValues
-                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
-            )
-        );
-
-        mpGeometryData.swap(pNewGeometryData);
-        BaseType::mpGeometryData = &(*mpGeometryData);
-    }
-
     virtual void AssignGeometryData
     (
         const ValuesContainerType& Knots1,
@@ -1121,8 +1042,7 @@ private:
      */
     MatrixType CalculateShapeFunctionsIntegrationPointsValues(IntegrationMethod ThisMethod ) const
     {
-        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod+1);
-        const IntegrationPointsArrayType& integration_points = all_integration_points[ThisMethod];
+        const IntegrationPointsArrayType& integration_points = BaseType::IntegrationPoints(ThisMethod);
         //number of integration points
         const int integration_points_number = integration_points.size();
         //setting up return matrix
@@ -1154,14 +1074,13 @@ private:
     ShapeFunctionsGradientsType
     CalculateShapeFunctionsIntegrationPointsLocalGradients(IntegrationMethod ThisMethod ) const
     {
-        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod+1);
-        const IntegrationPointsArrayType& IntegrationPoints = all_integration_points[ThisMethod];
-        ShapeFunctionsGradientsType DN_De( IntegrationPoints.size() );
+        const IntegrationPointsArrayType& integration_points = BaseType::IntegrationPoints(ThisMethod);
+        ShapeFunctionsGradientsType DN_De( integration_points.size() );
         std::fill( DN_De.begin(), DN_De.end(), MatrixType( mNumber, 1 ) );
 
-        for ( unsigned int it_gp = 0; it_gp < IntegrationPoints.size(); it_gp++ )
+        for ( unsigned int it_gp = 0; it_gp < integration_points.size(); it_gp++ )
         {
-            ShapeFunctionsLocalGradients(DN_De[it_gp], IntegrationPoints[it_gp]);
+            ShapeFunctionsLocalGradients(DN_De[it_gp], integration_points[it_gp]);
         }
 
         return DN_De;
@@ -1203,8 +1122,7 @@ private:
         IntegrationMethod ThisMethod
     ) const
     {
-        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod+1);
-        const IntegrationPointsArrayType& integration_points = all_integration_points[ThisMethod];
+        const IntegrationPointsArrayType& integration_points = BaseType::IntegrationPoints(ThisMethod);
         CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(shape_functions_values, shape_functions_local_gradients, integration_points);
     }
 
@@ -1212,105 +1130,6 @@ private:
     // end of method to build to GeometryData
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // method to construct GeometryData
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    virtual IntegrationPointsContainerType AllIntegrationPoints(int NumberOfIntegrationMethod) const
-    {
-        //generate integration points for GI_GAUSS_1 rule. Note that GI_GAUSS_1 is the default rule which take the minimum order of integration in each direction
-        std::vector<IntegrationPointsArrayType> GaussRule;
-
-        //define the base integration rule for 1st parametric dimension. This ensures that the number of integration points in each direction equal to order + 1
-        std::vector<IntegrationPointsArrayType> BaseRule;
-        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints1, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints2, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints3, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints4, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints5, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints6, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints7, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints8, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints9, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-        BaseRule.push_back(Quadrature<LineGaussLegendreIntegrationPoints10, 1, IntegrationPoint<3> >::GenerateIntegrationPoints());
-
-        ///////////////////////////////////////////////////////////////
-        // Remarks: this current implementation supports integration with order up to 9
-        IndexType k, j1, offset1;
-
-        //TODO: parallelize this process
-        for (k = 0; k < NumberOfIntegrationMethod; ++k)
-        {
-            offset1 = k + mOrder; // this allows for one more order than the order of the curve
-
-            if(offset1 >= BaseRule.size())
-                KRATOS_THROW_ERROR(std::logic_error, "There are not enough Gauss point to support for integration", __FUNCTION__)
-
-            IntegrationPointsArrayType TempGaussRule;
-
-            for(j1 = 0; j1 < BaseRule[offset1].size(); ++j1)
-            {
-                IntegrationPointType& temp1 = BaseRule[offset1][j1];
-
-                IntegrationPointType temp;
-
-                temp.X() = (temp1.X() + 1) / 2;
-                temp.Weight() = 0.5 * temp1.Weight();
-
-                TempGaussRule.push_back(temp);
-            }
-
-            GaussRule.push_back(TempGaussRule);
-        }
-
-//        KRATOS_WATCH(NumberOfIntegrationMethod)
-
-        IntegrationPointsContainerType integration_points;
-        for (k = 0; k < NumberOfIntegrationMethod; ++k)
-        {
-            integration_points[k] = GaussRule[k];
-
-//            std::cout << "GaussRule[" << k << "]: " << std::endl;
-//            for(int i = 0; i < GaussRule[k].size(); ++i)
-//            {
-//                std::cout << " " << GaussRule[k][i] << std::endl;
-//            }
-//            std::cout << std::endl;
-        }
-
-        return integration_points;
-    }
-
-    //This 2 methods works but invoking repetitive calculation of shape functions. This can be optimized by merging these functions in one call. These functions are kept as reference but never be called to compute geometry_data
-    ShapeFunctionsValuesContainerType AllShapeFunctionsValues()
-    {
-        ShapeFunctionsValuesContainerType shape_functions_values =
-        {
-            {
-                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_1 ),
-                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_2 ),
-                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_3 ),
-                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_4 ),
-                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_5 )
-            }
-        };
-        return shape_functions_values;
-    }
-
-    ShapeFunctionsLocalGradientsContainerType AllShapeFunctionsLocalGradients()
-    {
-        ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients =
-        {
-            {
-                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_1 ),
-                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_2 ),
-                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_3 ),
-                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_4 ),
-                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_5 )
-            }
-        };
-        return shape_functions_local_gradients;
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     // end of method to construct GeometryData
