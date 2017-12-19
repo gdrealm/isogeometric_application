@@ -102,7 +102,7 @@ public:
         if (TformMat.size2() != rNewControlGrid.Size())
             KRATOS_THROW_ERROR(std::logic_error, "The second size of the transformation matrix is not compatible with new grid function size", "")
 
-        if (rNewWeights.size() != rControlGrid.Size())
+        if (rNewWeights.size() != rNewControlGrid.Size())
             KRATOS_THROW_ERROR(std::logic_error, "The size of the new weights is not compatible with the new grid function size", "")
 
         // compute new data and store
