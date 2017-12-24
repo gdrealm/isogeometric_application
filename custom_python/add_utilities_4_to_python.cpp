@@ -23,6 +23,7 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "custom_python/add_utilities_to_python.h"
 #include "custom_utilities/nonconforming_multipatch_lagrange_mesh.h"
 #include "custom_utilities/multipatch_model_part.h"
+#include "custom_utilities/multi_multipatch_model_part.h"
 
 
 namespace Kratos
@@ -35,16 +36,22 @@ using namespace boost::python;
 
 ////////////////////////////////////////
 
-template<int TDim>
-ModelPart& MultiPatchModelPart_GetModelPart(MultiPatchModelPart<TDim>& rDummy)
+template<class T>
+ModelPart& MultiPatchModelPart_GetModelPart(T& rDummy)
 {
     return *(rDummy.pModelPart());
 }
 
-template<int TDim>
-MultiPatch<TDim>& MultiPatchModelPart_GetMultiPatch(MultiPatchModelPart<TDim>& rDummy)
+template<class T>
+typename T::MultiPatchType& MultiPatchModelPart_GetMultiPatch(T& rDummy)
 {
     return *(rDummy.pMultiPatch());
+}
+
+template<class T>
+typename T::MultiPatchType& MultiPatchModelPart_GetMultiPatch2(T& rDummy, const std::size_t& i)
+{
+    return *(rDummy.pMultiPatch(i));
 }
 
 ////////////////////////////////////////
@@ -86,14 +93,36 @@ void IsogeometricApplication_AddModelPartToPython()
     .def("AddElements", &MultiPatchModelPartType::AddElements)
     .def("AddConditions", &MultiPatchModelPartType::AddConditions)
     .def("EndModelPart", &MultiPatchModelPartType::EndModelPart)
-    .def("GetModelPart", &MultiPatchModelPart_GetModelPart<TDim>, return_internal_reference<>())
-    .def("GetMultiPatch", &MultiPatchModelPart_GetMultiPatch<TDim>, return_internal_reference<>())
+    .def("GetModelPart", &MultiPatchModelPart_GetModelPart<MultiPatchModelPartType>, return_internal_reference<>())
+    .def("GetMultiPatch", &MultiPatchModelPart_GetMultiPatch<MultiPatchModelPartType>, return_internal_reference<>())
     .def("SynchronizeForward", &MultiPatchModelPartType::template SynchronizeForward<Variable<double> >)
     .def("SynchronizeBackward", &MultiPatchModelPartType::template SynchronizeBackward<Variable<double> >)
     .def("SynchronizeForward", &MultiPatchModelPartType::template SynchronizeForward<Variable<array_1d<double, 3> > >)
     .def("SynchronizeBackward", &MultiPatchModelPartType::template SynchronizeBackward<Variable<array_1d<double, 3> > >)
     .def("SynchronizeForward", &MultiPatchModelPartType::template SynchronizeForward<Variable<Vector> >)
     .def("SynchronizeBackward", &MultiPatchModelPartType::template SynchronizeBackward<Variable<Vector> >)
+    .def(self_ns::str(self))
+    ;
+
+    typedef MultiMultiPatchModelPart<TDim> MultiMultiPatchModelPartType;
+    ss.str(std::string());
+    ss << "MultiMultiPatchModelPart" << TDim << "D";
+    class_<MultiMultiPatchModelPartType, typename MultiMultiPatchModelPartType::Pointer, boost::noncopyable>
+    (ss.str().c_str(), init<>())
+    .def("AddMultiPatch", &MultiMultiPatchModelPartType::AddMultiPatch)
+    .def("BeginModelPart", &MultiMultiPatchModelPartType::BeginModelPart)
+    .def("CreateNodes", &MultiMultiPatchModelPartType::CreateNodes)
+    // .def("AddElements", &MultiMultiPatchModelPartType::AddElements)
+    // .def("AddConditions", &MultiMultiPatchModelPartType::AddConditions)
+    .def("EndModelPart", &MultiMultiPatchModelPartType::EndModelPart)
+    .def("GetModelPart", &MultiPatchModelPart_GetModelPart<MultiMultiPatchModelPartType>, return_internal_reference<>())
+    .def("GetMultiPatch", &MultiPatchModelPart_GetMultiPatch2<MultiMultiPatchModelPartType>, return_internal_reference<>())
+    .def("SynchronizeForward", &MultiMultiPatchModelPartType::template SynchronizeForward<Variable<double> >)
+    .def("SynchronizeBackward", &MultiMultiPatchModelPartType::template SynchronizeBackward<Variable<double> >)
+    .def("SynchronizeForward", &MultiMultiPatchModelPartType::template SynchronizeForward<Variable<array_1d<double, 3> > >)
+    .def("SynchronizeBackward", &MultiMultiPatchModelPartType::template SynchronizeBackward<Variable<array_1d<double, 3> > >)
+    .def("SynchronizeForward", &MultiMultiPatchModelPartType::template SynchronizeForward<Variable<Vector> >)
+    .def("SynchronizeBackward", &MultiMultiPatchModelPartType::template SynchronizeBackward<Variable<Vector> >)
     .def(self_ns::str(self))
     ;
 }

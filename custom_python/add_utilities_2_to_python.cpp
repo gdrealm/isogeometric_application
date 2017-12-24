@@ -449,12 +449,23 @@ void MultiPatch_MakeNeighbor(MultiPatch<TDim>& rDummy, typename Patch<TDim>::Poi
 }
 
 template<int TDim>
-std::size_t MultiPatch_Enumerate(MultiPatch<TDim>& rDummy)
+std::size_t MultiPatch_Enumerate1(MultiPatch<TDim>& rDummy)
 {
     std::size_t system_size;
 
     system_size = rDummy.Enumerate();
-    KRATOS_WATCH(system_size)
+//    KRATOS_WATCH(system_size)
+
+    return system_size;
+}
+
+template<int TDim>
+std::size_t MultiPatch_Enumerate2(MultiPatch<TDim>& rDummy, const std::size_t& start)
+{
+    std::size_t system_size;
+
+    system_size = rDummy.Enumerate(start);
+//    KRATOS_WATCH(system_size)
 
     return system_size;
 }
@@ -897,7 +908,8 @@ void IsogeometricApplication_AddPatchesToPython()
     .def("__len__", &MultiPatch_Len<MultiPatch<TDim> >)
     .def("MakeNeighbor", &MultiPatch_MakeNeighbor<TDim>)
     .def("EquationSystemSize", &MultiPatch<TDim>::EquationSystemSize)
-    .def("Enumerate", &MultiPatch_Enumerate<TDim>)
+    .def("Enumerate", &MultiPatch_Enumerate1<TDim>)
+    .def("Enumerate", &MultiPatch_Enumerate2<TDim>)
     .def("PrintAddress", &MultiPatch<TDim>::PrintAddress)
     .def(self_ns::str(self))
     ;
