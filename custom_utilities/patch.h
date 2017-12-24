@@ -29,7 +29,7 @@
 #include "isogeometric_application/isogeometric_application.h"
 
 
-// #define DEBUG_DESTROY
+#define DEBUG_DESTROY
 
 #define CONVERT_INDEX_IGA_TO_KRATOS(n) (n+1)
 #define CONVERT_INDEX_KRATOS_TO_IGA(n) (n-1)
@@ -1194,8 +1194,14 @@ public:
     /// Get the number of patches
     std::size_t size() const {return mpPatches.size();}
 
-    /// Enumerate all the patches
+    /// Enumerate all the patches, starting at 0
     std::size_t Enumerate()
+    {
+        return this->Enumerate(0);
+    }
+
+    /// Enumerate all the patches, with the given starting id
+    std::size_t Enumerate(const std::size_t& start)
     {
         // reset global ids for each patch
         for (typename PatchContainerType::ptr_iterator it = Patches().ptr_begin(); it != Patches().ptr_end(); ++it)
@@ -1204,7 +1210,7 @@ public:
         }
 
         // enumerate each patch
-        mEquationSystemSize = 0;
+        mEquationSystemSize = start;
         for (typename PatchContainerType::ptr_iterator it = Patches().ptr_begin(); it != Patches().ptr_end(); ++it)
         {
             mEquationSystemSize = (*it)->pFESpace()->Enumerate(mEquationSystemSize);
