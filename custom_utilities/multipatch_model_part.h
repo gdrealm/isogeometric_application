@@ -19,6 +19,7 @@
 #include "includes/model_part.h"
 #include "utilities/openmp_utils.h"
 #include "custom_utilities/patch.h"
+#include "custom_utilities/multipatch_utility.h"
 #include "custom_geometries/isogeometric_geometry.h"
 #include "isogeometric_application/isogeometric_application.h"
 
@@ -38,6 +39,8 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(MultiPatchModelPart);
 
     /// Type definition
+    typedef Patch<TDim> PatchType;
+    typedef MultiPatch<TDim> MultiPatchType;
     typedef Element::NodeType NodeType;
     typedef IsogeometricGeometry<NodeType> IsogeometricGeometryType;
     typedef typename Patch<TDim>::ControlPointType ControlPointType;
@@ -99,13 +102,10 @@ public:
             // KRATOS_WATCH(patch_id)
             // KRATOS_WATCH(local_id)
 
-            typedef typename Patch<TDim>::ControlPointType ControlPointType;
             const ControlPointType& point = mpMultiPatch->pGetPatch(patch_id)->pControlPointGridFunction()->pControlGrid()->GetData(local_id);
             // KRATOS_WATCH(point)
 
             ModelPart::NodeType::Pointer pNewNode = mpModelPart->CreateNewNode(CONVERT_INDEX_IGA_TO_KRATOS(i), point.X(), point.Y(), point.Z());
-
-            // TODO transfer corresponding data from control points to new nodes
         }
 
         #ifdef ENABLE_PROFILING
@@ -133,7 +133,7 @@ public:
         const GridFunction<TDim, ControlPointType>& rControlPointGridFunction = pPatch->ControlPointGridFunction();
 
         // create new elements and add to the model_part
-        ModelPart::ElementsContainerType pNewElements = this->CreateEntitiesFromFESpace<Element, FESpace<TDim>, ControlGrid<ControlPointType>, ModelPart::NodesContainerType>(pPatch->pFESpace(), rControlPointGridFunction.pControlGrid(), mpModelPart->Nodes(), element_name, starting_id, p_temp_properties);
+        ModelPart::ElementsContainerType pNewElements = CreateEntitiesFromFESpace<Element, FESpace<TDim>, ControlGrid<ControlPointType>, ModelPart::NodesContainerType>(pPatch->pFESpace(), rControlPointGridFunction.pControlGrid(), mpModelPart->Nodes(), element_name, starting_id, p_temp_properties);
 
         for (ModelPart::ElementsContainerType::ptr_iterator it = pNewElements.ptr_begin(); it != pNewElements.ptr_end(); ++it)
         {
@@ -173,7 +173,7 @@ public:
         const GridFunction<TDim-1, ControlPointType>& rControlPointGridFunction = pBoundaryPatch->ControlPointGridFunction();
 
         // create new conditions and add to the model_part
-        ModelPart::ConditionsContainerType pNewConditions = this->CreateEntitiesFromFESpace<Condition, FESpace<TDim-1>, ControlGrid<ControlPointType>, ModelPart::NodesContainerType>(pBoundaryPatch->pFESpace(), rControlPointGridFunction.pControlGrid(), mpModelPart->Nodes(), condition_name, starting_id, p_temp_properties);
+        ModelPart::ConditionsContainerType pNewConditions = CreateEntitiesFromFESpace<Condition, FESpace<TDim-1>, ControlGrid<ControlPointType>, ModelPart::NodesContainerType>(pBoundaryPatch->pFESpace(), rControlPointGridFunction.pControlGrid(), mpModelPart->Nodes(), condition_name, starting_id, p_temp_properties);
 
         for (ModelPart::ConditionsContainerType::ptr_iterator it = pNewConditions.ptr_begin(); it != pNewConditions.ptr_end(); ++it)
         {
@@ -203,19 +203,16 @@ public:
     template<class TVariableType>
     void SynchronizeForward(const TVariableType& rVariable)
     {
-        if (!IsReady())
-            return;
+        if (!IsReady()) return;
     }
 
     /// Synchronize from model_part to the multipatch
     template<class TVariableType>
     void SynchronizeBackward(const TVariableType& rVariable)
     {
-        if (!IsReady())
-            return;
+        if (!IsReady()) return;
 
         // loop through each patch, we construct a map from each function id to the patch id
-        std::map<std::size_t, std::size_t> func_id_map;
         for (typename MultiPatch<TDim>::PatchContainerType::iterator it = mpMultiPatch->begin();
                 it != mpMultiPatch->end(); ++it)
         {
@@ -243,41 +240,6 @@ public:
         }
     }
 
-    /// Information
-    virtual void PrintInfo(std::ostream& rOStream) const
-    {
-        rOStream << "MultiPatchModelPart";
-    }
-
-    virtual void PrintData(std::ostream& rOStream) const
-    {
-        rOStream << ">>>ModelPart:" << std::endl;
-        rOStream << *mpModelPart << std::endl;
-        rOStream << ">>>MultiPatch" << std::endl;
-        rOStream << *mpMultiPatch << std::endl;
-    }
-
-private:
-
-    bool mIsModelPartReady;
-
-    ModelPart::Pointer mpModelPart;
-    typename MultiPatch<TDim>::Pointer mpMultiPatch;
-
-    template<class TContainerType, class TKeyType>
-    typename TContainerType::iterator FindKey(TContainerType& ThisContainer , TKeyType ThisKey, std::string ComponentName)
-    {
-        typename TContainerType::iterator i_result;
-        if((i_result = ThisContainer.find(ThisKey)) == ThisContainer.end())
-        {
-            std::stringstream buffer;
-            buffer << ComponentName << " #" << ThisKey << " is not found.";
-            KRATOS_THROW_ERROR(std::invalid_argument, buffer.str(), "");
-        }
-
-        return i_result;
-    }
-
     /// Create entities (elements/conditions) from FESpace
     /// @param pFESpace the finite element space to provide the cell manager
     /// @param pControlGrid control grid to provide control points
@@ -286,7 +248,7 @@ private:
     /// @param starting_id the first id of the newly created entities, from there the id is incremental
     /// @param p_temp_properties the Properties to create new entities
     template<class TEntityType, class TFESpace, class TControlGridType, class TNodeContainerType>
-    PointerVectorSet<TEntityType, IndexedObject> CreateEntitiesFromFESpace(typename TFESpace::ConstPointer pFESpace,
+    static PointerVectorSet<TEntityType, IndexedObject> CreateEntitiesFromFESpace(typename TFESpace::ConstPointer pFESpace,
         typename TControlGridType::ConstPointer pControlGrid,
         TNodeContainerType& rNodes, const std::string& element_name,
         const std::size_t& starting_id, Properties::Pointer p_temp_properties)
@@ -337,7 +299,7 @@ private:
             Vector weights(anchors.size());
             for (std::size_t i = 0; i < anchors.size(); ++i)
             {
-                temp_element_nodes.push_back(( *(FindKey(rNodes, CONVERT_INDEX_IGA_TO_KRATOS(anchors[i]), "Node").base())));
+                temp_element_nodes.push_back(( *(MultiPatchUtility::FindKey(rNodes, CONVERT_INDEX_IGA_TO_KRATOS(anchors[i]), "Node").base())));
                 weights[i] = pControlGrid->GetData(pFESpace->LocalId(anchors[i])).W();
             }
 
@@ -380,6 +342,27 @@ private:
 
         return pNewElements;
     }
+
+    /// Information
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << "MultiPatchModelPart";
+    }
+
+    virtual void PrintData(std::ostream& rOStream) const
+    {
+        rOStream << ">>>ModelPart:" << std::endl;
+        rOStream << *mpModelPart << std::endl;
+        rOStream << ">>>MultiPatch" << std::endl;
+        rOStream << *mpMultiPatch << std::endl;
+    }
+
+private:
+
+    bool mIsModelPartReady;
+
+    ModelPart::Pointer mpModelPart;
+    typename MultiPatch<TDim>::Pointer mpMultiPatch;
 
 };
 

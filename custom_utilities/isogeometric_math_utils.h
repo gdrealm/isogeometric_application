@@ -149,6 +149,7 @@ public:
 
     /**
      * Convert a modified compressed sparse row matrix to compressed sparse row matrix B <- A
+     * TODO check if compressed_matrix is returned
      */
     static Matrix MCSR2CSR(const Matrix& A)
     {

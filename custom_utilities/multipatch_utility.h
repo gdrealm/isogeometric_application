@@ -107,6 +107,21 @@ public:
         return lastPropId;
     }
 
+    /// Find the element in the KRATOS container with specific key
+    template<class TContainerType, class TKeyType>
+    static typename TContainerType::iterator FindKey(TContainerType& ThisContainer , TKeyType ThisKey, std::string ComponentName)
+    {
+        typename TContainerType::iterator i_result;
+        if((i_result = ThisContainer.find(ThisKey)) == ThisContainer.end())
+        {
+            std::stringstream buffer;
+            buffer << ComponentName << " #" << ThisKey << " is not found.";
+            KRATOS_THROW_ERROR(std::invalid_argument, buffer.str(), "");
+        }
+
+        return i_result;
+    }
+
     /// Information
     virtual void PrintInfo(std::ostream& rOStream) const
     {
