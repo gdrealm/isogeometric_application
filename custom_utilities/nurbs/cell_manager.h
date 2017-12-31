@@ -65,7 +65,7 @@ public:
     void SetTolerance(const double& Tol) {mTol = Tol;}
 
     /// Get the tolerance for the internal searching algorithm
-    double GetTolerance() const {return mTol;}
+    const double& GetTolerance() const {return mTol;}
 
     /// Check if the cell exists in the list; otherwise create new cell and return
     virtual cell_t CreateCell(const std::vector<knot_t>& pKnots)
@@ -115,7 +115,33 @@ public:
         return get(Id);
     }
 
-    /// Search the cells coverred in another cell. In return std::vector<cell_t> are all the cells covered by p_cell.
+    /// Overload comparison operator
+    bool operator==(const CellManager<TCellType>& rOther)
+    {
+        if (this->size() != rOther.size())
+            return false;
+
+        iterator it_this = this->begin();
+        iterator it_other = rOther.begin();
+
+        while ((it_this != this->end()) && (it_other != rOther.end()))
+        {
+            if (!(*it_this)->IsSame(*it_other, 1.0e-10))
+                return false;
+            ++it_this;
+            ++it_other;
+        }
+
+        return true;
+    }
+
+    /// Overload comparison operator
+    bool operator!=(const CellManager<TCellType>& rOther)
+    {
+        return !(*this == rOther);
+    }
+
+    /// Search the cells covered in another cell. In return std::vector<cell_t> are all the cells covered by p_cell.
     virtual std::vector<cell_t> GetCells(cell_t p_cell)
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling the virtual function", __FUNCTION__)
