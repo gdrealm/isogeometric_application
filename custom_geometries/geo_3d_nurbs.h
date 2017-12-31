@@ -1751,8 +1751,7 @@ private:
     /**
      * TODO
      */
-    virtual void CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients
-    (
+    virtual void CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Matrix& shape_function_values,
         ShapeFunctionsGradientsType& shape_function_local_gradients,
         const IntegrationPointsArrayType& integration_points

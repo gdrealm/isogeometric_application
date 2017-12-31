@@ -316,9 +316,6 @@ public:
         return GeometryData::Kratos_Bezier2D;
     }
 
-    /**
-     * TODO
-     */
     virtual void CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         MatrixType& shape_functions_values,
         ShapeFunctionsGradientsType& shape_functions_local_gradients,
@@ -978,9 +975,9 @@ private:
      */
 
     /**
-     * TODO
+     * Calculate shape function values and local gradient at a particular point
      */
-    void ShapeFunctionsValuesAndLocalGradients(
+    virtual void ShapeFunctionsValuesAndLocalGradients(
         VectorType& shape_functions_values,
         MatrixType& shape_functions_local_gradients,
         const CoordinatesArrayType& rPoint
@@ -1034,27 +1031,22 @@ private:
         double denom = inner_prod(bezier_functions_values, bezier_weights);
 
         //compute the shape function values
-        shape_functions_values.resize(this->PointsNumber(), false);
+        if(shape_functions_values.size() != this->PointsNumber())
+            shape_functions_values.resize(this->PointsNumber(), false);
         noalias( shape_functions_values ) = prod(mExtractionOperator, bezier_functions_values);
         for(IndexType i = 0; i < this->PointsNumber(); ++i)
             shape_functions_values(i) *= (mCtrlWeights(i) / denom);
 
         //compute the shape function local gradients
-        shape_functions_local_gradients.resize(this->PointsNumber(), 2, false);
+        if(shape_functions_local_gradients.size1() != this->PointsNumber()
+            || shape_functions_local_gradients.size2() != 2)
+            shape_functions_local_gradients.resize(this->PointsNumber(), 2, false);
         double tmp1 = inner_prod(bezier_functions_local_derivatives1, bezier_weights);
         double tmp2 = inner_prod(bezier_functions_local_derivatives2, bezier_weights);
-        VectorType tmp_gradients1 =
-            prod(
-                mExtractionOperator,
-                    (1 / denom) * bezier_functions_local_derivatives1 -
-                        (tmp1 / pow(denom, 2)) * bezier_functions_values
-            );
-        VectorType tmp_gradients2 =
-            prod(
-                mExtractionOperator,
-                    (1 / denom) * bezier_functions_local_derivatives2 -
-                        (tmp2 / pow(denom, 2)) * bezier_functions_values
-            );
+        VectorType tmp_gradients1 = prod(mExtractionOperator,
+                    (1 / denom) * bezier_functions_local_derivatives1 - (tmp1 / pow(denom, 2)) * bezier_functions_values );
+        VectorType tmp_gradients2 = prod(mExtractionOperator,
+                    (1 / denom) * bezier_functions_local_derivatives2 - (tmp2 / pow(denom, 2)) * bezier_functions_values );
         for(IndexType i = 0; i < this->PointsNumber(); ++i)
         {
             shape_functions_local_gradients(i, 0) = tmp_gradients1(i) * mCtrlWeights(i);

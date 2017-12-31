@@ -447,16 +447,27 @@ public:
         KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
     }
 
-    /**
-     * TODO to be removed
-     */
     virtual void CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
-        MatrixType& shape_function_values,
-        ShapeFunctionsGradientsType& shape_function_local_gradients,
+        MatrixType& shape_functions_values,
+        ShapeFunctionsGradientsType& shape_functions_local_gradients,
         const IntegrationPointsArrayType& integration_points
     ) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
+        if (shape_functions_values.size1() != integration_points.size()
+            || shape_functions_values.size1() != this->PointsNumber())
+        shape_functions_values.resize(integration_points.size(), this->PointsNumber(), false);
+
+        if (shape_functions_local_gradients.size() != integration_points.size())
+            shape_functions_local_gradients.resize(integration_points.size());
+
+        VectorType tmp_values(this->PointsNumber());
+        MatrixType tmp_local_gradients(this->PointsNumber(), this->WorkingSpaceDimension());
+        for (std::size_t PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber)
+        {
+            this->ShapeFunctionsValuesAndLocalGradients(tmp_values, tmp_local_gradients, integration_points[PointNumber]);
+            noalias(row(shape_functions_values, PointNumber)) = tmp_values;
+            shape_functions_local_gradients[PointNumber] = tmp_local_gradients;
+        }
     }
 
     virtual void CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
@@ -518,6 +529,21 @@ public:
             this->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(*mpInternal_Ncontainer, *mpInternal_DN_De, ThisMethod);
             mIsInitialized = true;
         }
+        #endif
+    }
+
+    virtual void Initialize(const IntegrationPointsArrayType& integration_points)
+    {
+        #ifndef ENABLE_PRECOMPUTE
+        if(!mIsInitialized)
+        {
+            mpInternal_Ncontainer = boost::shared_ptr<Matrix>(new Matrix());
+            mpInternal_DN_De = boost::shared_ptr<ShapeFunctionsGradientsType>(new ShapeFunctionsGradientsType());
+            this->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(*mpInternal_Ncontainer, *mpInternal_DN_De, integration_points);
+            mIsInitialized = true;
+        }
+        #else
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not available in the PRECOMPUTE mode")
         #endif
     }
 
@@ -712,49 +738,6 @@ private:
     ///@name Private Operations
     ///@{
 
-    static const IntegrationPointsContainerType AllIntegrationPoints()
-    {
-        IntegrationPointsContainerType integration_points =
-        {
-            {
-                Quadrature<LineGaussLegendreIntegrationPoints1, 1, IntegrationPoint<3> >::GenerateIntegrationPoints(),
-                Quadrature<LineGaussLegendreIntegrationPoints2, 1, IntegrationPoint<3> >::GenerateIntegrationPoints(),
-                Quadrature<LineGaussLegendreIntegrationPoints3, 1, IntegrationPoint<3> >::GenerateIntegrationPoints(),
-                Quadrature<LineGaussLegendreIntegrationPoints4, 1, IntegrationPoint<3> >::GenerateIntegrationPoints(),
-                Quadrature<LineGaussLegendreIntegrationPoints5, 1, IntegrationPoint<3> >::GenerateIntegrationPoints()
-//                Quadrature<LineGaussLegendreIntegrationPoints6, 1, IntegrationPoint<3> >::GenerateIntegrationPoints(),
-//                Quadrature<LineGaussLegendreIntegrationPoints7, 1, IntegrationPoint<3> >::GenerateIntegrationPoints(),
-//                Quadrature<LineGaussLegendreIntegrationPoints8, 1, IntegrationPoint<3> >::GenerateIntegrationPoints(),
-//                Quadrature<LineGaussLegendreIntegrationPoints9, 1, IntegrationPoint<3> >::GenerateIntegrationPoints(),
-//                Quadrature<LineGaussLegendreIntegrationPoints10, 1, IntegrationPoint<3> >::GenerateIntegrationPoints()
-            }
-        };
-
-        return integration_points;
-    }
-
-    static const ShapeFunctionsValuesContainerType AllShapeFunctionsValues(unsigned int Order)
-    {
-        ShapeFunctionsValuesContainerType shape_functions_values =
-        {
-            {
-                CalculateShapeFunctionsIntegrationPointsValues( GeometryData::GI_GAUSS_1, Order )
-            }
-        };
-        return shape_functions_values;
-    }
-
-    static const ShapeFunctionsLocalGradientsContainerType AllShapeFunctionsLocalGradients(unsigned int Order)
-    {
-        ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients =
-        {
-            {
-                CalculateShapeFunctionsIntegrationPointsLocalGradients( GeometryData::GI_GAUSS_1, Order )
-            }
-        };
-        return shape_functions_local_gradients;
-    }
-
     ///@}
     ///@name Private  Access
     ///@{
@@ -764,77 +747,13 @@ private:
     ///@name Private Inquiry
     ///@{
 
-    void ShapeFunctionsValuesAndLocalGradients(
+    virtual void ShapeFunctionsValuesAndLocalGradients(
         VectorType& shape_functions_values,
         MatrixType& shape_functions_local_gradients,
         const CoordinatesArrayType& rPoint
     ) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling IsogeometricGeometry base class function", __FUNCTION__)
-    }
-
-    Matrix CalculateShapeFunctionsIntegrationPointsValues(IntegrationMethod ThisMethod, unsigned int Order) const
-    {
-        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod);
-        const IntegrationPointsArrayType& integration_points = all_integration_points[ThisMethod];
-        //number of integration points
-        const int integration_points_number = integration_points.size();
-        //setting up return matrix
-        Matrix shape_function_values( integration_points_number, Order );
-        //setting up temporary local gradients
-        ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
-        shape_functions_local_gradients.resize(integration_points_number);
-        std::fill(shape_functions_local_gradients.begin(), shape_functions_local_gradients.end(), MatrixType());
-
-        //loop over all integration points
-        //TODO: this can be optimized
-        for(unsigned int pnt = 0; pnt < integration_points_number; ++pnt)
-        {
-            VectorType temp_values;
-            ShapeFunctionsValuesAndLocalGradients(
-                temp_values,
-                shape_functions_local_gradients[pnt],
-                integration_points[pnt]
-            );
-            for(unsigned int node = 0; node < Order; ++node)
-            {
-                shape_function_values( pnt, node ) = temp_values(node);
-            }
-        }
-
-        return shape_function_values;
-    }
-
-    ShapeFunctionsGradientsType CalculateShapeFunctionsIntegrationPointsLocalGradients(IntegrationMethod ThisMethod, unsigned int Order) const
-    {
-        IntegrationPointsContainerType all_integration_points = AllIntegrationPoints(ThisMethod);
-        const IntegrationPointsArrayType& integration_points = all_integration_points[ThisMethod];
-        //number of integration points
-        const int integration_points_number = integration_points.size();
-        //setting up return matrix
-        Matrix shape_function_values( integration_points_number, Order );
-        //setting up temporary local gradients
-        ShapeFunctionsGradientsType shape_functions_local_gradients;
-        shape_functions_local_gradients.resize(integration_points_number);
-        std::fill(shape_functions_local_gradients.begin(), shape_functions_local_gradients.end(), MatrixType());
-
-        //loop over all integration points
-        //TODO: this can be optimized
-        for(unsigned int pnt = 0; pnt < integration_points_number; ++pnt)
-        {
-            VectorType temp_values;
-            ShapeFunctionsValuesAndLocalGradients(
-                temp_values,
-                shape_functions_local_gradients[pnt],
-                integration_points[pnt]
-            );
-            for(unsigned int node = 0; node < Order; ++node)
-            {
-                shape_function_values( pnt, node ) = temp_values(node);
-            }
-        }
-
-        return shape_functions_local_gradients;
     }
 
     ///@}
