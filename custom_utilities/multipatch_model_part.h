@@ -16,6 +16,8 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/kratos_flags.h"
+#include "includes/deprecated_variables.h"
 #include "includes/model_part.h"
 #include "utilities/openmp_utils.h"
 #include "custom_utilities/patch.h"
@@ -144,7 +146,7 @@ public:
         mpModelPart->Elements().Unique();
 
         #ifdef ENABLE_PROFILING
-        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewElements.size() << " elements are generated" << std::endl;
+        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewElements.size() << " elements of type " << element_name << " are generated" << std::endl;
         #else
         std::cout << __FUNCTION__ << " completed" << std::endl;
         #endif
@@ -184,7 +186,7 @@ public:
         mpModelPart->Conditions().Unique();
 
         #ifdef ENABLE_PROFILING
-        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewConditions.size() << " conditions are generated" << std::endl;
+        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewConditions.size() << " conditions of type " << condition_name << " are generated" << std::endl;
         #else
         std::cout << __FUNCTION__ << " completed" << std::endl;
         #endif
@@ -204,6 +206,24 @@ public:
     void SynchronizeForward(const TVariableType& rVariable)
     {
         if (!IsReady()) return;
+
+        // transfer data from from control points to nodes
+        for (std::size_t i = 0; i < mpMultiPatch->EquationSystemSize(); ++i)
+        {
+            std::tuple<std::size_t, std::size_t> loc = mpMultiPatch->EquationIdLocation(i);
+
+            const std::size_t& patch_id = std::get<0>(loc);
+            const std::size_t& local_id = std::get<1>(loc);
+            // KRATOS_WATCH(patch_id)
+            // KRATOS_WATCH(local_id)
+
+            const typename TVariableType::Type& value = mpMultiPatch->pGetPatch(patch_id)->pGetGridFunction(rVariable)->pControlGrid()->GetData(local_id);
+            // KRATOS_WATCH(value)
+
+            ModelPart::NodeType::Pointer pNode = mpModelPart->pGetNode(CONVERT_INDEX_IGA_TO_KRATOS(i));
+
+            pNode->GetSolutionStepValue(rVariable) = value;
+        }
     }
 
     /// Synchronize from model_part to the multipatch
@@ -332,6 +352,9 @@ public:
 
             // create the element and add to the list
             typename TEntityType::Pointer pNewElement = r_clone_element.Create(cnt++, p_temp_geometry, p_temp_properties);
+            pNewElement->SetValue(ACTIVATION_LEVEL, 0);
+            pNewElement->SetValue(IS_INACTIVE, false);
+            pNewElement->Set(ACTIVE, true);
             pNewElements.push_back(pNewElement);
         }
 
