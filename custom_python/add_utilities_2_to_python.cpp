@@ -118,6 +118,161 @@ void ControlGrid_SetItem(ControlGrid<TDataType>& rDummy, int index, const TDataT
     rDummy.SetData(index, value);
 }
 
+template<typename TDataType>
+struct ControlValue_Helper
+{
+    static boost::python::list GetValue(const TDataType& rValue)
+    {
+    }
+
+    static TDataType GetValue(boost::python::list rValue)
+    {
+    }
+};
+
+template<>
+struct ControlValue_Helper<double>
+{
+    static boost::python::list GetValue(const double& rValue)
+    {
+        boost::python::list v;
+        v.append(rValue);
+        return v;
+    }
+
+    static double GetValue(boost::python::list rValue)
+    {
+    }
+};
+
+template<>
+struct ControlValue_Helper<ControlPoint<double> >
+{
+    static boost::python::list GetValue(const ControlPoint<double>& rValue)
+    {
+        boost::python::list v;
+        v.append(rValue.WX());
+        v.append(rValue.WY());
+        v.append(rValue.WZ());
+        v.append(rValue.W());
+        return v;
+    }
+
+    static double GetValue(boost::python::list rValue)
+    {
+    }
+};
+
+template<>
+struct ControlValue_Helper<array_1d<double, 3> >
+{
+    static boost::python::list GetValue(const array_1d<double, 3>& rValue)
+    {
+        boost::python::list v;
+        v.append(rValue[0]);
+        v.append(rValue[1]);
+        v.append(rValue[2]);
+        return v;
+    }
+
+    static double GetValue(boost::python::list rValue)
+    {
+    }
+};
+
+template<int TDim, typename TDataType>
+struct StructuredControlGrid_Helper
+{
+    static boost::python::list GetValue(StructuredControlGrid<TDim, TDataType>& rDummy)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+    }
+
+    static void SetValue(StructuredControlGrid<TDim, TDataType>& rDummy, boost::python::list values)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+    }
+};
+
+template<typename TDataType>
+struct StructuredControlGrid_Helper<1, TDataType>
+{
+    static boost::python::list GetValue(StructuredControlGrid<1, TDataType>& rDummy)
+    {
+        boost::python::list output;
+
+        for (std::size_t i = 0; i < rDummy.size(); ++i)
+        {
+            boost::python::list v = ControlValue_Helper<TDataType>::GetValue(rDummy.GetValue(i));
+            output.append(v);
+        }
+
+        return output;
+    }
+
+    static void SetValue(StructuredControlGrid<1, TDataType>& rDummy, boost::python::list values)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+    }
+};
+
+template<typename TDataType>
+struct StructuredControlGrid_Helper<2, TDataType>
+{
+    static boost::python::list GetValue(StructuredControlGrid<2, TDataType>& rDummy)
+    {
+        boost::python::list output;
+
+        for (std::size_t j = 0; j < rDummy.Size(1); ++j)
+        {
+            boost::python::list row;
+            for (std::size_t i = 0; i < rDummy.Size(0); ++i)
+            {
+                boost::python::list v = ControlValue_Helper<TDataType>::GetValue(rDummy.GetValue(i, j));
+                row.append(v);
+            }
+            output.append(row);
+        }
+
+        return output;
+    }
+
+    static void SetValue(StructuredControlGrid<2, TDataType>& rDummy, boost::python::list values)
+    {
+    }
+};
+
+template<typename TDataType>
+struct StructuredControlGrid_Helper<3, TDataType>
+{
+    static boost::python::list GetValue(StructuredControlGrid<3, TDataType>& rDummy)
+    {
+        boost::python::list output;
+
+        for (std::size_t k = 0; k < rDummy.Size(2); ++k)
+        {
+            boost::python::list row;
+            for (std::size_t j = 0; j < rDummy.Size(1); ++j)
+            {
+                boost::python::list col;
+                for (std::size_t i = 0; i < rDummy.Size(0); ++i)
+                {
+                    boost::python::list v = ControlValue_Helper<TDataType>::GetValue(rDummy.GetValue(i, j, k));
+                    col.append(v);
+                }
+                row.append(col);
+            }
+            output.append(row);
+        }
+
+        return output;
+    }
+
+    static void SetValue(StructuredControlGrid<3, TDataType>& rDummy, boost::python::list values)
+    {
+    }
+};
+
 ////////////////////////////////////////
 
 ControlGrid<ControlPoint<double> >::Pointer ControlGridLibrary_CreateLinearControlPointGrid(
@@ -317,6 +472,40 @@ boost::python::list FESpace_BoundaryShiftedFunctionIndices(FESpace<TDim>& rDummy
     for (std::size_t i = 0; i < boundary_indices.size(); ++i)
         indices.append<int>(static_cast<int>(boundary_indices[i] + 1));
     return indices;
+}
+
+////////////////////////////////////////
+
+template<int TDim, int TWhichDim>
+boost::python::list BSplinesFESpace_GetKnotVector(BSplinesFESpace<TDim>& rDummy)
+{
+    boost::python::list knot_list;
+
+    if (TWhichDim < TDim)
+    {
+        const typename BSplinesFESpace<TDim>::knot_container_t& knot_vector = rDummy.KnotVector(TWhichDim);
+
+        for (std::size_t i = 0; i < knot_vector.size(); ++i)
+            knot_list.append(knot_vector[i]);
+    }
+
+    return knot_list;
+}
+
+template<int TDim, int TWhichDim>
+void BSplinesFESpace_SetKnotVector(BSplinesFESpace<TDim>& rDummy, boost::python::list knot_list)
+{
+    if (TWhichDim < TDim)
+    {
+        std::vector<double> knot_vec;
+        typedef boost::python::stl_input_iterator<double> iterator_value_type;
+        BOOST_FOREACH(const iterator_value_type::value_type& v, std::make_pair(iterator_value_type(knot_list), iterator_value_type() ) )
+        {
+            knot_vec.push_back(v);
+        }
+
+        rDummy.SetKnotVector(TWhichDim, knot_vec);
+    }
 }
 
 ////////////////////////////////////////
@@ -690,21 +879,25 @@ void IsogeometricApplication_AddControlGrids()
 
     class_<StructuredControlGrid<1, ControlPoint<double> >, StructuredControlGrid<1, ControlPoint<double> >::Pointer, bases<BaseStructuredControlGrid<ControlPoint<double> > >, boost::noncopyable>
     ("StructuredControlPointGrid1D", init<const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<1, ControlPoint<double> >::GetValue, &StructuredControlGrid_Helper<1, ControlPoint<double> >::SetValue)
     .def(self_ns::str(self))
     ;
 
     class_<StructuredControlGrid<1, double>, StructuredControlGrid<1, double>::Pointer, bases<BaseStructuredControlGrid<double> >, boost::noncopyable>
     ("StructuredDoubleControlGrid1D", init<const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<1, double>::GetValue, &StructuredControlGrid_Helper<1, double>::SetValue)
     .def(self_ns::str(self))
     ;
 
     class_<StructuredControlGrid<1, array_1d<double, 3> >, StructuredControlGrid<1, array_1d<double, 3> >::Pointer, bases<BaseStructuredControlGrid<array_1d<double, 3> > >, boost::noncopyable>
     ("StructuredArray1DControlGrid1D", init<const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<1, array_1d<double, 3> >::GetValue, &StructuredControlGrid_Helper<1, array_1d<double, 3> >::SetValue)
     .def(self_ns::str(self))
     ;
 
     class_<StructuredControlGrid<1, Vector>, StructuredControlGrid<1, Vector>::Pointer, bases<BaseStructuredControlGrid<Vector> >, boost::noncopyable>
     ("StructuredVectorControlGrid1D", init<const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<1, Vector>::GetValue, &StructuredControlGrid_Helper<1, Vector>::SetValue)
     .def(self_ns::str(self))
     ;
 
@@ -712,21 +905,25 @@ void IsogeometricApplication_AddControlGrids()
 
     class_<StructuredControlGrid<2, ControlPoint<double> >, StructuredControlGrid<2, ControlPoint<double> >::Pointer, bases<BaseStructuredControlGrid<ControlPoint<double> > >, boost::noncopyable>
     ("StructuredControlPointGrid2D", init<const std::size_t&, const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<2, ControlPoint<double> >::GetValue, &StructuredControlGrid_Helper<2, ControlPoint<double> >::SetValue)
     .def(self_ns::str(self))
     ;
 
     class_<StructuredControlGrid<2, double>, StructuredControlGrid<2, double>::Pointer, bases<BaseStructuredControlGrid<double> >, boost::noncopyable>
     ("StructuredDoubleControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<2, double>::GetValue, &StructuredControlGrid_Helper<2, double>::SetValue)
     .def(self_ns::str(self))
     ;
 
     class_<StructuredControlGrid<2, array_1d<double, 3> >, StructuredControlGrid<2, array_1d<double, 3> >::Pointer, bases<BaseStructuredControlGrid<array_1d<double, 3> > >, boost::noncopyable>
     ("StructuredArray1DControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<2, array_1d<double, 3> >::GetValue, &StructuredControlGrid_Helper<2, array_1d<double, 3> >::SetValue)
     .def(self_ns::str(self))
     ;
 
     class_<StructuredControlGrid<2, Vector>, StructuredControlGrid<2, Vector>::Pointer, bases<BaseStructuredControlGrid<Vector> >, boost::noncopyable>
     ("StructuredVectorControlGrid2D", init<const std::size_t&, const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<2, Vector>::GetValue, &StructuredControlGrid_Helper<2, Vector>::SetValue)
     .def(self_ns::str(self))
     ;
 
@@ -734,21 +931,25 @@ void IsogeometricApplication_AddControlGrids()
 
     class_<StructuredControlGrid<3, ControlPoint<double> >, StructuredControlGrid<3, ControlPoint<double> >::Pointer, bases<BaseStructuredControlGrid<ControlPoint<double> > >, boost::noncopyable>
     ("StructuredControlPointGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<3, ControlPoint<double> >::GetValue, &StructuredControlGrid_Helper<3, ControlPoint<double> >::SetValue)
     .def(self_ns::str(self))
     ;
 
     class_<StructuredControlGrid<3, double>, StructuredControlGrid<3, double>::Pointer, bases<BaseStructuredControlGrid<double> >, boost::noncopyable>
     ("StructuredDoubleControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<3, double>::GetValue, &StructuredControlGrid_Helper<3, double>::SetValue)
     .def(self_ns::str(self))
     ;
 
     class_<StructuredControlGrid<3, array_1d<double, 3> >, StructuredControlGrid<3, array_1d<double, 3> >::Pointer, bases<BaseStructuredControlGrid<array_1d<double, 3> > >, boost::noncopyable>
     ("StructuredArray1DControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<1, array_1d<double, 3> >::GetValue, &StructuredControlGrid_Helper<1, array_1d<double, 3> >::SetValue)
     .def(self_ns::str(self))
     ;
 
     class_<StructuredControlGrid<3, Vector>, StructuredControlGrid<3, Vector>::Pointer, bases<BaseStructuredControlGrid<Vector> >, boost::noncopyable>
     ("StructuredVectorControlGrid3D", init<const std::size_t&, const std::size_t&, const std::size_t&>())
+    .add_property("ControlValues", &StructuredControlGrid_Helper<3, Vector>::GetValue, &StructuredControlGrid_Helper<3, Vector>::SetValue)
     .def(self_ns::str(self))
     ;
 
@@ -806,6 +1007,9 @@ void IsogeometricApplication_AddFESpacesToPython()
     class_<BSplinesFESpace<TDim>, typename BSplinesFESpace<TDim>::Pointer, bases<FESpace<TDim> >, boost::noncopyable>
     (ss.str().c_str(), init<>())
     .def("Number", &BSplinesFESpace<TDim>::Number)
+    .add_property("KnotU", BSplinesFESpace_GetKnotVector<TDim, 0>, BSplinesFESpace_SetKnotVector<TDim, 0>)
+    .add_property("KnotV", BSplinesFESpace_GetKnotVector<TDim, 1>, BSplinesFESpace_SetKnotVector<TDim, 1>)
+    .add_property("KnotW", BSplinesFESpace_GetKnotVector<TDim, 2>, BSplinesFESpace_SetKnotVector<TDim, 2>)
     .def(self_ns::str(self))
     ;
 }
