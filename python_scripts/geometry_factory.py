@@ -1,5 +1,5 @@
 import math
-from KratosMultiphysics import *
+#from KratosMultiphysics import *
 from KratosMultiphysics.IsogeometricApplication import *
 
 ###
