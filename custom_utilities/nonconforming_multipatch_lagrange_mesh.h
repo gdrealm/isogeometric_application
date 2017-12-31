@@ -21,6 +21,7 @@
 #include "custom_utilities/grid_function.h"
 #include "custom_utilities/fespace.h"
 #include "custom_utilities/patch.h"
+#include "custom_utilities/multipatch_utility.h"
 
 // #define DEBUG_MESH_GENERATION
 
@@ -50,6 +51,7 @@ public:
     virtual ~NonConformingMultipatchLagrangeMesh() {}
 
     /// Set the division for all the patches the same number of division in each dimension
+    /// Note that if the division is changed, the post_model_part must be generated again
     void SetUniformDivision(const std::size_t& num_division)
     {
         for (typename MultiPatch<TDim>::PatchContainerType::iterator it = mpMultiPatch->begin();
@@ -62,6 +64,7 @@ public:
     }
 
     /// Set the division for the patch at specific dimension
+    /// Note that if the division is changed, the post_model_part must be generated again
     void SetDivision(const std::size_t& patch_id, const int& dim, const std::size_t& num_division)
     {
         if (mpMultiPatch->Patches().find(patch_id) == mpMultiPatch->end())
@@ -89,10 +92,6 @@ public:
     /// Append to model_part, the quad/hex element from patches
     void WriteModelPart(ModelPart& r_model_part) const
     {
-        typedef typename Patch<TDim>::DoubleGridFunctionContainerType DoubleGridFunctionContainerType;
-        typedef typename Patch<TDim>::Array1DGridFunctionContainerType Array1DGridFunctionContainerType;
-        typedef typename Patch<TDim>::VectorGridFunctionContainerType VectorGridFunctionContainerType;
-
         // get the sample element
         std::string element_name = mBaseElementName;
         if (TDim == 2)
@@ -151,6 +150,7 @@ public:
                         #endif
 
                         this->CreateNode(p_ref, *it, r_model_part, NodeCounter);
+                        ++NodeCounter;
                     }
                 }
 
@@ -167,10 +167,10 @@ public:
 
                         // TODO: check if jacobian checking is necessary
                         temp_element_nodes.clear();
-                        temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node1, NodeKey).base()));
-                        temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node2, NodeKey).base()));
-                        temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node4, NodeKey).base()));
-                        temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node3, NodeKey).base()));
+                        temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node1, NodeKey).base()));
+                        temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node2, NodeKey).base()));
+                        temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node4, NodeKey).base()));
+                        temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node3, NodeKey).base()));
 
                         Element::Pointer pNewElement = rCloneElement.Create(ElementCounter++, temp_element_nodes, pNewProperties);
                         r_model_part.AddElement(pNewElement);
@@ -219,6 +219,7 @@ public:
                             p_ref[2] = ((double) k) / NumDivision3;
 
                             this->CreateNode(p_ref, *it, r_model_part, NodeCounter);
+                            ++NodeCounter;
                         }
                     }
                 }
@@ -242,14 +243,14 @@ public:
 
                             // TODO: check if jacobian checking is necessary
                             temp_element_nodes.clear();
-                            temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node1, NodeKey).base()));
-                            temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node2, NodeKey).base()));
-                            temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node4, NodeKey).base()));
-                            temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node3, NodeKey).base()));
-                            temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node5, NodeKey).base()));
-                            temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node6, NodeKey).base()));
-                            temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node8, NodeKey).base()));
-                            temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), Node7, NodeKey).base()));
+                            temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node1, NodeKey).base()));
+                            temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node2, NodeKey).base()));
+                            temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node4, NodeKey).base()));
+                            temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node3, NodeKey).base()));
+                            temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node5, NodeKey).base()));
+                            temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node6, NodeKey).base()));
+                            temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node8, NodeKey).base()));
+                            temp_element_nodes.push_back(*(MultiPatchUtility::FindKey(r_model_part.Nodes(), Node7, NodeKey).base()));
 
                             Element::Pointer pNewElement = rCloneElement.Create(ElementCounter++, temp_element_nodes, pNewProperties);
                             r_model_part.AddElement(pNewElement);
@@ -296,24 +297,8 @@ private:
     std::size_t mLastElemId;
     std::size_t mLastPropId;
 
-    //**********AUXILIARY FUNCTION**************************************************************
-    //******************************************************************************************
-    template<class TContainerType, class TKeyType>
-    typename TContainerType::iterator FindKey(TContainerType& ThisContainer, TKeyType& ThisKey, const std::string& ComponentName) const
-    {
-        typename TContainerType::iterator i_result;
-        if((i_result = ThisContainer.find(ThisKey)) == ThisContainer.end())
-        {
-            std::stringstream buffer;
-            buffer << ComponentName << " #" << ThisKey << " is not found.";
-            KRATOS_THROW_ERROR(std::invalid_argument, buffer.str(), "");
-        }
-
-        return i_result;
-    }
-
     /// Helper function to create new node from patch and add to the model_part. The control values will be carried.
-    void CreateNode(const std::vector<double>& p_ref, const Patch<TDim>& rPatch, ModelPart& r_model_part, std::size_t& NodeCounter) const
+    void CreateNode(const std::vector<double>& p_ref, const Patch<TDim>& rPatch, ModelPart& r_model_part, const std::size_t& NodeCounter) const
     {
         typedef typename Patch<TDim>::DoubleGridFunctionContainerType DoubleGridFunctionContainerType;
         typedef typename Patch<TDim>::Array1DGridFunctionContainerType Array1DGridFunctionContainerType;
@@ -321,15 +306,7 @@ private:
 
         typename Patch<TDim>::ControlPointType p = rPatch.pControlPointGridFunction()->GetValue(p_ref);
 
-        // typename NodeType::Pointer pNewNode( new NodeType( 0, p.X(), p.Y(), p.Z() ) );
-        // pNewNode->SetId(NodeCounter++);
-        // r_model_part.AddNode(pNewNode);
-        // // Giving model part's variables list to the node
-        // pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
-        // //set buffer size
-        // pNewNode->SetBufferSize(r_model_part.GetBufferSize());
-
-        typename NodeType::Pointer pNewNode = r_model_part.CreateNewNode(NodeCounter++, p.X(), p.Y(), p.Z());
+        typename NodeType::Pointer pNewNode = r_model_part.CreateNewNode(NodeCounter, p.X(), p.Y(), p.Z());
         #ifdef DEBUG_MESH_GENERATION
         std::cout << "Node " << pNewNode->Id() << " (" << pNewNode->X() << " " << pNewNode->Y() << " " << pNewNode->Z() << ") is created" << std::endl;
         #endif
