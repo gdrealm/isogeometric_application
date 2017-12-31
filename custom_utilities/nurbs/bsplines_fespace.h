@@ -108,6 +108,7 @@ public:
         }
         else
         {
+            mKnotVectors[i].clear();
             for (std::size_t j = 0; j < values.size(); ++j)
                 mKnotVectors[i].pCreateKnot(values[j]);
         }

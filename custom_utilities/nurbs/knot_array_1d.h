@@ -52,6 +52,15 @@ public:
     /// Default constructor
     KnotArray1D() {}
 
+    /// Destructor
+    virtual ~KnotArray1D() {}
+
+    /// Clear the internal knot container
+    void clear()
+    {
+        mpKnots.clear();
+    }
+
     /// Insert the knot to the array and return its pointer.
     /// This function creates the new knot regardless it is repetitive or not.
     knot_t pCreateKnot(const TDataType& k)

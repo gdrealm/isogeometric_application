@@ -182,10 +182,10 @@ public:
     /// check if this cell is the same as the reference cell. Two cells are the same if it has the same bounding knot values.
     bool IsSame(const Cell::Pointer p_cell, const double& tol) const
     {
-        if(    fabs( LeftValue()  - p_cell->LeftValue() )  < tol
+        if(    fabs( LeftValue()  - p_cell->LeftValue()  ) < tol
             && fabs( RightValue() - p_cell->RightValue() ) < tol
-            && fabs( DownValue()  - p_cell->DownValue() )  < tol
-            && fabs( UpValue()    - p_cell->UpValue() )    < tol
+            && fabs( DownValue()  - p_cell->DownValue()  ) < tol
+            && fabs( UpValue()    - p_cell->UpValue()    ) < tol
             && fabs( BelowValue() - p_cell->BelowValue() ) < tol
             && fabs( AboveValue() - p_cell->AboveValue() ) < tol )
                 return true;
