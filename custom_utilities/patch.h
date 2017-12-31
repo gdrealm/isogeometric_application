@@ -1141,7 +1141,14 @@ public:
 
         std::map<std::size_t, std::size_t>::const_iterator it = mGlobalToPatch.find(global_id);
         if (it == mGlobalToPatch.end())
+        {
+            KRATOS_WATCH(global_id)
+            KRATOS_WATCH(mEquationSystemSize)
+            std::cout << "global_to_patch map:" << std::endl;
+            for (std::map<std::size_t, std::size_t>::const_iterator it2 = mGlobalToPatch.begin(); it2 != mGlobalToPatch.end(); ++it2)
+                std::cout << " " << it2->first << ": " << it2->second << std::endl;
             KRATOS_THROW_ERROR(std::logic_error, "The global id does not exist in the global_to_patch map.", "")
+        }
 
         const std::size_t& patch_id = it->second;
         const std::size_t& local_id = pGetPatch(it->second)->pFESpace()->LocalId(global_id);
@@ -1166,7 +1173,12 @@ public:
     typename PatchType::Pointer pGetPatch(const std::size_t& Id)
     {
         typename PatchContainerType::ptr_iterator it_patch = mpPatches.find(Id).base();
-        assert(it_patch != mpPatches.ptr_end());
+        if(it_patch == mpPatches.ptr_end())
+        {
+            std::stringstream ss;
+            ss << "The patch " << Id << " does not exist in the multipatch";
+            KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        }
         return *it_patch;
     }
 
@@ -1174,7 +1186,12 @@ public:
     typename PatchType::ConstPointer pGetPatch(const std::size_t& Id) const
     {
         typename PatchContainerType::ptr_const_iterator it_patch = mpPatches.find(Id).base();
-        assert(it_patch != mpPatches.ptr_end());
+        if(it_patch == mpPatches.ptr_end())
+        {
+            std::stringstream ss;
+            ss << "The patch " << Id << " does not exist in the multipatch";
+            KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        }
         return typename PatchType::ConstPointer(*it_patch);
     }
 
@@ -1210,11 +1227,11 @@ public:
         }
 
         // enumerate each patch
-        mEquationSystemSize = start;
+        std::size_t last = start;
         for (typename PatchContainerType::ptr_iterator it = Patches().ptr_begin(); it != Patches().ptr_end(); ++it)
         {
-            mEquationSystemSize = (*it)->pFESpace()->Enumerate(mEquationSystemSize);
-            // KRATOS_WATCH(mEquationSystemSize)
+            last = (*it)->pFESpace()->Enumerate(last);
+            // KRATOS_WATCH(last)
 
             // transfer the enumeration to neighbor boundary
             for (int i = _LEFT_; i <= _BACK_; ++i)
@@ -1251,9 +1268,10 @@ public:
         {
             all_indices.insert((*it)->pFESpace()->FunctionIndices().begin(), (*it)->pFESpace()->FunctionIndices().end());
         }
+        mEquationSystemSize = all_indices.size();
 
         std::map<std::size_t, std::size_t> new_indices;
-        std::size_t cnt = 0;
+        std::size_t cnt = start;
         for (std::set<std::size_t>::iterator it = all_indices.begin(); it != all_indices.end(); ++it)
         {
             new_indices[*it] = cnt++;
@@ -1277,7 +1295,7 @@ public:
         // turn on the enumerated flag
         mIsEnumerated = true;
 
-        return mEquationSystemSize;
+        return start + mEquationSystemSize;
     }
 
     /// Make the two patches neighbor. This requires that two patches are conformed at the interface.
@@ -1319,7 +1337,7 @@ private:
 
     PatchContainerType mpPatches; // container for all the patches
     bool mIsEnumerated;
-    std::size_t mEquationSystemSize;
+    std::size_t mEquationSystemSize; // this is the number of equation id in this multipatch
     std::map<std::size_t, std::size_t> mGlobalToPatch; // this is to map each global id to a patch id
 
 };

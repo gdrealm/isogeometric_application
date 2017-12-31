@@ -16,6 +16,8 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/kratos_flags.h"
+#include "includes/deprecated_variables.h"
 #include "includes/model_part.h"
 #include "utilities/openmp_utils.h"
 #include "custom_utilities/patch.h"
@@ -89,8 +91,12 @@ public:
         mIsModelPartReady = false;
 
         // always enumerate the multipatch first
+        std::size_t EquationSystemSize = 0;
         for (std::size_t ip = 0; ip < mpMultiPatches.size(); ++ip)
-            mpMultiPatches[ip]->Enumerate();
+        {
+            EquationSystemSize = mpMultiPatches[ip]->Enumerate(EquationSystemSize);
+            KRATOS_WATCH(EquationSystemSize)
+        }
 
         // create new model_part
         ModelPart::Pointer pNewModelPart = ModelPart::Pointer(new ModelPart(mpModelPart->Name()));
@@ -107,13 +113,14 @@ public:
         #endif
 
         std::size_t node_counter = 0;
+        std::size_t cnt = 0;
 
         for (std::size_t ip = 0; ip < mpMultiPatches.size(); ++ip)
         {
             // create new nodes from control points
             for (std::size_t i = 0; i < mpMultiPatches[ip]->EquationSystemSize(); ++i)
             {
-                std::tuple<std::size_t, std::size_t> loc = mpMultiPatches[ip]->EquationIdLocation(i);
+                std::tuple<std::size_t, std::size_t> loc = mpMultiPatches[ip]->EquationIdLocation(cnt++);
 
                 const std::size_t& patch_id = std::get<0>(loc);
                 const std::size_t& local_id = std::get<1>(loc);
@@ -179,7 +186,7 @@ public:
         mpModelPart->Elements().Unique();
 
         #ifdef ENABLE_PROFILING
-        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewElements.size() << " elements are generated" << std::endl;
+        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewElements.size() << " elements of type " << element_name << " are generated" << std::endl;
         #else
         std::cout << __FUNCTION__ << " completed" << std::endl;
         #endif
@@ -208,7 +215,7 @@ public:
         const GridFunction<TDim-1, ControlPointType>& rControlPointGridFunction = pBoundaryPatch->ControlPointGridFunction();
 
         // create new conditions and add to the model_part
-        ModelPart::ConditionsContainerType pNewConditions = MultiMultiPatchModelPart::CreateEntitiesFromFESpace<Condition, FESpace<TDim-1>, ControlGrid<ControlPointType>, ModelPart::NodesContainerType>(pBoundaryPatch->pFESpace(), rControlPointGridFunction.pControlGrid(), mpModelPart->Nodes(), condition_name, starting_id, p_temp_properties);
+        ModelPart::ConditionsContainerType pNewConditions = MultiPatchModelPart<TDim>::template CreateEntitiesFromFESpace<Condition, FESpace<TDim-1>, ControlGrid<ControlPointType>, ModelPart::NodesContainerType>(pBoundaryPatch->pFESpace(), rControlPointGridFunction.pControlGrid(), mpModelPart->Nodes(), condition_name, starting_id, p_temp_properties);
 
         for (ModelPart::ConditionsContainerType::ptr_iterator it = pNewConditions.ptr_begin(); it != pNewConditions.ptr_end(); ++it)
         {
@@ -219,7 +226,7 @@ public:
         mpModelPart->Conditions().Unique();
 
         #ifdef ENABLE_PROFILING
-        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewConditions.size() << " conditions are generated" << std::endl;
+        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewConditions.size() << " conditions of type " << condition_name << " are generated" << std::endl;
         #else
         std::cout << __FUNCTION__ << " completed" << std::endl;
         #endif
@@ -239,41 +246,60 @@ public:
     void SynchronizeForward(const TVariableType& rVariable)
     {
         if (!IsReady()) return;
+
+        // transfer data from from control points to nodes
+        std::size_t cnt = 0;
+        for (std::size_t ip = 0; ip < mpMultiPatches.size(); ++ip)
+        {
+            for (std::size_t i = 0; i < mpMultiPatches[ip]->EquationSystemSize(); ++i)
+            {
+                std::tuple<std::size_t, std::size_t> loc = mpMultiPatches[ip]->EquationIdLocation(i);
+
+                const std::size_t& patch_id = std::get<0>(loc);
+                const std::size_t& local_id = std::get<1>(loc);
+                // KRATOS_WATCH(patch_id)
+                // KRATOS_WATCH(local_id)
+
+                const typename TVariableType::Type& value = mpMultiPatches[ip]->pGetPatch(patch_id)->pGetGridFunction(rVariable)->pControlGrid()->GetData(local_id);
+                // KRATOS_WATCH(value)
+
+                ModelPart::NodeType::Pointer pNode = mpModelPart->pGetNode(CONVERT_INDEX_IGA_TO_KRATOS(cnt++));
+
+                pNode->GetSolutionStepValue(rVariable) = value;
+            }
+        }
     }
 
     /// Synchronize from model_part to the multipatch
     template<class TVariableType>
-    void SynchronizeBackward(const TVariableType& rVariable)
+    void SynchronizeBackward(const std::size_t& ip, const TVariableType& rVariable)
     {
         if (!IsReady()) return;
 
-        for (std::size_t ip = 0; ip < mpMultiPatches.size(); ++ip)
+        // loop through each patch, we construct a map from each function id to the patch id
+        for (typename MultiPatch<TDim>::PatchContainerType::iterator it = mpMultiPatches[ip]->begin();
+                it != mpMultiPatches[ip]->end(); ++it)
         {
-            // loop through each patch, we construct a map from each function id to the patch id
-            for (typename MultiPatch<TDim>::PatchContainerType::iterator it = mpMultiPatches[ip]->begin();
-                    it != mpMultiPatches[ip]->end(); ++it)
+            const std::vector<std::size_t>& func_ids = it->pFESpace()->FunctionIndices();
+
+            // check if the grid function existed in the patch
+            if (!it->template HasGridFunction<TVariableType>(rVariable))
             {
-                const std::vector<std::size_t>& func_ids = it->pFESpace()->FunctionIndices();
+                // if not then create the new grid function
+                typename ControlGrid<typename TVariableType::Type>::Pointer pNewControlGrid = UnstructuredControlGrid<typename TVariableType::Type>::Create(it->pFESpace()->TotalNumber());
+                it->template CreateGridFunction<TVariableType>(rVariable, pNewControlGrid);
+            }
 
-                // check if the grid function existed in the patch
-                if (!it->template HasGridFunction<TVariableType>(rVariable))
-                {
-                    // if not then create the new grid function
-                    typename ControlGrid<typename TVariableType::Type>::Pointer pNewControlGrid = UnstructuredControlGrid<typename TVariableType::Type>::Create(it->pFESpace()->TotalNumber());
-                    it->template CreateGridFunction<TVariableType>(rVariable, pNewControlGrid);
-                }
+            // get the control grid
+            typename ControlGrid<typename TVariableType::Type>::Pointer pControlGrid = it->pGetGridFunction(rVariable)->pControlGrid();
 
-                // get the control grid
-                typename ControlGrid<typename TVariableType::Type>::Pointer pControlGrid = it->pGetGridFunction(rVariable)->pControlGrid();
+            // set the data for the control grid
+            for (std::size_t i = 0; i < pControlGrid->size(); ++i)
+            {
+                std::size_t global_id = func_ids[i];
+                std::size_t node_id = CONVERT_INDEX_IGA_TO_KRATOS(global_id);
 
-                // set the data for the control grid
-                for (std::size_t i = 0; i < pControlGrid->size(); ++i)
-                {
-                    std::size_t global_id = func_ids[i];
-                    std::size_t node_id = CONVERT_INDEX_IGA_TO_KRATOS(global_id);
-
-                    pControlGrid->SetData(i, mpModelPart->Nodes()[node_id].GetSolutionStepValue(rVariable));
-                }
+                pControlGrid->SetData(i, mpModelPart->Nodes()[node_id].GetSolutionStepValue(rVariable));
             }
         }
     }
@@ -328,6 +354,11 @@ private:
             pCellManagers.push_back(pFESpaces[ip]->ConstructCellManager());
 
         // TODO compare all cell managers to make sure they are matching
+        for (std::size_t ip = 1; ip < pCellManagers.size(); ++ip)
+        {
+            if ((*pCellManagers[ip]) != (*pCellManagers[0]))
+                KRATOS_THROW_ERROR(std::logic_error, "The cell manager does not match at index", ip)
+        }
 
         #ifdef ENABLE_PROFILING
         std::cout << "  >> ConstructCellManager: " << OpenMPUtils::GetCurrentTime()-start << " s" << std::endl;
@@ -358,11 +389,11 @@ private:
 
         for (std::size_t ic = 0; ic < pCellManagers[0]->size(); ++ic)
         {
-            std::vector<typename IsogeometricGeometryType::Pointer> p_temp_geometries;            
+            std::vector<Element::GeometryType::Pointer> p_temp_geometries;
 
             for (std::size_t ip = 0; ip < pFESpaces.size(); ++ip)
             {
-                typename cell_container_t::cell_t pcell = pCellManagers[ip][ic];
+                typename cell_container_t::cell_t pcell = pCellManagers[ip]->operator[](ic);
                 // KRATOS_WATCH(*pcell)
 
                 // get new nodes
@@ -373,7 +404,7 @@ private:
                 for (std::size_t i = 0; i < anchors.size(); ++i)
                 {
                     temp_element_nodes.push_back(( *(MultiPatchUtility::FindKey(rNodes, CONVERT_INDEX_IGA_TO_KRATOS(anchors[i]), "Node").base())));
-                    weights[i] = pControlGrids[i]->GetData(pFESpaces[i]->LocalId(anchors[i])).W();
+                    weights[i] = pControlGrids[ip]->GetData(pFESpaces[ip]->LocalId(anchors[i])).W();
                 }
 
                 #ifdef DEBUG_GEN_ENTITY
@@ -403,12 +434,14 @@ private:
                                                     static_cast<int>(pFESpaces[ip]->Order(1)),
                                                     static_cast<int>(pFESpaces[ip]->Order(2)),
                                                     max_integration_method);
-
                 p_temp_geometries.push_back(p_temp_geometry);
             }
 
             // create the element and add to the list
             typename TEntityType::Pointer pNewElement = r_clone_element.Create(cnt++, p_temp_geometries, p_temp_properties);
+            pNewElement->SetValue(ACTIVATION_LEVEL, 0);
+            pNewElement->SetValue(IS_INACTIVE, false);
+            pNewElement->Set(ACTIVE, true);
             pNewElements.push_back(pNewElement);
         }
 
