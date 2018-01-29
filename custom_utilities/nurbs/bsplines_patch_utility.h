@@ -19,6 +19,7 @@
 #include "includes/define.h"
 #include "custom_utilities/nurbs/bsplines_fespace.h"
 #include "custom_utilities/nurbs/bsplines_fespace_library.h"
+#include "custom_utilities/import_export/multi_nurbs_patch_geo_importer.h"
 #include "custom_utilities/patch.h"
 
 namespace Kratos
@@ -32,19 +33,6 @@ class BSplinesPatchUtility
 public:
     /// Pointer definition
     KRATOS_CLASS_POINTER_DEFINITION(BSplinesPatchUtility);
-
-    /// Type definition
-
-    enum ReadMode
-    {
-        _NO_READ          = 0,
-        _READ_PATCH       = 1,
-        _READ_ORDER       = 2,
-        _READ_NUMBER      = 3,
-        _READ_KNOTS       = 4,
-        _READ_COORDINATES = 5,
-        _READ_WEIGHTS     = 6
-    };
 
     /// Default constructor
     BSplinesPatchUtility() {}
@@ -124,225 +112,19 @@ public:
         return pNewPatch;
     }
 
+    /// Get the dimension of underlying NURBS in geo file
     static int GetDimensionOfGeo(const std::string& fn)
     {
-        std::ifstream infile(fn.c_str());
-        if(!infile)
-            KRATOS_THROW_ERROR(std::logic_error, "Error open file", fn)
-
-        std::string line;
-        std::vector<std::string> words;
-        int read_mode = _READ_PATCH;
-        while(!infile.eof())
-        {
-            std::getline(infile, line);
-            boost::trim_if(line, boost::is_any_of("\t ")); // ignore trailing spaces
-            boost::split(words, line, boost::is_any_of(" \t"), boost::token_compress_on);
-
-            if(words.size() != 0)
-            {
-                if(words[0] == std::string("#") || words[0][0] == '#')
-                    continue;
-
-                if(read_mode == _READ_PATCH)
-                {
-                    // bound check
-                    if(words.size() < 2)
-                    {
-                        std::cout << "Error at line: " << line << std::endl;
-                        KRATOS_THROW_ERROR(std::logic_error, "The Patch section need to contain information about dimension and number of patches, current number of information =", words.size())
-                    }
-
-                    // read info
-                    int Dim = atoi(words[0].c_str());
-                    return Dim;
-                }
-            }
-        }
-
-        return 0;
+        return GetDimensionOfGeo(fn);
     }
 
     /// Create the B-Splines patch from geo file
+    /// This function is kept for backward compatibility. New user should use MultiNURBSPatchGeoImporter instead.
     template<int TDim>
     static typename Patch<TDim>::Pointer CreatePatchFromGeo(const std::string& fn)
     {
-        std::ifstream infile(fn.c_str());
-        if(!infile)
-            KRATOS_THROW_ERROR(std::logic_error, "Error open file", fn)
-
-        std::string line;
-        std::vector<std::string> words;
-        int read_mode = _READ_PATCH;
-        int npatches, dim_index = 0;
-        std::vector<std::size_t> orders;
-        std::vector<std::size_t> numbers;
-        std::vector<std::vector<double> > knots(3);
-        std::vector<std::vector<double> > wcoords(3);
-        std::vector<double> weights;
-        while(!infile.eof())
-        {
-            std::getline(infile, line);
-            boost::trim_if(line, boost::is_any_of("\t ")); // ignore trailing spaces
-            boost::split(words, line, boost::is_any_of(" \t"), boost::token_compress_on);
-
-            if(words.size() != 0)
-            {
-                if(words[0] == std::string("#") || words[0][0] == '#')
-                    continue;
-
-                if(read_mode == _READ_PATCH)
-                {
-                    // bound check
-                    if(words.size() < 2)
-                    {
-                        std::cout << "Error at line: " << line << std::endl;
-                        KRATOS_THROW_ERROR(std::logic_error, "The Patch section need to contain information about dimension and number of patches, current number of information =", words.size())
-                    }
-
-                    // read info
-                    int Dim = atoi(words[0].c_str());
-                    if (Dim != TDim)
-                        KRATOS_THROW_ERROR(std::logic_error, "The input dimension is invalid", "")
-                    npatches = atoi(words[1].c_str());
-                    if(npatches > 1)
-                    {
-                        KRATOS_WATCH(line)
-                        KRATOS_WATCH(words[0])
-                        KRATOS_WATCH(words[1])
-                        KRATOS_THROW_ERROR(std::logic_error, "At present, the number of patches > 1 is not supported, npatches =", npatches)
-                    }
-                    read_mode = _READ_ORDER;
-                    continue;
-                }
-
-                if(read_mode == _READ_ORDER)
-                {
-                    // bound check
-                    if(words.size() != TDim)
-                        KRATOS_THROW_ERROR(std::logic_error, "The Order section must contained number of information equal to dimension, current number of information =", words.size())
-
-                    // read info
-                    for(std::size_t i = 0; i < TDim; ++i)
-                        orders.push_back(static_cast<std::size_t>(atoi(words[i].c_str())));
-                    read_mode = _READ_NUMBER;
-                    continue;
-                }
-
-                if(read_mode == _READ_NUMBER)
-                {
-                    // bound check
-                    if(words.size() != TDim)
-                        KRATOS_THROW_ERROR(std::logic_error, "The Number section must contained number of information equal to dimension, current number of information =", words.size())
-
-                    for(std::size_t i = 0; i < TDim; ++i)
-                        numbers.push_back(static_cast<std::size_t>(atoi(words[i].c_str())));
-                    read_mode = _READ_KNOTS;
-                    continue;
-                }
-
-                if(read_mode == _READ_KNOTS)
-                {
-                    // bound check
-                    int knot_len = numbers[dim_index] + orders[dim_index] + 1;
-                    if(words.size() != knot_len)
-                        KRATOS_THROW_ERROR(std::logic_error, "The Knots section must contained number of information equal to n+p+1, current number of information =", words.size())
-
-                    for(std::size_t i = 0; i < knot_len; ++i)
-                    {
-                        double k = atof(words[i].c_str());
-                        knots[dim_index].push_back(k);
-                    }
-
-                    ++dim_index;
-                    if(dim_index == TDim)
-                    {
-                        dim_index = 0;
-                        read_mode = _READ_COORDINATES;
-                    }
-                    continue;
-                }
-
-                if(read_mode == _READ_COORDINATES)
-                {
-                    // bound check
-                    int num_basis = 1;
-                    for(std::size_t i = 0; i < TDim; ++i)
-                        num_basis *= numbers[i];
-                    if(words.size() != num_basis)
-                        KRATOS_THROW_ERROR(std::logic_error, "The Coordinates section must contained number of information equal to prod(ni), current number of information =", words.size())
-
-                    for(std::size_t i = 0; i < num_basis; ++i)
-                        wcoords[dim_index].push_back(atof(words[i].c_str()));
-
-                    ++dim_index;
-                    if(dim_index == TDim)
-                    {
-                        dim_index = 0;
-                        read_mode = _READ_WEIGHTS;
-                    }
-                    continue;
-                }
-
-                if(read_mode == _READ_WEIGHTS)
-                {
-                    // bound check
-                    int num_basis = 1;
-                    for(std::size_t i = 0; i < TDim; ++i)
-                        num_basis *= numbers[i];
-                    if(words.size() != num_basis)
-                        KRATOS_THROW_ERROR(std::logic_error, "The Weights section must contained number of information equal to prod(ni), current number of information =", words.size())
-
-                    for(std::size_t i = 0; i < num_basis; ++i)
-                        weights.push_back(atof(words[i].c_str()));
-
-                    read_mode = _NO_READ;
-                    continue;
-                }
-            }
-        }
-
-        // close the file
-        infile.close();
-
-        // create the FESpace
-        typename BSplinesFESpace<TDim>::Pointer pNewFESpace = BSplinesFESpace<TDim>::Create();
-        for (int dim = 0; dim < TDim; ++dim)
-        {
-            pNewFESpace->SetKnotVector(dim, knots[dim]);
-            pNewFESpace->SetInfo(dim, numbers[dim], orders[dim]);
-        }
-
-        // reset function indices and enumerate it first time to give each function in the FESpace a different id
-        pNewFESpace->ResetFunctionIndices();
-        std::size_t start = 0;
-        pNewFESpace->Enumerate(start);
-
-        // create new patch
-        typename Patch<TDim>::Pointer pNewPatch = Patch<TDim>::Create(0, pNewFESpace);
-
-        // create control grid and assign to new patch
-        typedef ControlPoint<double> ControlPointType;
-        typename StructuredControlGrid<TDim, ControlPointType>::Pointer pControlPointGrid = StructuredControlGrid<TDim, ControlPointType>::Create(numbers);
-        std::size_t total_number = 1;
-        for (int dim = 0; dim < TDim; ++dim)
-            total_number *= numbers[dim];
-
-        for (std::size_t i = 0; i < total_number; ++i)
-        {
-            ControlPointType c;
-            if (TDim == 2)
-                c.SetCoordinates(wcoords[0][i]/weights[i], wcoords[1][i]/weights[i], 0.0, weights[i]);
-            else if (TDim == 3)
-                c.SetCoordinates(wcoords[0][i]/weights[i], wcoords[1][i]/weights[i], wcoords[2][i]/weights[i], weights[i]);
-            pControlPointGrid->SetData(i, c);
-        }
-
-        pControlPointGrid->SetName("CONTROL_POINT");
-        pNewPatch->CreateControlPointGridFunction(pControlPointGrid);
-
-        std::cout << __FUNCTION__ << ": Read NURBS from " << fn << " completed" << std::endl;
-        return pNewPatch;
+        MultiNURBSPatchGeoImporter<TDim> dummy;
+        return dummy.ImportSingle(fn);
     }
 
     /// Information

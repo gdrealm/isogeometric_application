@@ -45,6 +45,7 @@ LICENSE: see isogeometric_application/LICENSE.txt
 #include "custom_utilities/multipatch_utility.h"
 #include "custom_utilities/multipatch_refinement_utility.h"
 #include "custom_utilities/import_export/multi_nurbs_patch_geo_exporter.h"
+#include "custom_utilities/import_export/multi_nurbs_patch_geo_importer.h"
 #include "custom_utilities/import_export/multi_nurbs_patch_matlab_exporter.h"
 #include "custom_utilities/import_export/multi_nurbs_patch_glvis_exporter.h"
 
@@ -1119,7 +1120,7 @@ void IsogeometricApplication_AddPatchesToPython()
     ;
 }
 
-void IsogeometricApplication_AddImportExportToPython()
+void IsogeometricApplication_AddExportToPython()
 {
     class_<MultiNURBSPatchGeoExporter, MultiNURBSPatchGeoExporter::Pointer, boost::noncopyable>
     ("MultiNURBSPatchGeoExporter", init<>())
@@ -1151,6 +1152,22 @@ void IsogeometricApplication_AddImportExportToPython()
     .def("Export", &MultiPatchExporter_Export<1, MultiNURBSPatchGLVisExporter, MultiPatch<1> >)
     .def("Export", &MultiPatchExporter_Export<2, MultiNURBSPatchGLVisExporter, MultiPatch<2> >)
     .def("Export", &MultiPatchExporter_Export<3, MultiNURBSPatchGLVisExporter, MultiPatch<3> >)
+    .def(self_ns::str(self))
+    ;
+
+}
+
+template<int TDim>
+void IsogeometricApplication_AddImportToPython()
+{
+    std::stringstream ss;
+
+    ss.str(std::string());
+    ss << "MultiNURBSPatchGeoImporter" << TDim << "D";
+    class_<MultiNURBSPatchGeoImporter<TDim>, typename MultiNURBSPatchGeoImporter<TDim>::Pointer, boost::noncopyable>
+    (ss.str().c_str(), init<>())
+    .def("ImportSingle", &MultiNURBSPatchGeoImporter<TDim>::ImportSingle)
+    .def("Import", &MultiNURBSPatchGeoImporter<TDim>::Import)
     .def(self_ns::str(self))
     ;
 
@@ -1283,7 +1300,10 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     ///////////////////////IMPORT/EXPORT/////////////////////////////
     /////////////////////////////////////////////////////////////////
 
-    IsogeometricApplication_AddImportExportToPython();
+    IsogeometricApplication_AddExportToPython();
+    IsogeometricApplication_AddImportToPython<1>();
+    IsogeometricApplication_AddImportToPython<2>();
+    IsogeometricApplication_AddImportToPython<3>();
 
 }
 
