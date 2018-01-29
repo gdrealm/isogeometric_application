@@ -798,7 +798,7 @@ public:
     
     /**
      * Utility function to generate elements/conditions for element/condition
-     * if T==Element, type must be 1; otherwise type=2
+     * if T==Element, type must be 1; if T==Condition, type is 2
      */
     template<class T, std::size_t type>
     void GenerateForOneEntity(ModelPart& rModelPart,
@@ -821,6 +821,7 @@ public:
         else
             std::cout << "Generating for condition " << rE.Id() << std::endl;
         KRATOS_WATCH(*pDummyProperties)
+        KRATOS_WATCH(EntityCounter)
         #endif
 
         // generate list of nodes

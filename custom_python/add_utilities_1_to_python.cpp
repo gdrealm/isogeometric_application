@@ -191,6 +191,21 @@ void NURBSTestUtils_ProbeJacobian3(
     dummy.ProbeJacobian(pElement, X, Y, Z);
 }
 
+void BezierClassicalPostUtility_GenerateConditions(BezierClassicalPostUtility& dummy,
+        ModelPart& rModelPart,
+        Condition& rCondition,
+        const std::string& sample_condition_name,
+        std::size_t starting_node_id,
+        std::size_t starting_condition_id)
+{
+    Condition const& SampleCondition = KratosComponents<Condition>::Get(sample_condition_name);
+    int NodeCounter = starting_node_id;
+    int NodeCounter_old = NodeCounter;
+    int ConditionCounter = starting_condition_id;
+    dummy.GenerateForOneEntity<Condition, 2>(rModelPart, rCondition,
+            SampleCondition, NodeCounter_old, NodeCounter, ConditionCounter, "Node");
+}
+
 void BezierClassicalPostUtility_GenerateModelPart2WithCondition(BezierClassicalPostUtility& dummy, ModelPart::Pointer pModelPartPost)
 {
     dummy.GenerateModelPart2(pModelPartPost, true);
@@ -227,6 +242,7 @@ void IsogeometricApplication_AddCustomUtilities1ToPython()
     ;
 
     class_<BezierClassicalPostUtility, BezierClassicalPostUtility::Pointer, boost::noncopyable>("BezierClassicalPostUtility", init<ModelPart::Pointer>())
+    .def("GenerateConditions", &BezierClassicalPostUtility_GenerateConditions)
     .def("GenerateModelPart", &BezierClassicalPostUtility::GenerateModelPart)
     .def("GenerateModelPart2", &BezierClassicalPostUtility_GenerateModelPart2WithCondition)
     .def("GenerateModelPart2", &BezierClassicalPostUtility_GenerateModelPart2)
