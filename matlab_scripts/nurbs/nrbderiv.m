@@ -39,7 +39,7 @@ function varargout = nrbderiv (nurbs)
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,
@@ -216,6 +216,16 @@ end
 varargout{1} = dnurbs;
 if (nargout == 2)
   varargout{2} = dnurbs2;
+  
+  if (iscell (dnurbs2))
+    dnurbs2 = [dnurbs2{:}];
+  end
+  if (any (arrayfun(@(x) any(isnan(x.coefs(:)) | isinf(x.coefs(:))), dnurbs2)))
+    warning ('nrbderiv:SecondDerivative', ...
+        ['The structure for the second derivative contains Inf and/or NaN coefficients, ' ...
+        'probably due to low continuity at repeated knots. This should not affect the ' ...
+        'computation of the second derivatives, except at those knots.'])
+  end
 end
 
 end

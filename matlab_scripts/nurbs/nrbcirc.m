@@ -35,7 +35,7 @@ function curve = nrbcirc(radius,center,sang,eang)
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,
@@ -114,7 +114,7 @@ end
 
 %!demo
 %! for r = 1:9
-%! crv = nrbcirc(r,[],deg2rad(45),deg2rad(315));
+%! crv = nrbcirc(r,[],45*pi/180,315*pi/180);
 %!   nrbplot(crv,50);
 %!   hold on;
 %! end

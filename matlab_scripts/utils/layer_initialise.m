@@ -1,7 +1,8 @@
 function layer_initialise(fid, str)
 
 fprintf(fid, '# geometry layers data file for isogeometric application\n');
-fprintf(fid, '# (c) %d Hoang Giang Bui, Ruhr-University Bochum\n',year(now));
+%fprintf(fid, '# (c) %d Hoang Giang Bui, Ruhr-University Bochum\n',year(now));
+fprintf(fid, '# (c) %d Hoang Giang Bui, Ruhr-University Bochum\n',2018);
 c = clock;
 fprintf(fid, '# This file is created at %s\n',datestr(datenum(c(1),c(2),c(3),c(4),c(5),c(6))));
 fprintf(fid, '%s\n', str);

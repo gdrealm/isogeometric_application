@@ -96,7 +96,7 @@ function nurbs = nrbmak(coefs,knots)
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,
@@ -106,6 +106,9 @@ function nurbs = nrbmak(coefs,knots)
 %
 %    You should have received a copy of the GNU General Public License
 %    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+nurbs = struct ('form', 'B-NURBS', 'dim', 4, 'number', [], 'coefs', [], ...
+                'knots', [], 'order', []);
 
 nurbs.form   = 'B-NURBS';
 nurbs.dim    = 4;
@@ -122,7 +125,7 @@ if iscell(knots)
    nurbs.number = np(2:4);
    if (dim < 4)
      nurbs.coefs = repmat([0.0 0.0 0.0 1.0]',[1 np(2:4)]);
-     nurbs.coefs(1:dim,:,:) = coefs;  
+     nurbs.coefs(1:dim,:,:,:) = coefs;  
    else
      nurbs.coefs = coefs;
    end
@@ -132,9 +135,9 @@ if iscell(knots)
    uknots = sort(knots{1});
    vknots = sort(knots{2});
    wknots = sort(knots{3});
-   uknots = (uknots-uknots(1))/(uknots(end)-uknots(1));
-   vknots = (vknots-vknots(1))/(vknots(end)-vknots(1));
-   wknots = (wknots-wknots(1))/(wknots(end)-wknots(1));
+%   uknots = (uknots-uknots(uorder))/(uknots(end-uorder+1)-uknots(uorder));
+%   vknots = (vknots-vknots(vorder))/(vknots(end-vorder+1)-vknots(vorder));
+%   wknots = (wknots-wknots(worder))/(wknots(end-worder+1)-wknots(worder));
    nurbs.knots = {uknots vknots wknots};
    nurbs.order = [uorder vorder worder];
 
@@ -152,8 +155,8 @@ if iscell(knots)
    vorder = size(knots{2},2)-np(3);
    uknots = sort(knots{1});
    vknots = sort(knots{2});
-   uknots = (uknots-uknots(1))/(uknots(end)-uknots(1));
-   vknots = (vknots-vknots(1))/(vknots(end)-vknots(1));
+%   uknots = (uknots-uknots(uorder))/(uknots(end-uorder+1)-uknots(uorder));
+%   vknots = (vknots-vknots(vorder))/(vknots(end-vorder+1)-vknots(vorder));
    nurbs.knots = {uknots vknots};
    nurbs.order = [uorder vorder];
    
@@ -169,9 +172,11 @@ else
   else
     nurbs.coefs = coefs;
   end
-  nurbs.order = size(knots,2)-np(2);
+  order = size (knots,2) - np(2);
+  nurbs.order = order;
   knots = sort(knots);
-  nurbs.knots = (knots-knots(1))/(knots(end)-knots(1));
+%  nurbs.knots = (knots-knots(order))/(knots(end-order+1)-knots(order));
+  nurbs.knots = knots;
 
 end
 

@@ -34,7 +34,7 @@ function surf = nrbcylind(height,radius,center,sang,eang)
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,
@@ -67,7 +67,7 @@ surf = nrbextrude(nrbcirc(radius,center,sang,eang),[0.0 0.0 height]);
 end
 
 %!demo
-%! srf = nrbcylind(3,1,[],deg2rad(270),deg2rad(180));
+%! srf = nrbcylind(3,1,[],3*pi/2,pi);
 %! nrbplot(srf,[20,20]);
 %! axis equal;
 %! title('Cylinderical section by extrusion of a circular arc.');

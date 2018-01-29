@@ -8,18 +8,18 @@ function rx = vecrot(angle, vector)
 % 
 % INPUT:
 % 
-%   angle		: rotation angle defined in radians
-%   vector		: vector defining the rotation axis
+%   angle : rotation angle defined in radians
+%   vector: vector defining the rotation axis
 %
 % OUTPUT:
 % 
-%   rx		: (4x4) Transformation matrix.
+%   rx: (4x4) Transformation matrix.
 % 
 % 
 % Description:
 % 
-%   Return the (4x4) Transformation matrix for a rotation about the x axis
-%   by the defined angle.
+%   Return the (4x4) Transformation matrix for a rotation about the axis
+%   defined by vector, and by the given angle.
 % 
 % See also:
 % 
@@ -29,7 +29,7 @@ function rx = vecrot(angle, vector)
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,

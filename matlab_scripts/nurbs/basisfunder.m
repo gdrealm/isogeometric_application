@@ -28,7 +28,7 @@ function dersv = basisfunder (ii, pl, uu, u_knotl, nders)
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,
@@ -63,7 +63,7 @@ function dersv = basisfunder (ii, pl, uu, u_knotl, nders)
         saved = left(j-r+1)*temp;
       end
       ndu(j+1,j+1) = saved;
-    end
+    end   
     for j = 0:pl
       ders(1,j+1) = ndu(j+1,pl+1);
     end
@@ -103,16 +103,14 @@ function dersv = basisfunder (ii, pl, uu, u_knotl, nders)
         s2 = j;
       end
     end
-
     r = pl;
-    
     for k = 1:nders
       for j = 0:pl
         ders(k+1,j+1) = ders(k+1,j+1)*r;
       end
       r = r*(pl-k);
     end
-    
+
     dersv(jj, :, :) = ders;
     
   end

@@ -23,7 +23,7 @@ function tsrf = nrbtransp(srf)
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,
@@ -53,3 +53,11 @@ end
 %! srf = nrbtransp(srf);
 %! nrbplot(srf,[20 5]);
 %! hold off
+
+%!test
+%! srf  = nrbrevolve(nrbline([1 0],[2 0]), [0 0 0], [0 0 1], pi/2);
+%! srft = nrbtransp(srf);
+%! assert (srf.number, fliplr(srft.number));
+%! assert (srf.order, fliplr(srft.order));
+%! assert (srf.knots, fliplr(srft.knots));
+%! assert (srf.coefs, permute(srft.coefs, [1 3 2]));

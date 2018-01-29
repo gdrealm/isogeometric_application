@@ -56,11 +56,11 @@ function [p,w] = nrbeval(nurbs,tt)
 %
 % Copyright (C) 2000 Mark Spink 
 % Copyright (C) 2010 Carlo de Falco
-% Copyright (C) 2010, 2011 Rafael Vazquez
+% Copyright (C) 2010, 2011, 2015 Rafael Vazquez
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,
@@ -135,8 +135,16 @@ if (iscell(nurbs.knots))
       %% tt(2,:) represents the v direction
       %% tt(3,:) represents the w direction
 
+      st = size(tt);
+      if (st(1) ~= 3 && st(2) == 3 && numel(st) == 2)
+        tt = tt';
+        st = size (tt);
+      end
+      nt = prod(st(2:end));
+
+      tt = reshape (tt, [3, nt]);
+
       %% evaluate along the w direction
-      nt = size(tt,2);
       val = reshape(nurbs.coefs,4*num1*num2,num3);
       val = bspeval(degree(3),val,nurbs.knots{3},tt(3,:));
       val = reshape(val,[4 num1 num2 nt]);
@@ -160,6 +168,11 @@ if (iscell(nurbs.knots))
       p = pnts(1:3,:);
       if (foption)
         p = p./repmat(w,[3, 1]);
+      end
+
+      if (numel(st) ~= 2)
+        w = reshape (w, [st(2:end)]);
+        p = reshape (p, [3, st(2:end)]);
       end
     end
 
@@ -202,7 +215,14 @@ if (iscell(nurbs.knots))
       %% tt(1,:) represents the u direction
       %% tt(2,:) represents the v direction
 
-      nt = size(tt,2);
+      st = size(tt);
+      if (st(1) ~= 2 && st(2) == 2 && numel(st) == 2)
+        tt = tt';
+        st = size (tt);
+      end
+      nt = prod(st(2:end));
+
+      tt = reshape (tt, [2, nt]);
 
       val = reshape(nurbs.coefs,4*num1,num2);
       val = bspeval(degree(2),val,nurbs.knots{2},tt(2,:));
@@ -221,6 +241,11 @@ if (iscell(nurbs.knots))
       if (foption)
 	p = p./repmat(w,[3, 1]);
       end
+
+      if (numel(st) ~= 2)
+        w = reshape (w, [st(2:end)]);
+        p = reshape (p, [3, st(2:end)]);
+      end
         
     end
 
@@ -229,13 +254,24 @@ else
 
   %% NURBS structure represents a curve
   %%  tt represent a vector of parametric points in the u direction
+
+  if (iscell (tt) && numel (tt) == 1)
+    tt = cell2mat (tt);
+  end
   
-  val = bspeval(nurbs.order-1,nurbs.coefs,nurbs.knots,tt);   
+  st = size (tt);
+  
+  val = bspeval(nurbs.order-1,nurbs.coefs,nurbs.knots,tt(:)');
 
   w = val(4,:);
   p = val(1:3,:);
   if foption
     p = p./repmat(w,3,1);
+  end
+
+  if (st(1) ~= 1 || numel(st) ~= 2)
+    w = reshape (w, st);
+    p = reshape (p, [3, st]);
   end
 
 end

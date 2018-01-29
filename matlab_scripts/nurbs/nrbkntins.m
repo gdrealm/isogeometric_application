@@ -65,7 +65,7 @@ function inurbs = nrbkntins(nurbs,iknots)
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,
@@ -91,6 +91,11 @@ end
 degree = nurbs.order-1;
 
 if iscell(nurbs.knots)
+ fmax = @(x,y) any (y > max(x)); fmin = @(x,y) any (y < min(x));
+ if (any(cellfun(fmax, nurbs.knots, iknots)) || any(cellfun(fmin, nurbs.knots, iknots)))
+   error ('Trying to insert a knot outside the interval of definition')
+ end
+    
  if size(nurbs.knots,2)==3
   % NURBS represents a volume
   num1 = nurbs.number(1);
@@ -160,6 +165,9 @@ if iscell(nurbs.knots)
  end
 else
 
+  if (any(iknots > max(nurbs.knots)) || any(iknots < min(nurbs.knots)))
+    error ('Trying to insert a knot outside the interval of definition')
+  end
   % NURBS represents a curve
   if isempty(iknots)
     coefs = nurbs.coefs;

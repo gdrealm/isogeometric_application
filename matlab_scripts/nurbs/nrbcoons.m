@@ -74,7 +74,7 @@ function srf = nrbcoons(u1, u2, v1, v2)
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,
@@ -88,6 +88,15 @@ function srf = nrbcoons(u1, u2, v1, v2)
 if nargin ~= 4
   error('Incorrect number of input arguments');
 end
+
+if (max (abs (nrbeval (u1, u1.knots(1)) - nrbeval (v1, v1.knots(1)))) > 1e-10 || ...
+    max (abs (nrbeval (u1, u1.knots(end)) - nrbeval (v2, v2.knots(1)))) > 1e-10 || ...
+    max (abs (nrbeval (u2, u2.knots(1)) - nrbeval (v1, v1.knots(end)))) > 1e-10 || ...
+    max (abs (nrbeval (u2, u2.knots(end)) - nrbeval (v2, v2.knots(end)))) > 1e-10)
+  error ('The four curves do not define a closed boundary')
+end
+
+
 
 r1 = nrbruled(u1, u2);
 r2 = nrbtransp(nrbruled(v1, v2));

@@ -7,7 +7,7 @@ function varargout = nrbdeval (nurbs, dnurbs, varargin)
 %     [pnt, jac] = nrbdeval (vol, dvol, {tu tv tw})
 %     [pnt, jac, hess] = nrbdeval (crv, dcrv, dcrv2, tt)
 %     [pnt, jac, hess] = nrbdeval (srf, dsrf, dsrf2, {tu tv})
-%     [pnt, jac, hess] = nrbdeval (vol, dvol, {tu tv tw})
+%     [pnt, jac, hess] = nrbdeval (vol, dvol, dvol2, {tu tv tw})
 %
 % INPUTS:
 %
@@ -32,7 +32,7 @@ function varargout = nrbdeval (nurbs, dnurbs, varargin)
 %
 %    This program is free software: you can redistribute it and/or modify
 %    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 2 of the License, or
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 
 %    This program is distributed in the hope that it will be useful,
@@ -166,14 +166,20 @@ else
   [cup,cuw] = nrbeval (dnurbs,tt);
   temp1 = cuw(ones(3,1),:);
   jac = (cup-temp1.*pnt)./temp;
+  if (iscell (tt))
+    jac = {jac};
+  end
 
   % second derivative
   if (nargout == 3 && exist ('dnurbs2'))
     [cuup,cuuw] = nrbeval (dnurbs2, tt);
     temp2 = cuuw(ones(3,1),:);
     hess = (cuup - (2*cup.*temp1 + cp.*temp2)./temp + 2*cp.*temp1.^2./temp.^2)./temp;
+    if (iscell (tt))
+      hess = {hess};
+    end
   end
-
+  
 end
 
 varargout{1} = pnt;
