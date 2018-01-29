@@ -28,8 +28,7 @@
 #include "custom_utilities/control_grid_utility.h"
 #include "isogeometric_application/isogeometric_application.h"
 
-
-#define DEBUG_DESTROY
+// #define DEBUG_DESTROY
 
 #define CONVERT_INDEX_IGA_TO_KRATOS(n) (n+1)
 #define CONVERT_INDEX_KRATOS_TO_IGA(n) (n-1)

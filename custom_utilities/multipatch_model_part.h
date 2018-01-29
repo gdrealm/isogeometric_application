@@ -146,10 +146,11 @@ public:
         mpModelPart->Elements().Unique();
 
         #ifdef ENABLE_PROFILING
-        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewElements.size() << " elements of type " << element_name << " are generated" << std::endl;
+        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, ";
         #else
-        std::cout << __FUNCTION__ << " completed" << std::endl;
+        std::cout << __FUNCTION__ << " completed, ";
         #endif
+        std::cout << pNewElements.size() << " elements of type " << element_name << " are generated for patch " << pPatch->Id() << std::endl;
 
         return pNewElements;
     }
@@ -186,10 +187,11 @@ public:
         mpModelPart->Conditions().Unique();
 
         #ifdef ENABLE_PROFILING
-        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, " << pNewConditions.size() << " conditions of type " << condition_name << " are generated" << std::endl;
+        std::cout << ">>> " << __FUNCTION__ << " completed: " << OpenMPUtils::GetCurrentTime() - start << " s, ";
         #else
-        std::cout << __FUNCTION__ << " completed" << std::endl;
+        std::cout << __FUNCTION__ << " completed, ";
         #endif
+        std::cout << pNewConditions.size() << " conditions of type " << condition_name << " are generated for patch " << pPatch->Id() << std::endl;
 
         return pNewConditions;
     }
