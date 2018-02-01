@@ -75,9 +75,13 @@ public:
         std::vector<std::vector<std::size_t> > boundary;
         std::vector<std::tuple<std::size_t, std::size_t, std::size_t, int> > edges;
         std::map<std::size_t, std::vector<double> > knotvec;
-        KRATOS_WATCH(__LINE__) // error with 1D here
+        // KRATOS_WATCH(__LINE__) // error with 1D here
+        if (TDim == 1)
+        {
+            KRATOS_THROW_ERROR(std::logic_error, "Here there will be an error, no more proceeding", "")
+        }
         this->GenerateCornerTopology(*pMultiPatch, nvertices, elements, boundary, edges, knotvec);
-        KRATOS_WATCH(__LINE__)
+        // KRATOS_WATCH(__LINE__)
 
         outfile << "elements\n" << elements.size() << "\n";
         for (std::size_t i = 0; i < elements.size(); ++i)
