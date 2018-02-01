@@ -44,7 +44,6 @@ def CreateMultiPatch():
 
     mpatch.AddPatch(patch1)
     mpatch.AddPatch(patch2)
-    mpatch.ResetId()
     mpatch.MakeNeighbor(patch1, BoundarySide.Top, patch2, BoundarySide.Bottom)
 
     print("############REFINEMENT###############")

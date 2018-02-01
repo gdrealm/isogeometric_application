@@ -30,7 +30,7 @@ def CreateMultiPatch():
 
     fes1 = nurbs_fespace_library.CreateRectangularFESpace(3, 3)
     ctrl_grid_1 = grid_lib.CreateRectangularControlPointGrid(0.0, 0.0, fes1.Number(0), fes1.Number(1), 1.0, 1.0)
-    print(ctrl_grid_1)
+#    print(ctrl_grid_1)
     patch1_ptr = multipatch_util.CreatePatchPointer(1, fes1)
     patch1 = patch1_ptr.GetReference()
     patch1.CreateControlPointGridFunction(ctrl_grid_1)
@@ -48,16 +48,18 @@ def CreateMultiPatch():
     mpatch.AddPatch(patch1_ptr)
     mpatch.AddPatch(patch2_ptr)
     patch1.Id = 1
-    patch2.Id = 1
-#    mpatch.ResetId()
+    patch2.Id = 2
     mpatch.MakeNeighbor(patch1, BoundarySide.Right, patch2, BoundarySide.Left)
     #print(mpatch)
 
     print("############REFINEMENT###############")
     multipatch_refine_util = MultiPatchRefinementUtility()
     multipatch_refine_util.InsertKnots(patch1_ptr, [[0.5], [0.5]])
-    #patch1 = patch1_ptr.GetReference()
-    #patch2 = patch2_ptr.GetReference()
+#    patch1 = patch1_ptr.GetReference()
+#    patch2 = patch2_ptr.GetReference()
+#    print(patch1)
+#    print(patch2)
+#    print(mpatch)
     #print("############RESULTS###############")
 
     return mpatch

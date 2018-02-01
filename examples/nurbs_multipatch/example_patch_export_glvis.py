@@ -23,6 +23,7 @@ nurbs_fespace_library = BSplinesFESpaceLibrary()
 grid_lib = ControlGridLibrary()
 multipatch_util = MultiPatchUtility()
 mpatch = MultiPatch2D()
+mpatch_export = MultiNURBSPatchGLVisExporter()
 
 fes1 = nurbs_fespace_library.CreateRectangularFESpace(1, 1)
 ctrl_grid_1 = grid_lib.CreateRectangularControlPointGrid(0.0, 0.0, fes1.Number(0), fes1.Number(1), 1.0, 1.0)
@@ -32,7 +33,6 @@ patch1.CreateControlPointGridFunction(ctrl_grid_1)
 #print(patch1)
 
 mpatch.AddPatch(patch1)
-mpatch.ResetId()
 
 print("############REFINEMENT###############")
 multipatch_refine_util = MultiPatchRefinementUtility()
@@ -42,5 +42,5 @@ print(mpatch)
 #patch1 = patch1_ptr.GetReference()
 #patch2 = patch2_ptr.GetReference()
 #print("############RESULTS###############")
-multipatch_util.ExportGlvis(mpatch, "mpatch.mesh")
+mpatch_export.Export(mpatch, "mpatch.mesh")
 
