@@ -280,7 +280,12 @@ public:
 
     typename BaseType::BaseType::Pointer Create( PointsArrayType const& ThisPoints ) const
     {
-        return typename BaseType::BaseType::Pointer( new Geo2dBezier( ThisPoints ) );
+        Geo2dBezier::Pointer pNewGeom = Geo2dBezier::Pointer( new Geo2dBezier( ThisPoints ) );
+        ValuesContainerType DummyKnots;
+        pNewGeom->AssignGeometryData(DummyKnots, DummyKnots, DummyKnots,
+            mCtrlWeights, mExtractionOperator, mOrder1, mOrder2, 0,
+            static_cast<int>(mpBezierGeometryData->DefaultIntegrationMethod()) + 1);
+        return pNewGeom;
     }
 
 //    virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const

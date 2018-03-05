@@ -276,7 +276,12 @@ public:
 
     typename BaseType::BaseType::Pointer Create( PointsArrayType const& ThisPoints ) const
     {
-        return typename BaseType::BaseType::Pointer( new Geo3dBezier( ThisPoints ) );
+        Geo3dBezier::Pointer pNewGeom = Geo3dBezier::Pointer( new Geo3dBezier( ThisPoints ) );
+        ValuesContainerType DummyKnots;
+        pNewGeom->AssignGeometryData(DummyKnots, DummyKnots, DummyKnots,
+            mCtrlWeights, mExtractionOperator, mOrder1, mOrder2, mOrder3,
+            static_cast<int>(mpBezierGeometryData->DefaultIntegrationMethod()) + 1);
+        return pNewGeom;
     }
 
 //    virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const
