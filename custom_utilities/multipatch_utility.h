@@ -62,7 +62,6 @@ public:
         return lastNodeId;
     }
 
-
     /// Get the last element id of the model part
     static std::size_t GetLastElementId(ModelPart& r_model_part)
     {
@@ -77,7 +76,6 @@ public:
         return lastElementId;
     }
 
-
     /// Get the last condition id of the model part
     static std::size_t GetLastConditionId(ModelPart& r_model_part)
     {
@@ -91,7 +89,6 @@ public:
 
         return lastCondId;
     }
-
 
     /// Get the last properties id of the model_part
     static std::size_t GetLastPropertiesId(ModelPart& r_model_part)
@@ -120,6 +117,20 @@ public:
         }
 
         return i_result;
+    }
+
+    /// Create a condition taking the same geometry as the parent element
+    static Condition::Pointer CreateConditionFromElement(const std::string& sample_condition_name,
+        std::size_t& lastConditionId, Element::Pointer pElement, Properties::Pointer pProperties )
+    {
+        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_condition_name);
+
+        // REMARK: when creating the condition here, the integration rule is not passed. Instead the default integration rule of this element_type is applied, which may be not the same as the original element.
+        Condition::Pointer pNewCondition = r_clone_condition.Create(++lastConditionId, pElement->pGetGeometry(), pProperties);
+
+        std::cout << "1 condition of type " << sample_condition_name << " is created" << std::endl;
+
+        return pNewCondition;
     }
 
     /// Information

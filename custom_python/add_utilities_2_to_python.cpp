@@ -661,24 +661,31 @@ std::size_t MultiPatch_Enumerate2(MultiPatch<TDim>& rDummy, const std::size_t& s
 }
 
 template<int TDim>
-static typename Patch<TDim>::Pointer MultiPatchUtility_CreatePatchPointer(MultiPatchUtility& rDummy, const std::size_t& Id, typename FESpace<TDim>::Pointer pFESpace)
+typename Patch<TDim>::Pointer MultiPatchUtility_CreatePatchPointer(MultiPatchUtility& rDummy, const std::size_t& Id, typename FESpace<TDim>::Pointer pFESpace)
 {
     return rDummy.template CreatePatchPointer<TDim>(Id, pFESpace);
 }
 
-static std::size_t MultiPatchUtility_GetLastNodeId(MultiPatchUtility& rDummy, ModelPart& r_model_part)
+std::size_t MultiPatchUtility_GetLastNodeId(MultiPatchUtility& rDummy, ModelPart& r_model_part)
 {
     return rDummy.GetLastNodeId(r_model_part);
 }
 
-static std::size_t MultiPatchUtility_GetLastElementId(MultiPatchUtility& rDummy, ModelPart& r_model_part)
+std::size_t MultiPatchUtility_GetLastElementId(MultiPatchUtility& rDummy, ModelPart& r_model_part)
 {
     return rDummy.GetLastElementId(r_model_part);
 }
 
-static std::size_t MultiPatchUtility_GetLastConditionId(MultiPatchUtility& rDummy, ModelPart& r_model_part)
+std::size_t MultiPatchUtility_GetLastConditionId(MultiPatchUtility& rDummy, ModelPart& r_model_part)
 {
     return rDummy.GetLastConditionId(r_model_part);
+}
+
+Condition::Pointer MultiPatchUtility_CreateConditionFromElement(MultiPatchUtility& rDummy,
+        const std::string& sample_condition_name, std::size_t lastConditionId,
+        Element::Pointer pElement, Properties::Pointer pProperties)
+{
+    return rDummy.CreateConditionFromElement(sample_condition_name, lastConditionId, pElement, pProperties);
 }
 
 template<int TDim>
@@ -1277,6 +1284,7 @@ void IsogeometricApplication_AddCustomUtilities2ToPython()
     .def("GetLastNodeId", &MultiPatchUtility_GetLastNodeId)
     .def("GetLastElementId", &MultiPatchUtility_GetLastElementId)
     .def("GetLastConditionId", &MultiPatchUtility_GetLastConditionId)
+    .def("CreateConditionFromElement", &MultiPatchUtility_CreateConditionFromElement)
     ;
 
     class_<MultiPatchRefinementUtility, MultiPatchRefinementUtility::Pointer, boost::noncopyable>
