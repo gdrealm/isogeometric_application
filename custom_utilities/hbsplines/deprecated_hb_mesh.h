@@ -31,6 +31,7 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/variables.h"
 #include "includes/ublas_interface.h"
 #include "custom_utilities/nurbs/knot.h"
 #include "custom_utilities/nurbs/knot_array_1d.h"

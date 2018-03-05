@@ -12,11 +12,8 @@
 #include <iostream>
 
 // External includes
-#include "boost/numeric/ublas/vector.hpp"
 
 // Project includes
-#include "includes/define.h"
-#include "includes/ublas_interface.h"
 #include "bezier_utils.h"
 #include "bspline_utils.h"
 

@@ -17,20 +17,20 @@
 #include <fstream>
 
 // External includes
-#include "boost/numeric/ublas/vector.hpp"
 
 // Project includes
 #include "includes/define.h"
+#include "includes/variables.h"
+#include "includes/ublas_interface.h"
 #include "includes/element.h"
 #include "includes/model_part.h"
 #include "geometries/geometry.h"
 #include "geometries/geometry_data.h"
-#include "custom_geometries/isogeometric_geometry.h"
-#include "includes/ublas_interface.h"
 #include "integration/quadrature.h"
 #include "integration/line_gauss_legendre_integration_points.h"
 #include "utilities/openmp_utils.h"
 #include "utilities/math_utils.h"
+#include "custom_geometries/isogeometric_geometry.h"
 #include "custom_utilities/isogeometric_math_utils.h"
 
 #define ENABLE_PROFILING
